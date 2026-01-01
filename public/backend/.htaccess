@@ -1,0 +1,8 @@
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTP_USER_AGENT} "Course-MNR-World-Backend|NextJS|Mozilla|Chrome" [NC]
+    RewriteRule ^api/routes/ - [L]
+</IfModule>
+
+<Files "update-question.php">
+    Require all granted
+</Files>
