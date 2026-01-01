@@ -45,7 +45,14 @@ async function handleRequest(request: NextRequest) {
         body = await request.formData();
       } else {
         headers["Content-Type"] = "application/json";
-        body = await request.text();
+        try {
+          // Parse JSON from request and stringify it properly
+          const jsonData = await request.json();
+          body = JSON.stringify(jsonData);
+        } catch (error) {
+          // If it's not JSON, send as text (for compatibility)
+          body = await request.text();
+        }
       }
     }
 
