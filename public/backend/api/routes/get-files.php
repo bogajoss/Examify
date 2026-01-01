@@ -1,6 +1,6 @@
 <?php
 // Timezone setting removed
-defined('API_ACCESS') OR exit('Unauthorized');
+if (!defined('API_ACCESS')) { http_response_code(403); exit('Unauthorized'); }
 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 0;
 $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
 $search = $_GET['search'] ?? '';

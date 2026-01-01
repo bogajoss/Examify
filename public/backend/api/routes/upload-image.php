@@ -1,6 +1,6 @@
 <?php
 // Timezone setting removed
-defined('API_ACCESS') OR exit('Unauthorized');
+if (!defined('API_ACCESS')) { http_response_code(403); exit('Unauthorized'); }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);

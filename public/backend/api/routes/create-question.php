@@ -1,5 +1,5 @@
 <?php
-defined('API_ACCESS') OR exit('Unauthorized');
+if (!defined('API_ACCESS')) { http_response_code(403); exit('Unauthorized'); }
 
 // Set timezone to local for consistent date handling
 // Timezone setting removed

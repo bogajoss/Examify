@@ -1,5 +1,5 @@
 <?php
-defined('API_ACCESS') OR exit('Unauthorized');
+if (!defined('API_ACCESS')) { http_response_code(403); exit('Unauthorized'); }
 
 // Include date utilities for proper local time handling
 require_once __DIR__ . '/../../../backend/lib/date-utils.php';

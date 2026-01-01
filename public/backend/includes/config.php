@@ -1,14 +1,14 @@
 <?php
-// Database Configuration - Hardcoded
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'zxtfmwrs_mnr_exam');
-define('DB_USER', 'zxtfmwrs_mnr_exam');
-define('DB_PASS', 'mnr_exam');
-define('DB_CHARSET', 'utf8mb4');
+// Database Configuration
+define('DB_HOST', getenv('DB_HOST') ?: '127.0.0.1');
+define('DB_NAME', getenv('DB_NAME') ?: 'zxtfmwrs_mnr_exam');
+define('DB_USER', getenv('DB_USER') ?: 'zxtfmwrs_mnr_exam');
+define('DB_PASS', getenv('DB_PASS') ?: 'mnr_exam');
+define('DB_CHARSET', getenv('DB_CHARSET') ?: 'utf8mb4');
 
 // App Configuration
 define('APP_NAME', 'Universal Question Bank Manager');
-define('BASE_URL', '/api');  // Hardcoded instead of getenv('BACKEND_BASE_URL')
+define('BASE_URL', getenv('BACKEND_BASE_URL') ?: '/api');
 
 define('APP_PUBLIC_URL', '');
 define('UPLOADS_DIR', __DIR__ . '/../uploads');

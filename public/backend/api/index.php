@@ -5,6 +5,8 @@ require_once '../includes/image_upload.php';
 require_once '../includes/csv_parser.php';
 require_once '../includes/security.php';
 require_once '../includes/uuid.php';
+require_once '../includes/cache.php';
+require_once '../lib/date-utils.php';
 
 // Allow from any origin
 if (isset($_SERVER['HTTP_ORIGIN'])) {

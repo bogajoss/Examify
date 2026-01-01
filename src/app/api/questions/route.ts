@@ -16,14 +16,15 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Build URL with token
-    const url = `${getBaseUrl()}/index.php?route=create-question&token=${encodeURIComponent(API_KEY)}`;
+    // Build URL
+    const url = `${getBaseUrl()}/index.php?route=create-question`;
 
     const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "User-Agent": "Course-MNR-World-Backend/2.0",
+        "Authorization": `Bearer ${API_KEY}`,
       },
       body: JSON.stringify(body),
     });
@@ -72,14 +73,15 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Build URL with token
-    const url = `${getBaseUrl()}/index.php?route=update-question&token=${encodeURIComponent(API_KEY)}`;
+    // Build URL
+    const url = `${getBaseUrl()}/index.php?route=update-question`;
 
     const response = await fetch(url, {
       method: "PUT", // PHP backend accepts POST or PUT for updates, but PUT is more semantically correct
       headers: {
         "Content-Type": "application/json",
         "User-Agent": "Course-MNR-World-Backend/2.0",
+        "Authorization": `Bearer ${API_KEY}`,
       },
       body: JSON.stringify(body),
     });
@@ -128,14 +130,15 @@ export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Build URL with token
-    const url = `${getBaseUrl()}/index.php?route=delete-question&token=${encodeURIComponent(API_KEY)}`;
+    // Build URL
+    const url = `${getBaseUrl()}/index.php?route=delete-question`;
 
     const response = await fetch(url, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
         "User-Agent": "Course-MNR-World-Backend/2.0",
+        "Authorization": `Bearer ${API_KEY}`,
       },
       body: JSON.stringify(body),
     });

@@ -1,0 +1,219 @@
+[Thu Jan  1 10:01:54 2026] PHP 8.3.6 Development Server (http://0.0.0.0:8000) started
+[Thu Jan  1 10:02:34 2026] 127.0.0.1:40728 Accepted
+[Thu Jan  1 10:02:34 2026] 127.0.0.1:40728 [500]: POST /api/index.php?token=ff1337&route=create-file - Uncaught Error: Call to undefined function getNowLocalMysql() in /workspaces/codespaces-blank/Examify/public/backend/api/routes/create-file.php:43
+Stack trace:
+#0 /workspaces/codespaces-blank/Examify/public/backend/api/index.php(110): include()
+#1 {main}
+  thrown in /workspaces/codespaces-blank/Examify/public/backend/api/routes/create-file.php on line 43
+[Thu Jan  1 10:02:34 2026] 127.0.0.1:40728 Closing
+[Thu Jan  1 10:02:34 2026] 127.0.0.1:40734 Accepted
+[Thu Jan  1 10:02:34 2026] 127.0.0.1:40734 [500]: POST /api/index.php?token=ff1337&route=create-question
+[Thu Jan  1 10:02:34 2026] 127.0.0.1:40734 Closing
+[Thu Jan  1 10:02:45 2026] 127.0.0.1:37164 Accepted
+[Thu Jan  1 10:02:45 2026] 127.0.0.1:37164 [500]: POST /api/index.php?token=ff1337&route=create-file - Uncaught Error: Call to undefined function getNowLocalMysql() in /workspaces/codespaces-blank/Examify/public/backend/api/routes/create-file.php:43
+Stack trace:
+#0 /workspaces/codespaces-blank/Examify/public/backend/api/index.php(110): include()
+#1 {main}
+  thrown in /workspaces/codespaces-blank/Examify/public/backend/api/routes/create-file.php on line 43
+[Thu Jan  1 10:02:45 2026] 127.0.0.1:37164 Closing
+[Thu Jan  1 10:03:12 2026] 127.0.0.1:39088 Accepted
+[Thu Jan  1 10:03:12 2026] 127.0.0.1:39088 [200]: POST /api/index.php?token=ff1337&route=create-file
+[Thu Jan  1 10:03:12 2026] 127.0.0.1:39088 Closing
+[Thu Jan  1 10:03:12 2026] 127.0.0.1:39104 Accepted
+[Thu Jan  1 10:03:12 2026] 127.0.0.1:39104 [200]: POST /api/index.php?token=ff1337&route=create-question
+[Thu Jan  1 10:03:12 2026] 127.0.0.1:39104 Closing
+[Thu Jan  1 10:03:12 2026] 127.0.0.1:39116 Accepted
+[Thu Jan  1 10:03:12 2026] Update Question Request - Method: PUT
+[Thu Jan  1 10:03:12 2026] Raw input length: 120
+[Thu Jan  1 10:03:12 2026] JSON decode error: No error
+[Thu Jan  1 10:03:12 2026] 127.0.0.1:39116 [200]: PUT /api/index.php?token=ff1337&route=update-question
+[Thu Jan  1 10:03:12 2026] 127.0.0.1:39116 Closing
+[Thu Jan  1 10:03:12 2026] 127.0.0.1:39128 Accepted
+[Thu Jan  1 10:03:12 2026] 127.0.0.1:39128 [200]: GET /api/index.php?token=ff1337&route=question&id=fe24bc94-5345-4807-a296-2e875702096c
+[Thu Jan  1 10:03:12 2026] 127.0.0.1:39128 Closing
+[Thu Jan  1 10:03:12 2026] 127.0.0.1:39134 Accepted
+[Thu Jan  1 10:03:12 2026] 127.0.0.1:39134 [200]: DELETE /api/index.php?token=ff1337&route=delete-question
+[Thu Jan  1 10:03:12 2026] 127.0.0.1:39134 Closing
+[Thu Jan  1 10:03:45 2026] 127.0.0.1:35122 Accepted
+[Thu Jan  1 10:03:45 2026] 127.0.0.1:35122 [200]: GET /api/index.php?route=stats&token=ff1337
+[Thu Jan  1 10:03:45 2026] 127.0.0.1:35122 Closing
+[Thu Jan  1 10:03:51 2026] 127.0.0.1:43574 Accepted
+[Thu Jan  1 10:03:51 2026] 127.0.0.1:43574 [200]: POST /api/index.php?route=create-file&token=ff1337
+[Thu Jan  1 10:03:51 2026] 127.0.0.1:43574 Closing
+[Thu Jan  1 10:03:51 2026] 127.0.0.1:43588 Accepted
+[Thu Jan  1 10:03:51 2026] 127.0.0.1:43588 [200]: POST /api/index.php?route=create-question&token=ff1337
+[Thu Jan  1 10:03:51 2026] 127.0.0.1:43588 Closing
+[Thu Jan  1 10:03:51 2026] 127.0.0.1:43604 Accepted
+[Thu Jan  1 10:03:51 2026] Update Question Request - Method: PUT
+[Thu Jan  1 10:03:51 2026] Raw input length: 107
+[Thu Jan  1 10:03:51 2026] JSON decode error: No error
+[Thu Jan  1 10:03:51 2026] 127.0.0.1:43604 [200]: PUT /api/index.php?route=update-question&token=ff1337
+[Thu Jan  1 10:03:51 2026] 127.0.0.1:43604 Closing
+[Thu Jan  1 10:03:58 2026] 127.0.0.1:43618 Accepted
+[Thu Jan  1 10:03:58 2026] 127.0.0.1:43618 [200]: POST /api/index.php?route=create-question&token=ff1337
+[Thu Jan  1 10:03:58 2026] 127.0.0.1:43618 Closing
+[Thu Jan  1 10:03:58 2026] 127.0.0.1:43626 Accepted
+[Thu Jan  1 10:03:58 2026] Update Question Request - Method: PUT
+[Thu Jan  1 10:03:58 2026] Raw input length: 73
+[Thu Jan  1 10:03:58 2026] JSON decode error: No error
+[Thu Jan  1 10:03:58 2026] 127.0.0.1:43626 [404]: PUT /api/index.php?route=update-question&token=ff1337
+[Thu Jan  1 10:03:58 2026] 127.0.0.1:43626 Closing
+[Thu Jan  1 10:04:04 2026] 127.0.0.1:45922 Accepted
+[Thu Jan  1 10:04:04 2026] 127.0.0.1:45922 [200]: POST /api/index.php?route=create-question&token=ff1337
+[Thu Jan  1 10:04:04 2026] 127.0.0.1:45922 Closing
+[Thu Jan  1 10:04:04 2026] 127.0.0.1:45938 Accepted
+[Thu Jan  1 10:04:04 2026] Update Question Request - Method: PUT
+[Thu Jan  1 10:04:04 2026] Raw input length: 107
+[Thu Jan  1 10:04:04 2026] JSON decode error: No error
+[Thu Jan  1 10:04:04 2026] 127.0.0.1:45938 [200]: PUT /api/index.php?route=update-question&token=ff1337
+[Thu Jan  1 10:04:04 2026] 127.0.0.1:45938 Closing
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37534 Accepted
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37534 [200]: POST /api/index.php?route=create-file&token=ff1337
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37534 Closing
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37538 Accepted
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37538 [200]: GET /api/index.php?route=file&id=da0e0801-9abc-4cf1-b771-2099e54a1417&token=ff1337
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37538 Closing
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37546 Accepted
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37546 [200]: PUT /api/index.php?route=update-file&token=ff1337
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37546 Closing
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37554 Accepted
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37554 [200]: POST /api/index.php?route=create-question&token=ff1337
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37554 Closing
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37560 Accepted
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37560 [200]: GET /api/index.php?route=question&id=649f009f-8392-4e44-b3f1-3367df59dcc2&token=ff1337
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37560 Closing
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37568 Accepted
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37568 [200]: GET /api/index.php?route=questions&file_id=da0e0801-9abc-4cf1-b771-2099e54a1417&token=ff1337
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37568 Closing
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37578 Accepted
+[Thu Jan  1 10:05:52 2026] Update Question Request - Method: PUT
+[Thu Jan  1 10:05:52 2026] Raw input length: 121
+[Thu Jan  1 10:05:52 2026] JSON decode error: No error
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37578 [200]: PUT /api/index.php?route=update-question&token=ff1337
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37578 Closing
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37584 Accepted
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37584 [200]: GET /api/index.php?route=stats&token=ff1337
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37584 Closing
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37598 Accepted
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37598 [200]: DELETE /api/index.php?route=delete-question&token=ff1337
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37598 Closing
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37608 Accepted
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37608 [400]: DELETE /api/index.php?route=delete-file&token=ff1337
+[Thu Jan  1 10:05:52 2026] 127.0.0.1:37608 Closing
+[Thu Jan  1 10:06:08 2026] 127.0.0.1:54962 Accepted
+[Thu Jan  1 10:06:08 2026] 127.0.0.1:54962 [200]: POST /api/index.php?route=create-file&token=ff1337
+[Thu Jan  1 10:06:08 2026] 127.0.0.1:54962 Closing
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:54966 Accepted
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:54966 [200]: GET /api/index.php?route=file&id=7151e44d-236e-42f8-80e9-611bdd5e2ba3&token=ff1337
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:54966 Closing
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:54980 Accepted
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:54980 [200]: PUT /api/index.php?route=update-file&token=ff1337
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:54980 Closing
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:54992 Accepted
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:54992 [200]: POST /api/index.php?route=create-question&token=ff1337
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:54992 Closing
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:54994 Accepted
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:54994 [200]: GET /api/index.php?route=question&id=87da13a7-d0ad-4385-a55a-93ccc67cc4a2&token=ff1337
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:54994 Closing
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:55002 Accepted
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:55002 [200]: GET /api/index.php?route=questions&file_id=7151e44d-236e-42f8-80e9-611bdd5e2ba3&token=ff1337
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:55002 Closing
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:55006 Accepted
+[Thu Jan  1 10:06:09 2026] Update Question Request - Method: PUT
+[Thu Jan  1 10:06:09 2026] Raw input length: 74
+[Thu Jan  1 10:06:09 2026] JSON decode error: No error
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:55006 [200]: PUT /api/index.php?route=update-question&token=ff1337
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:55006 Closing
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:55012 Accepted
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:55012 [200]: GET /api/index.php?route=stats&token=ff1337
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:55012 Closing
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:55020 Accepted
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:55020 [200]: DELETE /api/index.php?route=delete-question&token=ff1337
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:55020 Closing
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:55028 Accepted
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:55028 [400]: DELETE /api/index.php?route=delete-file&token=ff1337
+[Thu Jan  1 10:06:09 2026] 127.0.0.1:55028 Closing
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34280 Accepted
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34280 [200]: POST /api/index.php?route=create-file&token=ff1337
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34280 Closing
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34290 Accepted
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34290 [200]: GET /api/index.php?route=file&id=5fe6bede-a711-4880-8328-e60ef16fd804&token=ff1337
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34290 Closing
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34302 Accepted
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34302 [200]: PUT /api/index.php?route=update-file&token=ff1337
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34302 Closing
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34310 Accepted
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34310 [200]: POST /api/index.php?route=create-question&token=ff1337
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34310 Closing
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34326 Accepted
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34326 [200]: GET /api/index.php?route=question&id=58830b72-793e-423e-8906-2672699def37&token=ff1337
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34326 Closing
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34338 Accepted
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34338 [200]: GET /api/index.php?route=questions&file_id=5fe6bede-a711-4880-8328-e60ef16fd804&token=ff1337
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34338 Closing
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34352 Accepted
+[Thu Jan  1 10:06:20 2026] Update Question Request - Method: PUT
+[Thu Jan  1 10:06:20 2026] Raw input length: 74
+[Thu Jan  1 10:06:20 2026] JSON decode error: No error
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34352 [200]: PUT /api/index.php?route=update-question&token=ff1337
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34352 Closing
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34354 Accepted
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34354 [200]: GET /api/index.php?route=stats&token=ff1337
+[Thu Jan  1 10:06:20 2026] 127.0.0.1:34354 Closing
+[Thu Jan  1 10:06:21 2026] 127.0.0.1:34358 Accepted
+[Thu Jan  1 10:06:21 2026] 127.0.0.1:34358 [200]: DELETE /api/index.php?route=delete-question&token=ff1337
+[Thu Jan  1 10:06:21 2026] 127.0.0.1:34358 Closing
+[Thu Jan  1 10:06:21 2026] 127.0.0.1:34370 Accepted
+[Thu Jan  1 10:06:21 2026] 127.0.0.1:34370 [200]: DELETE /api/index.php?route=delete-file&token=ff1337
+[Thu Jan  1 10:06:21 2026] 127.0.0.1:34370 Closing
+[Thu Jan  1 10:06:25 2026] 127.0.0.1:34376 Accepted
+[Thu Jan  1 10:06:25 2026] 127.0.0.1:34376 [200]: POST /api/index.php?route=create-file&token=ff1337
+[Thu Jan  1 10:06:25 2026] 127.0.0.1:34376 Closing
+[Thu Jan  1 10:06:25 2026] 127.0.0.1:34378 Accepted
+[Thu Jan  1 10:06:25 2026] 127.0.0.1:34378 [200]: POST /api/index.php?route=create-question&token=ff1337
+[Thu Jan  1 10:06:25 2026] 127.0.0.1:34378 Closing
+[Thu Jan  1 10:06:25 2026] 127.0.0.1:34390 Accepted
+[Thu Jan  1 10:06:25 2026] Update Question Request - Method: PUT
+[Thu Jan  1 10:06:25 2026] Raw input length: 78
+[Thu Jan  1 10:06:25 2026] JSON decode error: No error
+[Thu Jan  1 10:06:25 2026] 127.0.0.1:34390 [200]: PUT /api/index.php?route=update-question&token=ff1337
+[Thu Jan  1 10:06:25 2026] 127.0.0.1:34390 Closing
+[Thu Jan  1 10:06:25 2026] 127.0.0.1:34394 Accepted
+[Thu Jan  1 10:06:25 2026] 127.0.0.1:34394 [200]: DELETE /api/index.php?route=delete-question&token=ff1337
+[Thu Jan  1 10:06:25 2026] 127.0.0.1:34394 Closing
+[Thu Jan  1 10:06:25 2026] 127.0.0.1:34398 Accepted
+[Thu Jan  1 10:06:25 2026] 127.0.0.1:34398 [200]: DELETE /api/index.php?route=delete-file&token=ff1337
+[Thu Jan  1 10:06:25 2026] 127.0.0.1:34398 Closing
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:43962 Accepted
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:43962 [200]: POST /api/index.php?route=create-file
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:43962 Closing
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:43968 Accepted
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:43968 [200]: GET /api/index.php?route=file&id=7ffdab8a-086e-46ee-a18a-56b1dbc2a4c6
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:43968 Closing
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:43978 Accepted
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:43978 [200]: PUT /api/index.php?route=update-file
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:43978 Closing
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:43994 Accepted
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:43994 [200]: POST /api/index.php?route=create-question
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:43994 Closing
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44006 Accepted
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44006 [200]: GET /api/index.php?route=question&id=1f72013f-5575-4e68-8e66-939324219304
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44006 Closing
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44008 Accepted
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44008 [200]: GET /api/index.php?route=questions&file_id=7ffdab8a-086e-46ee-a18a-56b1dbc2a4c6
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44008 Closing
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44010 Accepted
+[Thu Jan  1 10:09:01 2026] Update Question Request - Method: PUT
+[Thu Jan  1 10:09:01 2026] Raw input length: 74
+[Thu Jan  1 10:09:01 2026] JSON decode error: No error
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44010 [200]: PUT /api/index.php?route=update-question
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44010 Closing
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44020 Accepted
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44020 [200]: GET /api/index.php?route=stats
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44020 Closing
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44034 Accepted
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44034 [200]: DELETE /api/index.php?route=delete-question
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44034 Closing
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44038 Accepted
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44038 [200]: DELETE /api/index.php?route=delete-file
+[Thu Jan  1 10:09:01 2026] 127.0.0.1:44038 Closing

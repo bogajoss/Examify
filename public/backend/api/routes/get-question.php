@@ -1,6 +1,6 @@
 <?php
 // Timezone setting removed
-defined('API_ACCESS') OR exit('Unauthorized');
+if (!defined('API_ACCESS')) { http_response_code(403); exit('Unauthorized'); }
 $id = $_GET['id'] ?? '';
 $stmt = $pdo->prepare("SELECT * FROM questions WHERE id = ?");
 $stmt->execute([$id]);

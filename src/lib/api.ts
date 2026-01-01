@@ -30,7 +30,6 @@ export async function apiRequest<T>(
 
     if (isServer) {
       // Server-side: call backend directly
-      urlParams.set("token", API_KEY);
       const baseUrl = BACKEND_URL.endsWith("/")
         ? BACKEND_URL.slice(0, -1)
         : BACKEND_URL;
@@ -43,6 +42,10 @@ export async function apiRequest<T>(
     const headers: Record<string, string> = {
       "User-Agent": USER_AGENT,
     };
+
+    if (isServer) {
+      headers["Authorization"] = `Bearer ${API_KEY}`;
+    }
 
     if (!(body instanceof FormData)) {
       headers["Content-Type"] = "application/json";

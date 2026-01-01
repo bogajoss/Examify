@@ -22,8 +22,7 @@ export async function DELETE(request: NextRequest) {
 async function handleRequest(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    searchParams.set("token", API_KEY);
-
+    
     const baseUrl = BACKEND_API_BASE.endsWith("/")
       ? BACKEND_API_BASE.slice(0, -1)
       : BACKEND_API_BASE;
@@ -32,6 +31,7 @@ async function handleRequest(request: NextRequest) {
 
     const headers: Record<string, string> = {
       "User-Agent": "Course-MNR-World-Backend/2.0",
+      "Authorization": `Bearer ${API_KEY}`,
     };
 
     let body: BodyInit | null = null;

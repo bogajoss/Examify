@@ -81,9 +81,9 @@ CREATE TABLE IF NOT EXISTS `categories` (
   UNIQUE KEY `name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-ALTER TABLE questions ADD INDEX IF NOT EXISTS idx_file_question (file_id, id);
-ALTER TABLE files ADD INDEX IF NOT EXISTS idx_file_bank (is_bank);
-ALTER TABLE exam_questions ADD INDEX IF NOT EXISTS idx_exam_questions (exam_id, question_id);
+ALTER TABLE questions ADD INDEX idx_file_question (file_id, id);
+ALTER TABLE files ADD INDEX idx_file_bank_alt (is_bank);
+ALTER TABLE exam_questions ADD INDEX idx_exam_questions (exam_id, question_id);
 
 ANALYZE TABLE questions;
 ANALYZE TABLE files;
