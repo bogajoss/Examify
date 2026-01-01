@@ -157,7 +157,7 @@ export default function QuestionEditor({
     try {
       let result;
       if (initialQuestion?.id) {
-        result = await apiRequest("update-question", "POST", {
+        result = await apiRequest("update-question", "PUT", {
           ...formData,
           id: initialQuestion.id,
         });

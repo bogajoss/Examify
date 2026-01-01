@@ -6,12 +6,39 @@ require_once '../includes/csv_parser.php';
 require_once '../includes/security.php';
 require_once '../includes/uuid.php';
 
+// Allow from any origin
+if (isset($_SERVER['HTTP_ORIGIN'])) {
+    header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+    header('Access-Control-Allow-Credentials: true');
+    header('Access-Control-Max-Age: 86400');    // cache for 1 day
+}
+
+// Access-Control headers are received during OPTIONS requests
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD']))
+        header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");         
+
+    if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
+        header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
+
+    exit(0);
+}
+
 header('Content-Type: application/json; charset=utf-8');
 
 define('API_ACCESS', true);
 
 // 1. Validate Token
 $token = $_GET['token'] ?? '';
+if (empty($token)) {
+    // Check headers for token as fallback
+    $headers = getallheaders();
+    $token = $headers['Authorization'] ?? '';
+    if (strpos($token, 'Bearer ') === 0) {
+        $token = substr($token, 7);
+    }
+}
+
 if (empty($token)) {
     http_response_code(401);
     echo json_encode(['success' => false, 'error' => 'Missing API Token']);
@@ -77,7 +104,13 @@ function attachImageUrls(array $question): array
 }
 
 if (array_key_exists($route, $routes)) {
-    include $routes[$route];
+    // Ensure the route file exists before including
+    if (file_exists($routes[$route])) {
+        include $routes[$route];
+    } else {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Route file missing']);
+    }
 } else {
     http_response_code(404);
     echo json_encode(['success' => false, 'error' => 'Route not found']);

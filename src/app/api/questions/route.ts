@@ -68,6 +68,62 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+
+    // Build URL with token
+    const url = `${getBaseUrl()}/index.php?route=update-question&token=${encodeURIComponent(API_KEY)}`;
+
+    const response = await fetch(url, {
+      method: "PUT", // PHP backend accepts POST or PUT for updates, but PUT is more semantically correct
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "Course-MNR-World-Backend/2.0",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const contentType = response.headers.get("content-type");
+    if (!response.ok) {
+      const errorBody = contentType?.includes("application/json")
+        ? (await response.json()).error || "Update question failed"
+        : await response.text();
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            typeof errorBody === "string"
+              ? errorBody
+              : JSON.stringify(errorBody),
+        },
+        { status: response.status },
+      );
+    }
+
+    if (!contentType?.includes("application/json")) {
+      return NextResponse.json(
+        { success: false, message: "Unexpected response format from backend" },
+        { status: 502 },
+      );
+    }
+
+    const result = await response.json();
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("[UPDATE-QUESTION] Error:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Internal server error",
+      },
+      { status: 500 },
+    );
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();

@@ -79,17 +79,28 @@ async function handleRequest(request: NextRequest) {
           {
             success: false,
             message: "Backend returned invalid JSON",
-            error: responseText,
+            error: responseText.substring(0, 500), // Truncate for safety
           },
           { status: 500 },
         );
       }
     } else {
+      // Handle HTML or text errors (often from WAF or load balancers)
+      console.warn(`[API-PROXY] Non-JSON response for ${method} ${url}:`, response.status, contentType);
+      
+      // If its a 403 HTML page, it's likely a WAF block
+      const isWafBlock = response.status === 403 && responseText.includes("<html");
+      const message = isWafBlock 
+        ? "Request blocked by server firewall (WAF). content might be too large or contain forbidden characters." 
+        : (responseText || `Error ${response.status}`);
+
       return NextResponse.json(
         {
           success: response.ok,
-          message: responseText || `Error ${response.status}`,
+          message: message,
           data: response.ok ? responseText : null,
+          debug_status: response.status,
+          debug_content_type: contentType
         },
         {
           status: response.ok
