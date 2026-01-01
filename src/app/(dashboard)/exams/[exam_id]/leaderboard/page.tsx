@@ -96,7 +96,18 @@ export default function ExamLeaderboardPage() {
 
       if (error) throw error;
 
-      return data.map((r: any, index: number) => ({
+      return (
+        data as {
+          id: string;
+          users: { name: string; roll: string };
+          score: number;
+          correct_answers: number;
+          wrong_answers: number;
+          unattempted: number;
+          submitted_at: string;
+          started_at: string | null;
+        }[]
+      ).map((r) => ({
         id: r.id,
         student: { name: r.users.name, roll: r.users.roll },
         score: r.score,

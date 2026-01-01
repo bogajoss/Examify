@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import {
   AlertBox,
   Button,
@@ -16,12 +16,13 @@ import {
 import { Loader2, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { createUser } from "@/lib/actions";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 // const DEFAULT_BATCH_ID = "48a42c85-aa53-4749-a4b8-851fe2003464";
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const [formData, setFormData] = useState({
     name: "",
     roll: "",
@@ -30,8 +31,9 @@ export default function RegisterPage() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { signIn } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -70,14 +72,21 @@ export default function RegisterPage() {
       if (result.success) {
         toast({
           title: "নিবন্ধন সফল",
-          description: "আপনার অ্যাকাউন্ট তৈরি হয়েছে। এখন লগইন করুন।",
+          description: "আপনার অ্যাকাউন্ট তৈরি হয়েছে। আপনাকে লগইন করানো হচ্ছে...",
         });
-        router.push("/login");
+        
+        // Auto-login after successful registration
+        const redirectTo = searchParams.get("redirect") || undefined;
+        await signIn(formData.roll, formData.password, redirectTo);
       } else {
         setError(result.message || "নিবন্ধন ব্যর্থ হয়েছে।");
       }
     } catch (err) {
-      setError("একটি ত্রুটি ঘটেছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("একটি ত্রুটি ঘটেছে। অনুগ্রহ করে আবার চেষ্টা করুন।");
+      }
       console.error(err);
     } finally {
       setLoading(false);
@@ -115,7 +124,9 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="roll">রোল নম্বর / ফোন নম্বর</Label>
+              <Label htmlFor="roll">
+                রোল নম্বর / ফোন নম্বর (অফিসিয়ালি রোল না পেলে তোমার ফোন নম্বর দাও)
+              </Label>
               <Input
                 id="roll"
                 type="text"
@@ -167,7 +178,7 @@ export default function RegisterPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  অ্যাকাউন্ট তৈরি হচ্ছে...
+                  নিবন্ধন হচ্ছে...
                 </>
               ) : (
                 "নিবন্ধন করুন"
@@ -176,7 +187,7 @@ export default function RegisterPage() {
             <p className="text-center text-sm text-muted-foreground">
               ইতিমধ্যে অ্যাকাউন্ট আছে?{" "}
               <Link
-                href="/login"
+                href={`/login${searchParams.get("redirect") ? `?redirect=${searchParams.get("redirect")}` : ""}`}
                 className="font-semibold text-primary underline-offset-4 hover:underline"
               >
                 লগইন করুন
@@ -186,5 +197,19 @@ export default function RegisterPage() {
         </form>
       </Card>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen bg-background">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <RegisterPageContent />
+    </Suspense>
   );
 }

@@ -62,7 +62,10 @@ export default function ExamsPage() {
           .order("created_at", { ascending: false });
 
         // 3. Fetch Batch Exams (if user has access to any batches)
-        let batchExamsPromise: any = Promise.resolve({ data: [], error: null });
+        let batchExamsPromise: PromiseLike<{
+          data: Exam[] | null;
+          error: Error | { message: string } | null;
+        }> = Promise.resolve({ data: [], error: null });
         if (accessibleBatchIds.length > 0) {
           batchExamsPromise = supabase
             .from("exams")
@@ -113,8 +116,8 @@ export default function ExamsPage() {
       const results = await getStudentResults(user.uid);
 
       const lookup: Record<string, StudentExam> = {};
-      results.forEach((r: any) => {
-        lookup[r.exam_id] = r as StudentExam;
+      results.forEach((r: StudentExam) => {
+        lookup[r.exam_id] = r;
       });
       return lookup;
     },

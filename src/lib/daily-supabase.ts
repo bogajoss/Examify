@@ -1,6 +1,5 @@
 import { supabase } from "./supabase";
-import { User, Batch } from "./types";
-import dayjs from "@/lib/date-utils";
+import { Batch } from "./types";
 
 export async function getEnrolledBatches(userId: string) {
   const { data, error } = await supabase
@@ -87,7 +86,7 @@ export async function submitTask(
   type: "mandatory" | "optional" | "todo",
   url: string,
 ) {
-  const updateData: any = {
+  const updateData: Record<string, string | boolean | null> = {
     student_id: userId,
     batch_id: batchId,
     task_date: date,

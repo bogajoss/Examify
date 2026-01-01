@@ -1,4 +1,3 @@
-import { supabase } from "@/lib/supabase";
 import { getBatch, getExams, getUsers } from "@/lib/data-supabase";
 import { BatchDetailsClient } from "./BatchDetailsClient";
 

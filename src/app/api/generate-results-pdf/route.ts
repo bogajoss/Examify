@@ -35,7 +35,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const processedResults = results.map((result: any) => ({
+    const processedResults = (
+      results as {
+        users: { name: string; roll: string };
+        score: number;
+        correct_answers: number;
+        wrong_answers: number;
+        unattempted: number;
+      }[]
+    ).map((result) => ({
       ...result,
       student_id: {
         name: result.users.name,

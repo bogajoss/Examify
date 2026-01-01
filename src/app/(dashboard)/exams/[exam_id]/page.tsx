@@ -728,11 +728,12 @@ export default function TakeExamPage() {
         }
 
         toast({ title: "পরীক্ষা জমা হয়েছে!" });
-      } catch (err: any) {
-        console.error("Error submitting exam:", err);
+      } catch (err) {
+        const error = err as Error;
+        console.error("Error submitting exam:", error);
         toast({
           title: "ত্রুটি",
-          description: "পরীক্ষা জমা দিতে সমস্যা হয়েছে: " + (err.message || ""),
+          description: "পরীক্ষা জমা দিতে সমস্যা হয়েছে: " + (error.message || ""),
           variant: "destructive",
         });
       }
@@ -976,7 +977,7 @@ export default function TakeExamPage() {
         }
 
         // Check if the batch is public via Supabase
-        const { data: batchData, error: batchError } = await supabase
+        const { data: batchData } = await supabase
           .from("batches")
           .select("is_public")
           .eq("id", exam.batch_id)
@@ -1058,12 +1059,12 @@ export default function TakeExamPage() {
 
       let finalQuestions: Question[] = [];
 
-      // Check if questions are already embedded (unlikely for Supabase unless JSONB, but kept for compatibility)
+      const embeddedQuestions = (examData as Record<string, unknown>).questions;
       if (
-        (examData as any).questions &&
-        (examData as any).questions.length > 0
+        Array.isArray(embeddedQuestions) &&
+        embeddedQuestions.length > 0
       ) {
-        finalQuestions = (examData as any).questions.map((q: Question) => {
+        finalQuestions = (embeddedQuestions as Question[]).map((q) => {
           let answerIndex = -1;
           if (typeof q.answer === "number") {
             answerIndex = q.answer;

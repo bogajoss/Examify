@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 import { apiRequest } from "./api";
-import { User, Batch, Exam, StudentExam } from "./types";
+import { User, Batch, Exam } from "./types";
 
 export async function getAdminStats() {
   const [usersCount, examsCount, batchesCount] = await Promise.all([

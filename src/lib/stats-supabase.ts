@@ -1,5 +1,4 @@
 import { supabase } from "./supabase";
-import { apiRequest } from "./api";
 
 export async function getPublicStats() {
   const [usersCount, examsCount, batchesCount] = await Promise.all([

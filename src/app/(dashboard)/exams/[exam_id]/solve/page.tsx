@@ -93,12 +93,13 @@ export default function SolvePage() {
       }
 
       let finalQuestions: Question[] = [];
+      const embeddedQuestions = (examData as Record<string, unknown>)
+        .questions;
       if (
-        (examData as any).questions &&
-        Array.isArray((examData as any).questions) &&
-        (examData as any).questions.length > 0
+        Array.isArray(embeddedQuestions) &&
+        embeddedQuestions.length > 0
       ) {
-        finalQuestions = ((examData as any).questions as RawQuestion[]).map(
+        finalQuestions = (embeddedQuestions as RawQuestion[]).map(
           (q: RawQuestion) => {
             const normalized = normalizeQuestion(q);
             return {
@@ -159,7 +160,12 @@ export default function SolvePage() {
 
             const responses = examData.student_responses;
             if (responses && Array.isArray(responses) && responses.length > 0) {
-              responses.forEach((resp: any) => {
+              (
+                responses as {
+                  selected_option: string | null;
+                  question_id: string;
+                }[]
+              ).forEach((resp) => {
                 if (resp.selected_option !== null) {
                   answers[resp.question_id] = parseInt(
                     resp.selected_option,

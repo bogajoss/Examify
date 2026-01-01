@@ -140,7 +140,9 @@ function NewUserCredentialsDialog({
             <Input value={user.name} readOnly />
           </div>
           <div className="space-y-2">
-            <Label>রোল নম্বর / ফোন নম্বর</Label>
+            <Label>
+              রোল নম্বর / ফোন নম্বর (অফিসিয়ালি রোল না পেলে তোমার ফোন নম্বর দাও)
+            </Label>
             <div className="flex items-center gap-2">
               <Input value={user.roll || ""} readOnly className="font-mono" />
               <Button
@@ -744,7 +746,10 @@ export function UsersClient({
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>রোল নম্বর / ফোন নম্বর</Label>
+                <Label>
+                  রোল নম্বর / ফোন নম্বর (অফিসিয়ালি রোল না পেলে তোমার ফোন নম্বর
+                  দাও)
+                </Label>
                 <div className="flex items-center gap-2">
                   <Input
                     value={viewingUser.roll || ""}

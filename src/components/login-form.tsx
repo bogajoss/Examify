@@ -33,7 +33,9 @@ export function UnifiedLoginForm({
   const [showPassword, setShowPassword] = useState(false);
 
   const isStudent = userType === "student";
-  const fieldLabel = isStudent ? "রোল নম্বর / ফোন নম্বর" : "ব্যবহারকারীর নাম";
+  const fieldLabel = isStudent
+    ? "রোল নম্বর / ফোন নম্বর (অফিসিয়ালি রোল না পেলে তোমার ফোন নম্বর দাও)"
+    : "ব্যবহারকারীর নাম";
   const fieldPlaceholder = isStudent
     ? "আপনার রোল বা ফোন নম্বর"
     : "আপনার ব্যবহারকারীর নাম";

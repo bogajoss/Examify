@@ -1,6 +1,6 @@
 import { getBatches } from "@/lib/data-supabase";
 import { supabase } from "@/lib/supabase";
-import type { User, Batch } from "@/lib/types";
+import type { User } from "@/lib/types";
 import { UsersClient } from "./UsersClient";
 import { Card, CardFooter } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";

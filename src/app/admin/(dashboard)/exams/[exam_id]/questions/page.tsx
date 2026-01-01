@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import BulkQuestionList from "@/components/BulkQuestionList";
 import { fetchQuestions, type RawQuestion } from "@/lib/fetchQuestions";
-import { Exam, Question } from "@/lib/types";
+import { Question } from "@/lib/types";
 import { apiRequest } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { CustomLoader, PageHeader, QuestionEditor } from "@/components";
@@ -27,7 +27,7 @@ export default function ExamQuestionsPage() {
     if (!exam_id) return;
     try {
       setLoading(true);
-      const { data: examData, error } = await supabase
+      const { data: examData } = await supabase
         .from("exams")
         .select("*")
         .eq("id", exam_id)

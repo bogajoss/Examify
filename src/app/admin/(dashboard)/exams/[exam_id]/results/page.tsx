@@ -152,7 +152,19 @@ export default function AdminExamResultsPage() {
         const resultsData = await getExamResults(exam_id);
 
         setResults(
-          resultsData.map((r: any) => ({
+          (
+            resultsData as {
+              id: string;
+              exam_id: string;
+              users: { name: string; roll: string };
+              score: number;
+              correct_answers: number;
+              wrong_answers: number;
+              unattempted: number;
+              submitted_at: string;
+              started_at: string | null;
+            }[]
+          ).map((r) => ({
             id: r.id,
             exam_id: r.exam_id,
             student_id_obj: { name: r.users.name, roll: r.users.roll },

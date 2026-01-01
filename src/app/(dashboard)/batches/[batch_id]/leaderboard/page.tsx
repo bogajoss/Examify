@@ -22,7 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import type { Batch, Exam } from "@/lib/types";
+import type { Batch } from "@/lib/types";
 
 interface LeaderboardEntry {
   student_id: string;
@@ -72,9 +72,6 @@ export default function BatchLeaderboardPage() {
         }
 
         const examIds = exams.map((exam) => exam.id);
-        const negativeMarksMap = new Map(
-          exams.map((e) => [e.id, e.negative_marks_per_wrong ?? 0]),
-        );
 
         // Fetch all results for these exams
         const { data: results, error: resultsError } = await supabase
@@ -89,7 +86,13 @@ export default function BatchLeaderboardPage() {
           [key: string]: { name: string; roll: string; total_score: number };
         } = {};
 
-        results?.forEach((result: any) => {
+        (
+          results as {
+            student_id: string;
+            score: number;
+            users: { name: string; roll: string };
+          }[]
+        )?.forEach((result) => {
           const studentUid = result.student_id;
           if (!studentUid) return;
 

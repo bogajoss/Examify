@@ -49,7 +49,7 @@ async function handleRequest(request: NextRequest) {
           // Parse JSON from request and stringify it properly
           const jsonData = await request.json();
           body = JSON.stringify(jsonData);
-        } catch (error) {
+        } catch {
           // If it's not JSON, send as text (for compatibility)
           body = await request.text();
         }

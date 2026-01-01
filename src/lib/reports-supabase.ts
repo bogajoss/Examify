@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { User, Batch, StudentReport, ReportDay } from "./types";
+import { Batch } from "./types";
 import dayjs from "@/lib/date-utils";
 
 export async function getBatches() {
@@ -59,7 +59,7 @@ export async function getReports(batchId: string, date: string) {
     const studentExams = exams
       ?.filter((e) => e.student_id === student.uid)
       .map((e) => ({
-        name: (e.exams as any)?.name || "Exam",
+        name: (e.exams as unknown as { name: string })?.name || "Exam",
         score: e.score || 0,
       }));
 

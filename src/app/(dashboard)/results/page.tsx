@@ -42,7 +42,7 @@ import {
   Clock,
 } from "lucide-react";
 
-import type { Exam, Batch } from "@/lib/types";
+import type { Exam, StudentExam } from "@/lib/types";
 
 import { Button } from "@/components/ui/button";
 
@@ -163,7 +163,7 @@ export default function ResultsPage() {
     queryFn: async () => {
       if (!user?.uid) return [];
       const data = await getStudentResults(user.uid);
-      return data.map((r: any) => ({
+      return data.map((r: StudentExam) => ({
         id: r.id,
         exam_id: r.exam_id,
         correct_answers: r.correct_answers,
@@ -199,8 +199,8 @@ export default function ResultsPage() {
       const finalScore =
         result.score !== undefined && result.score !== null
           ? parseFloat(String(result.score))
-          : parseFloat(result.correct_answers) -
-            parseFloat(result.wrong_answers) * negativeMarks;
+          : (result.correct_answers || 0) -
+            (result.wrong_answers || 0) * negativeMarks;
 
       return {
         id: result.id,
@@ -211,11 +211,11 @@ export default function ResultsPage() {
 
         score: finalScore,
 
-        correct_answers: parseInt(result.correct_answers),
+        correct_answers: result.correct_answers || 0,
 
-        wrong_answers: parseInt(result.wrong_answers),
+        wrong_answers: result.wrong_answers || 0,
 
-        unattempted: parseInt(result.unattempted),
+        unattempted: result.unattempted || 0,
 
         submitted_at: result.submitted_at,
 

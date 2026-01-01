@@ -98,8 +98,8 @@ export default function StudentBatchExamsPage() {
           const results = await getStudentResults(user.uid);
 
           const resultsMap: Record<string, StudentExam> = {};
-          results.forEach((r: any) => {
-            resultsMap[r.exam_id] = r as StudentExam;
+          results.forEach((r: StudentExam) => {
+            resultsMap[r.exam_id] = r;
           });
           setExamResults(resultsMap);
         }

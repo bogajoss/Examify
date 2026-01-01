@@ -6,7 +6,6 @@ import {
   useState,
   ReactNode,
 } from "react";
-import { apiRequest } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import type { User } from "@/lib/types";

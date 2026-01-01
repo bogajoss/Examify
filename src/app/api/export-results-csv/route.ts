@@ -60,7 +60,16 @@ export async function POST(request: NextRequest) {
     rows.push(headers.map((h) => `"${h}"`).join(","));
 
     // Add data rows
-    results.forEach((result: any, idx: number) => {
+    (
+      results as {
+        users: { name: string; roll: string };
+        score: number;
+        correct_answers: number;
+        wrong_answers: number;
+        unattempted: number;
+        submitted_at: string;
+      }[]
+    ).forEach((result, idx: number) => {
       const row = [
         idx + 1,
         `"${result.users.name || "N/A"}"`,

@@ -5,15 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { RawQuestion } from "@/lib/fetchQuestions";
 import LatexRenderer from "@/components/LatexRenderer";
-import { Edit, Trash2, Search, Filter, X } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { Edit, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import dayjs, { formatDate } from "@/lib/date-utils";
 
@@ -31,7 +23,7 @@ export default function BulkQuestionList({
   onDelete,
 }: Props) {
   const [mode, setMode] = React.useState<"question" | "solution">("question");
-  const [filters, setFilters] = React.useState({
+  const [filters] = React.useState({
     subject: "all",
     paper: "all",
     chapter: "all",

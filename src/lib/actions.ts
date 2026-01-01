@@ -1,27 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { apiRequest } from "./api";
-import { User, Batch, Exam } from "./types";
 import dayjs from "@/lib/date-utils";
 import { supabaseAdmin } from "./supabase";
 
 const randomUUID = () => globalThis.crypto.randomUUID();
-
-// Helper function to fetch image from URL and convert to Base64
-async function fetchImageAsBase64(url: string): Promise<string | null> {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) return null;
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const contentType = response.headers.get("content-type") || "image/jpeg";
-    return `data:${contentType};base64,${buffer.toString("base64")}`;
-  } catch (error) {
-    console.error("Failed to fetch image for import:", url, error);
-    return null;
-  }
-}
 
 // Helper function to verify password internally
 async function verifyPasswordInternal() {
@@ -377,7 +360,7 @@ export async function updateExam(formData: FormData) {
     optional_subjects = [];
   }
 
-  const updateData: any = {
+  const updateData: Record<string, unknown> = {
       name,
       description,
       course_name,
@@ -590,7 +573,13 @@ export async function importUsersData(formData: FormData) {
     }
 
     const { error } = await supabaseAdmin.from("users").upsert(
-      importedData.users.map((u: any) => ({
+      importedData.users.map((u: {
+        uid?: string;
+        name: string;
+        roll: string;
+        pass?: string;
+        enrolled_batches?: string[];
+      }) => ({
         uid: u.uid || randomUUID(),
         name: u.name,
         roll: u.roll,
@@ -619,7 +608,7 @@ export async function importUsersData(formData: FormData) {
 }
 
 // Keeping Question-related API calls to MySQL backend as requested
-export async function importBatchData(formData: FormData) {
+export async function importBatchData(_formData: FormData) {
   // This is a complex one, it involves creating batches, exams and questions.
   // Questions MUST stay in MySQL.
   // For simplicity and keeping questions in MySQL, we'll maintain the apiRequest approach for this entire flow,
@@ -706,15 +695,16 @@ export async function exportBatchData(batchId: string) {
       data: JSON.stringify(data, null, 2),
       filename: `batch-${batch.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}-${dayjs().format("YYYY-MM-DD")}.json`,
     };
-  } catch (error: any) {
+  } catch (error) {
+    const err = error as Error;
     return {
       success: false,
-      message: "Export failed: " + (error.message || error),
+      message: "Export failed: " + (err.message || String(error)),
     };
   }
 }
 
-export async function bulkUpdateExamScores(formData: FormData) {
+export async function bulkUpdateExamScores(_formData: FormData) {
   // Placeholder for bulk update
   return {
     success: false,
@@ -722,7 +712,7 @@ export async function bulkUpdateExamScores(formData: FormData) {
   };
 }
 
-export async function recalculateExamScores(formData: FormData) {
+export async function recalculateExamScores(_formData: FormData) {
   // Placeholder for recalculate
   return {
     success: false,

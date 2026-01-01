@@ -22,7 +22,8 @@ export default function CacheCleaner() {
         if (storedVersion !== CURRENT_APP_VERSION) {
           console.log("Detecting old app version. Redirecting to verification...");
           // Hard redirect to the verification/cleanup page
-          window.location.href = "/verify";
+          const redirectUrl = pathname && pathname !== "/" ? `/verify?redirect=${encodeURIComponent(pathname)}` : "/verify";
+          window.location.href = redirectUrl;
         }
       } catch (err) {
         console.error("Version check failed:", err);

@@ -14,8 +14,9 @@ import {
   Label,
 } from "@/components";
 import { GraduationCap, Loader2 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useEffect } from "react";
 
 function LoginPageContent() {
   const [rollNumber, setRollNumber] = useState("");
@@ -24,6 +25,15 @@ function LoginPageContent() {
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const searchParams = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (searchParams.get("migrated") === "true") {
+      const redirect = searchParams.get("redirect");
+      const url = `/register?migrated=true${redirect ? `&redirect=${encodeURIComponent(redirect)}` : ""}`;
+      router.replace(url);
+    }
+  }, [searchParams, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +69,9 @@ function LoginPageContent() {
         <form onSubmit={handleLogin}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="roll-number">রোল নম্বর / ফোন নম্বর</Label>
+              <Label htmlFor="roll-number">
+                রোল নম্বর / ফোন নম্বর (অফিসিয়ালি রোল না পেলে তোমার ফোন নম্বর দাও)
+              </Label>
               <Input
                 id="roll-number"
                 type="text"
@@ -103,7 +115,10 @@ function LoginPageContent() {
             </Button>
             <p className="mt-4 text-center text-sm text-muted-foreground">
               অ্যাকাউন্ট নেই?{" "}
-              <Link href="/register" className="underline hover:text-primary">
+              <Link 
+                href={`/register${searchParams.get("redirect") ? `?redirect=${searchParams.get("redirect")}` : ""}`} 
+                className="underline hover:text-primary"
+              >
                 নিবন্ধন করুন
               </Link>
             </p>

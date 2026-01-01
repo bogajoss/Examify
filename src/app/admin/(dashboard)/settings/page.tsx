@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings, Users, ShieldCheck, Trash2 } from "lucide-react";
+import { Settings, Users, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminAuth } from "@/context/AdminAuthContext";

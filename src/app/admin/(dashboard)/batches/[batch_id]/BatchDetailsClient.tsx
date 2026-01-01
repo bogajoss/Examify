@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useRef, type FormEvent, useEffect } from "react";
-import { apiRequest } from "@/lib/api";
+import { useState, useRef, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase";
 import { getExams, getUsers } from "@/lib/data-supabase";
 import { Button } from "@/components/ui/button";
@@ -72,7 +71,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { combineLocalDateTime, getCurrentLocalTime } from "@/lib/utils";
+import { combineLocalDateTime } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import dayjs from "@/lib/date-utils";
 import { useCopyLink } from "@/hooks/use-copy-link";
@@ -309,7 +308,7 @@ export function BatchDetailsClient({
     if (!studentSearchTerm.trim()) return;
     setIsSearchingStudents(true);
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("users")
       .select("*")
       .or(`name.ilike.%${studentSearchTerm}%,roll.ilike.%${studentSearchTerm}%`)

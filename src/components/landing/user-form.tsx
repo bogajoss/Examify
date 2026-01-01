@@ -163,7 +163,10 @@ export function UserForm({
             name="roll"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>রোল নম্বর / ফোন নম্বর</FormLabel>
+                <FormLabel>
+                  রোল নম্বর / ফোন নম্বর (অফিসিয়ালি রোল না পেলে তোমার ফোন নম্বর
+                  দাও)
+                </FormLabel>
                 <FormControl>
                   <Input
                     placeholder="ব্যবহারকারীর রোল বা ফোন নম্বর"
@@ -274,7 +277,10 @@ export function UserForm({
               name="roll"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>রোল নম্বর</FormLabel>
+                  <FormLabel>
+                    রোল নম্বর / ফোন নম্বর (অফিসিয়ালি রোল না পেলে তোমার ফোন নম্বর
+                    দাও)
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="রোল নম্বর"

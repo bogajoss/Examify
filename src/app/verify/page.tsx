@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCcw } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
-export default function VerifyPage() {
+function VerifyPageContent() {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("সিস্টেম আপডেট চেক করা হচ্ছে...");
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const performCleanup = async () => {
@@ -81,7 +82,7 @@ export default function VerifyPage() {
       }
 
       setProgress(100);
-      setStatus("সম্পন্ন! আপনাকে লগইন পেজে নিয়ে যাওয়া হচ্ছে...");
+      setStatus("সম্পন্ন! আপনাকে নিবন্ধন পেজে নিয়ে যাওয়া হচ্ছে...");
 
       // Mark migration as done for this specific version in the NEW empty storage
       // This prevents the CacheCleaner from triggering again immediately
@@ -90,12 +91,20 @@ export default function VerifyPage() {
 
       // Redirect after short delay
       setTimeout(() => {
-        window.location.href = "/login?migrated=true";
+        const redirect = searchParams.get("redirect");
+        const url = `/register?migrated=true${redirect ? `&redirect=${encodeURIComponent(redirect)}` : ""}`;
+        window.location.href = url;
       }, 1000);
     };
 
     performCleanup();
-  }, []);
+  }, [searchParams]);
+
+  const handleManualRedirect = () => {
+    const redirect = searchParams.get("redirect");
+    const url = `/register?migrated=true${redirect ? `&redirect=${encodeURIComponent(redirect)}` : ""}`;
+    window.location.href = url;
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -124,7 +133,7 @@ export default function VerifyPage() {
           <Button 
             className="w-full mt-4" 
             disabled={progress < 100}
-            onClick={() => window.location.href = "/login?migrated=true"}
+            onClick={handleManualRedirect}
           >
             {progress < 100 ? (
               <>
@@ -132,11 +141,23 @@ export default function VerifyPage() {
                 অপেক্ষা করুন...
               </>
             ) : (
-              "লগইন করুন"
+              "নিবন্ধন করুন"
             )}
           </Button>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <VerifyPageContent />
+    </Suspense>
   );
 }
