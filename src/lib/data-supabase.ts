@@ -91,7 +91,7 @@ export async function getUser(uid: string) {
 export async function getExamResults(examId: string) {
   const { data, error } = await supabase
     .from("student_exams")
-    .select("*, users!inner(*)")
+    .select("*, users!inner(full_name, roll_number, phone_number, uid)")
     .eq("exam_id", examId)
     .order("score", { ascending: false });
 
@@ -102,7 +102,7 @@ export async function getExamResults(examId: string) {
 export async function getStudentResults(studentId: string) {
   const { data, error } = await supabase
     .from("student_exams")
-    .select("*, exams!inner(*)")
+    .select("*, exams!inner(title, total_marks, duration_minutes)")
     .eq("student_id", studentId)
     .order("submitted_at", { ascending: false });
 

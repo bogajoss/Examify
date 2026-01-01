@@ -6,6 +6,7 @@ import { RadioGroup } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TOUCH_TARGETS } from "@/lib/examConstants";
 import LatexRenderer from "@/components/LatexRenderer";
+import Image from "next/image";
 
 interface Props {
   question: Question;
@@ -37,14 +38,16 @@ export default function ExamQuestionCard({
 
         {question.question_image_url && (
           <div className="my-4 rounded-lg overflow-hidden border border-border bg-muted/30">
-            <img
+            <Image
               src={question.question_image_url}
               alt="Question"
-              className="max-w-full h-auto mx-auto"
-              loading="lazy"
+              width={0}
+              height={0}
+              sizes="100vw"
+              className="w-full h-auto mx-auto"
+              style={{ width: "100%", height: "auto", userSelect: "none" }}
               onContextMenu={(e) => e.preventDefault()}
               onDragStart={(e) => e.preventDefault()}
-              style={{ userSelect: "none" }}
             />
           </div>
         )}

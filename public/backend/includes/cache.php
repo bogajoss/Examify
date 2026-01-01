@@ -1,27 +1,48 @@
 <?php
-// Simple in-memory cache for API responses
+// File-based cache for API responses
 // TTL: Time to live in seconds
 
 class APICache {
-    private static $cache = [];
-    private static $ttl = [];
+    private static $cacheDir = __DIR__ . '/../cache';
     
+    /**
+     * Initialize cache directory
+     */
+    private static function init() {
+        if (!file_exists(self::$cacheDir)) {
+            mkdir(self::$cacheDir, 0755, true);
+        }
+    }
+
     /**
      * Get cached value
      */
     public static function get($key) {
-        if (!isset(self::$cache[$key])) {
+        self::init();
+        $filename = self::getFilename($key);
+        
+        if (!file_exists($filename)) {
+            return null;
+        }
+        
+        $content = @file_get_contents($filename);
+        if ($content === false) {
+            return null;
+        }
+
+        $data = json_decode($content, true);
+        if (!$data || !isset($data['expiry']) || !isset($data['value'])) {
+            @unlink($filename);
             return null;
         }
         
         // Check if expired
-        if (isset(self::$ttl[$key]) && time() > self::$ttl[$key]) {
-            unset(self::$cache[$key]);
-            unset(self::$ttl[$key]);
+        if (time() > $data['expiry']) {
+            @unlink($filename);
             return null;
         }
         
-        return self::$cache[$key];
+        return $data['value'];
     }
     
     /**
@@ -31,8 +52,14 @@ class APICache {
      * @param $ttl Time to live in seconds (default: 300 = 5 minutes)
      */
     public static function set($key, $value, $ttl = 300) {
-        self::$cache[$key] = $value;
-        self::$ttl[$key] = time() + $ttl;
+        self::init();
+        $filename = self::getFilename($key);
+        $data = [
+            'expiry' => time() + $ttl,
+            'value' => $value
+        ];
+        
+        file_put_contents($filename, json_encode($data));
     }
     
     /**
@@ -46,16 +73,28 @@ class APICache {
      * Clear specific cache key
      */
     public static function delete($key) {
-        unset(self::$cache[$key]);
-        unset(self::$ttl[$key]);
+        self::init();
+        $filename = self::getFilename($key);
+        if (file_exists($filename)) {
+            @unlink($filename);
+        }
     }
     
     /**
      * Clear all cache
      */
     public static function flush() {
-        self::$cache = [];
-        self::$ttl = [];
+        self::init();
+        $files = glob(self::$cacheDir . '/*');
+        foreach ($files as $file) {
+            if (is_file($file)) {
+                @unlink($file);
+            }
+        }
+    }
+
+    private static function getFilename($key) {
+        return self::$cacheDir . '/' . md5($key) . '.cache';
     }
 }
 

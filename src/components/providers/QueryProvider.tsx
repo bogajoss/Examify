@@ -9,10 +9,10 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Data remains fresh for 1 minute
-            staleTime: 60 * 1000,
-            // Keep data in cache for 5 minutes
-            gcTime: 5 * 60 * 1000,
+            // Data remains fresh for 5 minutes
+            staleTime: 5 * 60 * 1000,
+            // Keep data in cache for 10 minutes
+            gcTime: 10 * 60 * 1000,
             // Don't retry on 404s
             retry: (failureCount, error: unknown) => {
               if ((error as { status?: number })?.status === 404) return false;
