@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { PageHeader, CustomLoader } from "@/components";
-import { maskMobileNumber } from "@/lib/utils";
+import { maskRollNumber } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -190,7 +190,7 @@ export default function BatchLeaderboardPage() {
                             </div>
                             <div>
                               <span className="font-medium">রোল: </span>
-                              {maskMobileNumber(entry.student_roll)}
+                              {maskRollNumber(entry.student_roll)}
                             </div>
                             <div>
                               <span className="font-medium">মোট স্কোর: </span>
@@ -211,7 +211,7 @@ export default function BatchLeaderboardPage() {
                         {entry.student_name}
                       </TableCell>
                       <TableCell className="hidden md:table-cell whitespace-nowrap">
-                        {maskMobileNumber(entry.student_roll)}
+                        {maskRollNumber(entry.student_roll)}
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-right font-bold whitespace-nowrap">
                         {parseFloat(String(entry.total_score)).toFixed(2)}

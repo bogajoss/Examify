@@ -71,7 +71,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { combineLocalDateTime } from "@/lib/utils";
+import { combineLocalDateTime, maskRollNumber } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import dayjs from "@/lib/date-utils";
 import { useCopyLink } from "@/hooks/use-copy-link";
@@ -1356,7 +1356,7 @@ export function BatchDetailsClient({
                         <div>
                           <p className="font-medium">{user.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            Roll: {user.roll}
+                            Roll: {maskRollNumber(user.roll)}
                           </p>
                         </div>
                         <Button
@@ -1400,14 +1400,14 @@ export function BatchDetailsClient({
                   {enrolledStudents.map((student) => (
                     <TableRow key={student.uid}>
                       <TableCell className="font-medium">
-                        {student.roll}
+                        {maskRollNumber(student.roll)}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
                           variant="destructive"
                           size="sm"
                           onClick={() =>
-                            requestDeleteStudent(student.uid, student.roll)
+                            requestDeleteStudent(student.uid, maskRollNumber(student.roll))
                           }
                         >
                           মুছে ফেলুন

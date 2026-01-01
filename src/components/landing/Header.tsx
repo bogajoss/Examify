@@ -23,7 +23,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ThemeToggle } from "../theme-toggle";
-import { cn } from "@/lib/utils";
+import { cn, maskRollNumber } from "@/lib/utils";
 import { memo } from "react";
 
 interface NavItem {
@@ -198,7 +198,7 @@ export const Header = memo(function Header() {
                       {user.name}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {user.roll}
+                      {maskRollNumber(user.roll)}
                     </p>
                   </div>
                 </DropdownMenuLabel>

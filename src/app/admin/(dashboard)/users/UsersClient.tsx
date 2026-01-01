@@ -87,6 +87,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { formatDate } from "@/lib/date-utils";
 import { Switch } from "@/components/ui/switch";
 import { useCopyLink } from "@/hooks/use-copy-link";
+import { maskRollNumber } from "@/lib/utils";
 
 interface UsersClientProps {
   initialUsers: User[];
@@ -554,7 +555,7 @@ export function UsersClient({
                     <div className="flex-1">
                       <p className="font-semibold">{user.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        রোল: {user.roll}
+                        রোল: {maskRollNumber(user.roll)}
                       </p>
                     </div>
                     <DropdownMenu>
@@ -650,7 +651,7 @@ export function UsersClient({
           <AlertDialogHeader>
             <AlertDialogTitle>আপনি কি নিশ্চিত?</AlertDialogTitle>
             <AlertDialogDescription>
-              আপনি {userToDelete?.name} (রোল: {userToDelete?.roll})-কে মুছে
+              আপনি {userToDelete?.name} (রোল: {userToDelete?.roll ? maskRollNumber(userToDelete.roll) : ""})-কে মুছে
               ফেলতে চলেছেন। এই কাজটি ফিরিয়ে নেওয়া যাবে না।
             </AlertDialogDescription>
           </AlertDialogHeader>

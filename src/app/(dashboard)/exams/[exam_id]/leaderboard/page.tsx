@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { PageHeader, CustomLoader } from "@/components";
-import { maskMobileNumber, formatExamDateTime } from "@/lib/utils";
+import { maskRollNumber, formatExamDateTime } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -266,7 +266,7 @@ export default function ExamLeaderboardPage() {
                             </div>
                             <div>
                               <span className="font-medium">রোল: </span>
-                              {maskMobileNumber(result.student.roll)}
+                              {maskRollNumber(result.student.roll)}
                             </div>
                             <div>
                               <span className="font-medium">স্কোর: </span>
@@ -311,7 +311,7 @@ export default function ExamLeaderboardPage() {
                         {result.student.name}
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {maskMobileNumber(result.student.roll)}
+                        {maskRollNumber(result.student.roll)}
                       </TableCell>
                       <TableCell className="hidden md:table-cell text-right font-bold">
                         {result.score

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { maskMobileNumber } from "@/lib/utils";
+import { maskRollNumber } from "@/lib/utils";
 import { formatDate } from "@/lib/date-utils";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       const row = [
         idx + 1,
         `"${result.users.name || "N/A"}"`,
-        `"${maskMobileNumber(result.users.roll || "N/A")}"`,
+        `"${maskRollNumber(result.users.roll || "N/A")}"`,
         (result.score || 0).toFixed(2),
         result.correct_answers || 0,
         result.wrong_answers || 0,

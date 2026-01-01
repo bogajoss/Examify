@@ -17,6 +17,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { maskRollNumber } from "@/lib/utils";
 
 const sidebarNavItems = [
   { title: "ড্যাশবোর্ড", href: "/exams", icon: LayoutDashboard },
@@ -63,7 +64,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         items={sidebarNavItems}
         userInfo={{
           name: user.name,
-          role: user.roll ? `রোল: ${user.roll}` : "Student",
+          role: user.roll ? `রোল: ${maskRollNumber(user.roll)}` : "Student",
         }}
         onLogout={handleLogout}
         panelType="student"
@@ -104,7 +105,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   : user.name}
               </p>
               <p className="text-xs text-muted-foreground">
-                {user.roll ? `রোল: ${user.roll}` : "Student"}
+                {user.roll ? `রোল: ${maskRollNumber(user.roll)}` : "Student"}
               </p>
             </div>
           </div>

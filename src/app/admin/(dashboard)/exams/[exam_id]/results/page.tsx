@@ -6,7 +6,7 @@ import { getExamResults } from "@/lib/data-supabase";
 import { useParams, useRouter } from "next/navigation";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { PageHeader } from "@/components";
-import { maskMobileNumber, formatExamDateTime } from "@/lib/utils";
+import { maskRollNumber, formatExamDateTime } from "@/lib/utils";
 import CustomLoader from "@/components/CustomLoader";
 import {
   Card,
@@ -666,7 +666,7 @@ export default function AdminExamResultsPage() {
                           </div>
                           <div>
                             <span className="font-medium">রোল: </span>
-                            {maskMobileNumber(
+                            {maskRollNumber(
                               result.student_id_obj?.roll || "N/A",
                             )}
                           </div>
@@ -713,7 +713,7 @@ export default function AdminExamResultsPage() {
                       {result.student_id_obj?.name || "N/A"}
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {maskMobileNumber(result.student_id_obj?.roll || "N/A")}
+                      {maskRollNumber(result.student_id_obj?.roll || "N/A")}
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-right font-bold">
                       {result.score

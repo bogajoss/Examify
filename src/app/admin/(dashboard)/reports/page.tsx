@@ -32,6 +32,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import dayjs from "@/lib/date-utils";
+import { maskRollNumber } from "@/lib/utils";
 
 interface ReportItem {
   uid: string;
@@ -184,7 +185,7 @@ export default function ReportsPage() {
       ];
       const csvData = reports.map((r) => [
         r.name,
-        r.roll,
+        maskRollNumber(r.roll),
         r.present ? "Present" : "Absent",
         r.exams && r.exams.length > 0
           ? r.exams.map((ex) => `${ex.name}(${ex.score})`).join(" | ")
@@ -309,7 +310,7 @@ export default function ReportsPage() {
                     <TableCell>
                       <div className="font-medium">{report.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        Roll: {report.roll}
+                        Roll: {maskRollNumber(report.roll)}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">

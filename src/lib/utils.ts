@@ -161,12 +161,12 @@ export const formatExamDateTime = (date: Date | string | null | undefined) => {
 };
 
 /**
- * Masks mobile numbers, showing only the last 4 digits
- * If the input is 8+ digits, it's considered a phone number and masked
+ * Masks roll numbers or phone numbers, showing only the last 4 digits if it's a long number
+ * If the input has more than 8 digits, it's considered sensitive (like a phone number) and masked
  * @param input - The input string (could be roll number or phone number)
- * @returns Masked string with only last 4 digits visible, or original if not a phone number
+ * @returns Masked string with only last 4 digits visible, or original if it's a short roll number
  */
-export const maskMobileNumber = (input: string): string => {
+export const maskRollNumber = (input: string): string => {
   if (!input) return input;
 
   // Extract only digit characters (both ASCII and Bengali digits)
@@ -178,8 +178,8 @@ export const maskMobileNumber = (input: string): string => {
     return String.fromCharCode(match.charCodeAt(0) - 0x09e6 + 0x30); // Convert Bengali to ASCII for counting
   }).length;
 
-  // If it's 8 or more digits, consider it a phone number and mask it
-  if (digitCount >= 8) {
+  // If it's more than 8 digits, mask it
+  if (digitCount > 8) {
     // Extract the last 4 digits from the original digitsOnly string
     const lastFourDigits = digitsOnly.slice(-4);
 
@@ -190,6 +190,6 @@ export const maskMobileNumber = (input: string): string => {
     return maskedPart + lastFourDigits;
   }
 
-  // If less than 8 digits, return as is (likely a roll number)
+  // If 8 or fewer digits, return as is (likely an official roll number)
   return input;
 };

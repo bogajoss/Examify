@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import dayjs, { formatDate } from "@/lib/date-utils";
+import { maskRollNumber } from "@/lib/utils";
 
 interface ExamResult {
   name: string;
@@ -94,7 +95,7 @@ export async function POST(req: NextRequest) {
                 (r: ReportData) => `
               <tr>
                 <td>${r.name}</td>
-                <td>${r.roll}</td>
+                <td>${maskRollNumber(r.roll)}</td>
                 <td class="${r.present ? "present" : "absent"}">${r.present ? "উপস্থিত" : "অনুপস্থিত"}</td>
                 <td>
                   ${

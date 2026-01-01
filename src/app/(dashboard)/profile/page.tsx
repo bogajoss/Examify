@@ -32,6 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { formatDate } from "@/lib/date-utils";
+import { maskRollNumber } from "@/lib/utils";
 
 interface Batch {
   id: string;
@@ -201,7 +202,7 @@ export default function ProfilePage() {
                   <>
                     <CardTitle className="text-2xl">{user.name}</CardTitle>
                     <CardDescription className="text-md">
-                      {user.roll}
+                      {maskRollNumber(user.roll)}
                     </CardDescription>
                     <Button size="sm" onClick={() => setEditing(true)}>
                       <Edit className="h-4 w-4 mr-1" />

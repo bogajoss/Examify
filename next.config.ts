@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
 
   // Optimize bundle size by preventing the compiler from scanning entire libraries
   experimental: {
+    serverActions: {
+      allowedOrigins: [
+        "special-goggles-x5qvg5r49x5pfvj5v-4321.app.github.dev",
+        "localhost:4321",
+      ],
+    },
     optimizePackageImports: [
       "lucide-react",
       "recharts",
