@@ -25,6 +25,7 @@ import {
   BookOpen,
   Zap,
   Clock,
+  RotateCcw,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "@/lib/date-utils";
@@ -824,6 +825,18 @@ export default function SolvePage() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             পিছনে যান
           </Button>
+
+          {exam?.number_of_attempts !== "one_time" && (
+            <Button
+              onClick={() => router.push(`/exams/${exam_id}`)}
+              variant="outline"
+              className="w-full sm:flex-1 h-12"
+              size="lg"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              আবার পরীক্ষা দিন
+            </Button>
+          )}
 
           <Button
             onClick={() => router.push(`/exams/${exam_id}/leaderboard`)}

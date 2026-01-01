@@ -69,6 +69,23 @@ if ($exam_id) {
             $questions = $stmt->fetchAll();
         }
     }
+    
+    // 2. Second Fallback: Use file_id from request if exam lookup failed or returned no questions
+    if (empty($questions) && $offset == 0 && isset($_GET['file_id']) && !empty($_GET['file_id'])) {
+        $fallback_file_id = $_GET['file_id'];
+        $query = "SELECT * FROM questions WHERE file_id = ?";
+        $params = [$fallback_file_id];
+        if ($search) {
+            $query .= " AND (question_text LIKE ? OR question LIKE ? OR explanation LIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+        $query .= " ORDER BY order_index ASC" . $pagination;
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
+        $questions = $stmt->fetchAll();
+    }
 } elseif ($file_id) {
     $query = "SELECT * FROM questions WHERE file_id = ?";
     $params = [$file_id];

@@ -59,8 +59,8 @@ import dayjs from "@/lib/date-utils";
 function formatDuration(start?: string | null, end?: string): string {
   if (!start || !end) return "N/A";
 
-  let startTime = dayjs(start);
-  let endTime = dayjs(end);
+  const startTime = dayjs(start);
+  const endTime = dayjs(end);
 
   const diffInMs = endTime.diff(startTime);
   if (diffInMs < 0) return "N/A";
