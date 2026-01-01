@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .select("*")
       .eq("roll", actualRollNumber)
       .eq("pass", password)
-      .single();
+      .maybeSingle();
 
     if (error || !userData) {
       throw new Error("ব্যবহারকারী খুঁজে পাওয়া যায়নি বা পাসওয়ার্ড ভুল।");
