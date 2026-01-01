@@ -1059,6 +1059,19 @@ export default function TakeExamPage() {
 
       let finalQuestions: Question[] = [];
 
+      // Collect all question IDs from subjects if it's a custom exam
+      const allSubjectQuestionIds: string[] = [];
+      mConfigs.forEach((config) => {
+        if (typeof config === "object" && config.question_ids) {
+          config.question_ids.forEach((id) => allSubjectQuestionIds.push(id));
+        }
+      });
+      oConfigs.forEach((config) => {
+        if (typeof config === "object" && config.question_ids) {
+          config.question_ids.forEach((id) => allSubjectQuestionIds.push(id));
+        }
+      });
+
       const embeddedQuestions = (examData as Record<string, unknown>).questions;
       if (
         Array.isArray(embeddedQuestions) &&
@@ -1113,7 +1126,14 @@ export default function TakeExamPage() {
           } as Question;
         });
       } else {
-        const fetched = await fetchQuestions(examData.file_id, examData.id);
+        const fetched = await fetchQuestions(
+          examData.file_id,
+          examData.id,
+          undefined,
+          undefined,
+          undefined,
+          allSubjectQuestionIds.length > 0 ? allSubjectQuestionIds : undefined,
+        );
 
         if (Array.isArray(fetched) && fetched.length > 0) {
           finalQuestions = fetched.map((q: RawQuestion) => {

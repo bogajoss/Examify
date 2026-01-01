@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../../backend/lib/date-utils.php';
 
 $file_id = $_GET['file_id'] ?? '';
 $exam_id = $_GET['exam_id'] ?? '';
+$ids_param = $_GET['ids'] ?? '';
 $search = $_GET['search'] ?? '';
 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 0;
 $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
@@ -17,7 +18,30 @@ if ($limit > 0) {
 
 $questions = [];
 
-if ($exam_id) {
+if ($ids_param) {
+    $ids = explode(',', $ids_param);
+    $ids = array_filter($ids); // Remove empty values
+    if (!empty($ids)) {
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $query = "SELECT * FROM questions WHERE id IN ($placeholders)";
+        $params = $ids;
+        
+        if ($search) {
+            $query .= " AND (question_text LIKE ? OR question LIKE ? OR explanation LIKE ?)";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+            $params[] = "%$search%";
+        }
+        
+        $query .= " ORDER BY FIELD(id, $placeholders)" . $pagination;
+        // We need to double the IDs for the FIELD function to maintain order
+        $params = array_merge($params, $ids);
+        
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($params);
+        $questions = $stmt->fetchAll();
+    }
+} elseif ($exam_id) {
     // 1. Check Exam Timing using local time validation (skip for admins)
     if (!IS_ADMIN_REQUEST) {
         $timingStmt = $pdo->prepare("SELECT start_at, is_practice FROM exams WHERE id = ?");

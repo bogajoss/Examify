@@ -35,7 +35,30 @@ export default function ExamQuestionsPage() {
 
       if (examData) {
         setExamName(examData.name || undefined);
-        if (examData.file_id) {
+        
+        // Prioritize specific question IDs if they exist (for custom exams or manually selected questions)
+        if (
+          examData.question_ids &&
+          Array.isArray(examData.question_ids) &&
+          examData.question_ids.length > 0
+        ) {
+          // Pass undefined for file_id to avoid client-side filtering
+          const fetched = await fetchQuestions(
+            undefined,
+            exam_id,
+            undefined,
+            undefined,
+            undefined,
+            examData.question_ids as string[],
+          );
+          setQuestions(fetched || []);
+          // Use the file_id from the first question if we need a default for editing, or the exam's file_id
+          if (fetched && fetched.length > 0 && fetched[0].file_id) {
+             setFileId(String(fetched[0].file_id));
+          } else if (examData.file_id) {
+             setFileId(examData.file_id);
+          }
+        } else if (examData.file_id) {
           setFileId(examData.file_id);
           const fetched = await fetchQuestions(examData.file_id);
           setQuestions(fetched || []);

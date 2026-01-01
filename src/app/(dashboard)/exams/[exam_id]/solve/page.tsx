@@ -93,6 +93,37 @@ export default function SolvePage() {
       }
 
       let finalQuestions: Question[] = [];
+
+      // Collect question IDs for custom exams
+      const allSubjectQuestionIds: string[] = [];
+      const mConfigs = (examData.mandatory_subjects as unknown[]) || [];
+      const oConfigs = (examData.optional_subjects as unknown[]) || [];
+
+      mConfigs.forEach((config) => {
+        if (
+          config &&
+          typeof config === "object" &&
+          "question_ids" in config &&
+          Array.isArray((config as { question_ids: string[] }).question_ids)
+        ) {
+          (config as { question_ids: string[] }).question_ids.forEach((id) =>
+            allSubjectQuestionIds.push(id),
+          );
+        }
+      });
+      oConfigs.forEach((config) => {
+        if (
+          config &&
+          typeof config === "object" &&
+          "question_ids" in config &&
+          Array.isArray((config as { question_ids: string[] }).question_ids)
+        ) {
+          (config as { question_ids: string[] }).question_ids.forEach((id) =>
+            allSubjectQuestionIds.push(id),
+          );
+        }
+      });
+
       const embeddedQuestions = (examData as Record<string, unknown>)
         .questions;
       if (
@@ -114,7 +145,14 @@ export default function SolvePage() {
           },
         );
       } else {
-        const fetched = await fetchQuestions(examData.file_id, examData.id);
+        const fetched = await fetchQuestions(
+          examData.file_id,
+          examData.id,
+          undefined,
+          undefined,
+          undefined,
+          allSubjectQuestionIds.length > 0 ? allSubjectQuestionIds : undefined,
+        );
         if (Array.isArray(fetched) && fetched.length > 0) {
           finalQuestions = fetched.map(
             (q: RawQuestion) =>

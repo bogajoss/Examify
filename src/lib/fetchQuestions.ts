@@ -13,9 +13,10 @@ export async function fetchQuestions(
   limit?: number,
   offset?: number,
   search?: string,
+  ids?: string[],
 ): Promise<RawQuestion[]> {
   // Safety guard: if we have no filters at all, don't fetch anything to avoid returning the whole database
-  if (!fileId && !exam_id && !search) {
+  if (!fileId && !exam_id && !search && (!ids || ids.length === 0)) {
     console.warn(
       "fetchQuestions called without any filters, aborting fetch to prevent full database return.",
     );
@@ -29,6 +30,9 @@ export async function fetchQuestions(
     }
     if (exam_id) {
       params.exam_id = exam_id;
+    }
+    if (ids && ids.length > 0) {
+      params.ids = ids.join(",");
     }
     if (limit !== undefined) {
       params.limit = String(limit);
@@ -70,7 +74,9 @@ export async function fetchQuestions(
     const transformed: RawQuestion[] = rawData.map(normalizeQuestion);
 
     // Client-side filtering as a safety net because backend might be returning too much
-    if (fileId) {
+    // Only filter by fileId if we are NOT fetching by exam_id.
+    // If we fetched by exam_id, we trust the backend to return the exam's questions.
+    if (fileId && !exam_id) {
       return transformed.filter((q) => String(q.file_id) === String(fileId));
     }
 
