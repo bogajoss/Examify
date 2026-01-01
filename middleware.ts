@@ -12,6 +12,11 @@ const publicRoutes = [
   "/api/proxy",
 ];
 
+const allowedOrigins = [
+  "http://localhost:4321",
+  "https://*.app.github.dev",
+];
+
 // Define admin-only routes (including sub-routes)
 const adminRoutes = ["/admin"];
 
