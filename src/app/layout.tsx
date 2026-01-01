@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
+import CacheCleaner from "@/components/CacheCleaner";
 
 export const metadata: Metadata = {
   title: "Examify — আপনার চূড়ান্ত পরীক্ষার প্রস্তুতি সঙ্গী",
@@ -39,6 +40,7 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
+          <CacheCleaner />
           <QueryProvider>
             <AuthProvider>
               {children}

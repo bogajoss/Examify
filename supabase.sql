@@ -42,11 +42,13 @@ create table if not exists exams (
   id uuid default extensions.uuid_generate_v4() not null primary key,
   name text not null,
   description text,
+  course_name text,
   batch_id uuid references batches(id) on delete cascade,
   duration_minutes integer default 120,
   negative_marks_per_wrong numeric(4,2) default 0.25,
   file_id uuid, -- Reference to MySQL file_id
   is_practice boolean default false,
+  number_of_attempts text default 'one_time', -- one_time, multiple
   status text default 'draft', -- draft, live, ended
   start_at timestamp with time zone,
   end_at timestamp with time zone,

@@ -13,7 +13,7 @@ import {
 import { UniversalDetailsCard } from "@/components/UniversalDetailsCard";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import type { Batch, Exam, StudentExam, User } from "@/lib/types";
+import type { Batch, Exam, StudentExam } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { PageHeader, EmptyState, CustomLoader } from "@/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -88,6 +88,7 @@ export default function StudentBatchExamsPage() {
           .from("exams")
           .select("*")
           .eq("batch_id", batch_id)
+          .eq("status", "live")
           .order("created_at", { ascending: false });
 
         if (examsError) throw examsError;

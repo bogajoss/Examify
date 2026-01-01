@@ -73,10 +73,9 @@ export async function getDailyTasks(
     .eq("student_id", userId)
     .eq("batch_id", batchId)
     .eq("task_date", date)
-    .single();
+    .maybeSingle();
 
-  // It's okay if no record exists
-  if (error && error.code !== "PGRST116") throw error;
+  if (error) throw error;
 
   return data;
 }

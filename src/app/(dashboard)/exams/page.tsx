@@ -7,7 +7,7 @@ import {
   CustomLoader,
   UniversalDetailsCard,
 } from "@/components";
-import { getExams, getStudentResults } from "@/lib/data-supabase";
+import { getStudentResults } from "@/lib/data-supabase";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import type { Exam, StudentExam } from "@/lib/types";
@@ -34,20 +34,73 @@ export default function ExamsPage() {
 
   // Query for all accessible exams from Supabase
   const { data: allExams = [], isLoading: examsLoading } = useQuery({
-    queryKey: ["exams", "accessible", user?.uid],
+    queryKey: ["exams", "accessible", user?.uid, user?.enrolled_batches],
     queryFn: async () => {
       if (!user) return [];
-      // This logic should ideally be in data-supabase.ts
-      // Fetch public exams and exams for user's batches
-      const { data, error } = await supabase
-        .from("exams")
-        .select("*")
-        .or(
-          `batch_id.is.null,batch_id.in.(${user.enrolled_batches?.join(",") || ""})`,
+
+      try {
+        // 1. Fetch all public batches
+        const { data: publicBatches } = await supabase
+          .from("batches")
+          .select("id")
+          .eq("is_public", true);
+
+        const publicBatchIds = publicBatches?.map((b) => b.id) || [];
+        const enrolledBatchIds = user.enrolled_batches || [];
+
+        // Combine unique batch IDs the user has access to
+        const accessibleBatchIds = Array.from(
+          new Set([...publicBatchIds, ...enrolledBatchIds]),
         );
 
-      if (error) throw error;
-      return data as Exam[];
+        // 2. Fetch Public Exams (Global)
+        const publicExamsPromise = supabase
+          .from("exams")
+          .select("*")
+          .eq("status", "live")
+          .is("batch_id", null)
+          .order("created_at", { ascending: false });
+
+        // 3. Fetch Batch Exams (if user has access to any batches)
+        let batchExamsPromise: any = Promise.resolve({ data: [], error: null });
+        if (accessibleBatchIds.length > 0) {
+          batchExamsPromise = supabase
+            .from("exams")
+            .select("*")
+            .eq("status", "live")
+            .in("batch_id", accessibleBatchIds)
+            .order("created_at", { ascending: false });
+        }
+
+        const [publicExamsResult, batchExamsResult] = await Promise.all([
+          publicExamsPromise,
+          batchExamsPromise,
+        ]);
+
+        if (publicExamsResult.error) throw publicExamsResult.error;
+        if (batchExamsResult.error) throw batchExamsResult.error;
+
+        // Merge and sort
+        const allExams = [
+          ...(publicExamsResult.data || []),
+          ...(batchExamsResult.data || []),
+        ];
+
+        // Deduplicate just in case (though logic separates them by batch_id null vs not null)
+        const uniqueExams = Array.from(
+          new Map(allExams.map((item) => [item.id, item])).values(),
+        );
+
+        // Sort again by created_at descending
+        return uniqueExams.sort((a, b) => {
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        });
+      } catch (err) {
+        console.error("Error fetching accessible exams:", err);
+        return [];
+      }
     },
     enabled: !authLoading && !!user,
   });

@@ -51,7 +51,7 @@ export type Exam = {
   mandatory_subjects?: SubjectConfig[] | string[] | null; // JSONB array in DB
   optional_subjects?: SubjectConfig[] | string[] | null; // JSONB array in DB
   question_ids?: string[];
-  is_enabled?: boolean; // New field to enable/disable exam
+  status?: "draft" | "live" | "end";
   created_at: string;
   questions?: Question[];
 };

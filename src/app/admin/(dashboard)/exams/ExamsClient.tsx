@@ -129,7 +129,8 @@ export function ExamsClient({
     try {
       const formData = new FormData();
       formData.append("id", exam.id);
-      formData.append("is_enabled", exam.is_enabled === false ? "1" : "0");
+      // Toggle logic: if live -> disable (0), else -> enable (1)
+      formData.append("is_enabled", exam.status === "live" ? "0" : "1");
       if (exam.batch_id) formData.append("batch_id", exam.batch_id);
 
       const { updateExam } = await import("@/lib/actions");
@@ -139,7 +140,7 @@ export function ExamsClient({
         const updatedExam = result.data as Exam;
         toast({
           title:
-            exam.is_enabled === false
+            updatedExam.status === "live"
               ? "পরীক্ষা সক্রিয় করা হয়েছে"
               : "পরীক্ষা বন্ধ করা হয়েছে",
         });
@@ -176,7 +177,7 @@ export function ExamsClient({
                   <h3 className="font-semibold text-lg line-clamp-2 flex-1">
                     {exam.name}
                   </h3>
-                  {exam.is_enabled === false && (
+                  {exam.status !== "live" && (
                     <Badge
                       variant="destructive"
                       className="whitespace-nowrap text-xs"
@@ -253,7 +254,7 @@ export function ExamsClient({
                   Edit
                 </Button>
                 <Button
-                  variant={exam.is_enabled === false ? "default" : "outline"}
+                  variant={exam.status !== "live" ? "default" : "outline"}
                   size="sm"
                   className="w-full text-xs"
                   onClick={() => handleToggleStatus(exam)}
@@ -261,7 +262,7 @@ export function ExamsClient({
                 >
                   {isToggling ? (
                     <CustomLoader minimal />
-                  ) : exam.is_enabled === false ? (
+                  ) : exam.status !== "live" ? (
                     <>
                       <Eye className="w-3.5 h-3.5 mr-1.5" />
                       সক্রিয় করুন

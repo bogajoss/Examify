@@ -216,6 +216,7 @@ export async function createExam(formData: FormData) {
   const file_id = formData.get("file_id") as string;
   const is_practice = formData.get("is_practice") === "true";
   const shuffle_questions = formData.get("shuffle_questions") === "true";
+  const number_of_attempts = (formData.get("number_of_attempts") as string) || "one_time";
   let start_at = formData.get("start_at") as string | null;
   let end_at = formData.get("end_at") as string | null;
 
@@ -244,19 +245,12 @@ export async function createExam(formData: FormData) {
     optional_subjects = [];
   }
 
-  let question_ids = [];
-  try {
-    const raw = formData.get("question_ids") as string;
-    question_ids = raw ? JSON.parse(raw) : [];
-  } catch {
-    question_ids = [];
-  }
-
   const { data, error } = await supabaseAdmin
     .from("exams")
     .insert({
       name,
       description,
+      course_name,
       batch_id,
       duration_minutes,
       marks_per_question,
@@ -269,6 +263,7 @@ export async function createExam(formData: FormData) {
       total_subjects,
       mandatory_subjects,
       optional_subjects,
+      number_of_attempts,
     })
     .select()
     .single();
@@ -327,6 +322,7 @@ export async function updateExam(formData: FormData) {
   const batch_id = formData.get("batch_id") as string;
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
+  const course_name = formData.get("course_name") as string;
 
   const durationRaw = formData.get("duration_minutes") as string;
   const duration_minutes = parseInt(durationRaw, 10);
@@ -340,7 +336,16 @@ export async function updateExam(formData: FormData) {
   const file_id = formData.get("file_id") as string;
   const is_practice = formData.get("is_practice") === "true";
   const shuffle_questions = formData.get("shuffle_questions") === "true";
-  const is_enabled = formData.get("is_enabled") !== "0";
+  
+  // Map legacy is_enabled toggle to status
+  // If is_enabled is "1" (true) -> status = "live"
+  // If is_enabled is "0" (false) -> status = "draft"
+  const is_enabled_input = formData.get("is_enabled");
+  let status = undefined;
+  if (is_enabled_input !== null) {
+     status = is_enabled_input !== "0" ? "live" : "draft";
+  }
+
   const number_of_attempts =
     (formData.get("number_of_attempts") as string) || "one_time";
   let start_at = formData.get("start_at") as string | null;
@@ -372,11 +377,10 @@ export async function updateExam(formData: FormData) {
     optional_subjects = [];
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("exams")
-    .update({
+  const updateData: any = {
       name,
       description,
+      course_name,
       duration_minutes: isNaN(duration_minutes) ? null : duration_minutes,
       marks_per_question,
       negative_marks_per_wrong,
@@ -388,7 +392,16 @@ export async function updateExam(formData: FormData) {
       total_subjects,
       mandatory_subjects,
       optional_subjects,
-    })
+      number_of_attempts,
+    };
+  
+  if (status) {
+      updateData.status = status;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("exams")
+    .update(updateData)
     .eq("id", id)
     .select()
     .single();

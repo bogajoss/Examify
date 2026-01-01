@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  reactCompiler: false,
+  reactCompiler: true,
 
   // Optimize bundle size by preventing the compiler from scanning entire libraries
   experimental: {

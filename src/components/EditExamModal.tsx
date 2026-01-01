@@ -151,7 +151,7 @@ export function EditExamModal({
         );
         setShuffle(exam?.shuffle_questions || false);
         setNumberOfAttempts(exam?.number_of_attempts || "one_time");
-        setIsEnabled(exam?.is_enabled !== false); // Default to true if undefined
+        setIsEnabled(exam?.status === "live");
 
         // Fetch full exam details to get ALL questions if not present
         let currentQuestions = exam.questions || [];

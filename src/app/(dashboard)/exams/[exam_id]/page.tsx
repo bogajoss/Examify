@@ -37,7 +37,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import type { Exam, Question, SubjectConfig, Batch, User } from "@/lib/types";
+import type { Exam, Question, SubjectConfig } from "@/lib/types";
 import {
   QUESTIONS_PER_PAGE,
   QUESTIONS_PER_PAGE_MOBILE,
@@ -1029,7 +1029,7 @@ export default function TakeExamPage() {
       }
 
       // Check if exam is enabled
-      if (examData.is_enabled === false) {
+      if (examData.status !== "live") {
         toast({
           title: "পরীক্ষা বন্ধ",
           description:
