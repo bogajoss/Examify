@@ -41,8 +41,7 @@ if ($ids_param) {
         $params = $ids;
         
         if ($search) {
-            $query .= " AND (question_text LIKE ? OR question LIKE ? OR explanation LIKE ?)";
-            $params[] = "%$search%";
+            $query .= " AND (question_text LIKE ? OR explanation LIKE ?)";
             $params[] = "%$search%";
             $params[] = "%$search%";
         }
@@ -76,8 +75,7 @@ if ($ids_param) {
     $params = [$exam_id];
     
     if ($search) {
-        $query .= " AND (q.question_text LIKE ? OR q.question LIKE ? OR q.explanation LIKE ?)";
-        $params[] = "%$search%";
+        $query .= " AND (q.question_text LIKE ? OR q.explanation LIKE ?)";
         $params[] = "%$search%";
         $params[] = "%$search%";
     }
@@ -96,8 +94,7 @@ if ($ids_param) {
             $query = "SELECT * FROM questions WHERE file_id = ?";
             $params = [$exam['file_id']];
             if ($search) {
-                $query .= " AND (question_text LIKE ? OR question LIKE ? OR explanation LIKE ?)";
-                $params[] = "%$search%";
+                $query .= " AND (question_text LIKE ? OR explanation LIKE ?)";
                 $params[] = "%$search%";
                 $params[] = "%$search%";
             }
@@ -114,8 +111,7 @@ if ($ids_param) {
         $query = "SELECT * FROM questions WHERE file_id = ?";
         $params = [$fallback_file_id];
         if ($search) {
-            $query .= " AND (question_text LIKE ? OR question LIKE ? OR explanation LIKE ?)";
-            $params[] = "%$search%";
+            $query .= " AND (question_text LIKE ? OR explanation LIKE ?)";
             $params[] = "%$search%";
             $params[] = "%$search%";
         }
@@ -128,8 +124,7 @@ if ($ids_param) {
     $query = "SELECT * FROM questions WHERE file_id = ?";
     $params = [$file_id];
     if ($search) {
-        $query .= " AND (question_text LIKE ? OR question LIKE ? OR explanation LIKE ?)";
-        $params[] = "%$search%";
+        $query .= " AND (question_text LIKE ? OR explanation LIKE ?)";
         $params[] = "%$search%";
         $params[] = "%$search%";
     }
@@ -141,8 +136,7 @@ if ($ids_param) {
     $query = "SELECT * FROM questions WHERE 1=1";
     $params = [];
     if ($search) {
-        $query .= " AND (question_text LIKE ? OR question LIKE ? OR explanation LIKE ?)";
-        $params[] = "%$search%";
+        $query .= " AND (question_text LIKE ? OR explanation LIKE ?)";
         $params[] = "%$search%";
         $params[] = "%$search%";
     }
