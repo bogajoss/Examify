@@ -11,6 +11,19 @@ $search = $_GET['search'] ?? '';
 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 0;
 $offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
 
+// Handle POST request body (JSON)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    if ($input) {
+        if (isset($input['ids'])) $ids_param = $input['ids'];
+        if (isset($input['file_id'])) $file_id = $input['file_id'];
+        if (isset($input['exam_id'])) $exam_id = $input['exam_id'];
+        if (isset($input['search'])) $search = $input['search'];
+        if (isset($input['limit'])) $limit = (int)$input['limit'];
+        if (isset($input['offset'])) $offset = (int)$input['offset'];
+    }
+}
+
 $pagination = "";
 if ($limit > 0) {
     $pagination = " LIMIT $limit OFFSET $offset";
@@ -19,7 +32,8 @@ if ($limit > 0) {
 $questions = [];
 
 if ($ids_param) {
-    $ids = explode(',', $ids_param);
+    // If ids is an array (from JSON), use it directly, otherwise explode string
+    $ids = is_array($ids_param) ? $ids_param : explode(',', $ids_param);
     $ids = array_filter($ids); // Remove empty values
     if (!empty($ids)) {
         $placeholders = implode(',', array_fill(0, count($ids), '?'));

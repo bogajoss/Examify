@@ -25,15 +25,23 @@ export async function fetchQuestions(
 
   try {
     const params: Record<string, string> = {};
+    let method = "GET";
+    let body: unknown = null;
+
     if (fileId) {
       params.file_id = String(fileId);
     }
     if (exam_id) {
       params.exam_id = exam_id;
     }
+    
+    // If fetching by specific IDs, use POST to avoid URL length limits
     if (ids && ids.length > 0) {
-      params.ids = ids.join(",");
+      method = "POST";
+      body = { ids: ids }; 
+      // We don't add ids to params to keep URL short
     }
+
     if (limit !== undefined) {
       params.limit = String(limit);
     }
@@ -46,8 +54,8 @@ export async function fetchQuestions(
 
     const result = await apiRequest<RawQuestion[]>(
       "questions",
-      "GET",
-      null,
+      method,
+      body,
       params,
     );
 

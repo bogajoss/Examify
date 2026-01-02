@@ -155,22 +155,55 @@ export function EditExamModal({
 
         // Fetch full exam details to get ALL questions if not present
         let currentQuestions = exam.questions || [];
-        if (currentQuestions.length === 0 && exam.file_id) {
-          const fetched = await fetchQuestions(exam.file_id, exam.id);
-          if (Array.isArray(fetched)) {
-            // Map RawQuestion to Question
-            currentQuestions = fetched.map((q) => ({
-              ...q,
-              id: String(q.id),
-              question: q.question || q.question_text || "",
-              options: q.options || [],
-              answer: q.answer || 0,
-            })) as Question[];
+        
+        // Collect all question IDs from all sources
+        const allIds = new Set<string>();
+        if (exam.question_ids) {
+            exam.question_ids.forEach(id => allIds.add(id));
+        }
+        
+        const mSubsRaw = normalizeSubjects(exam.mandatory_subjects, "mandatory");
+        const oSubsRaw = normalizeSubjects(exam.optional_subjects, "optional");
+        
+        mSubsRaw.forEach(s => s.question_ids?.forEach(id => allIds.add(id)));
+        oSubsRaw.forEach(s => s.question_ids?.forEach(id => allIds.add(id)));
+        
+        if (currentQuestions.length === 0) {
+          if (allIds.size > 0) {
+             const fetched = await fetchQuestions(
+                undefined, 
+                undefined, 
+                undefined, 
+                undefined, 
+                undefined, 
+                Array.from(allIds)
+             );
+             if (Array.isArray(fetched)) {
+                currentQuestions = fetched.map((q) => ({
+                  ...q,
+                  id: String(q.id),
+                  question: q.question || q.question_text || "",
+                  options: q.options || [],
+                  answer: q.answer || 0,
+                })) as Question[];
+             }
+          } else if (exam.file_id) {
+            const fetched = await fetchQuestions(exam.file_id, exam.id);
+            if (Array.isArray(fetched)) {
+              // Map RawQuestion to Question
+              currentQuestions = fetched.map((q) => ({
+                ...q,
+                id: String(q.id),
+                question: q.question || q.question_text || "",
+                options: q.options || [],
+                answer: q.answer || 0,
+              })) as Question[];
+            }
           }
         }
 
-        const mSubs = normalizeSubjects(exam.mandatory_subjects, "mandatory");
-        const oSubs = normalizeSubjects(exam.optional_subjects, "optional");
+        const mSubs = mSubsRaw;
+        const oSubs = oSubsRaw;
 
         // Sync counts from actual questions if they are 0
         const syncCounts = (configs: SubjectConfig[]) => {
