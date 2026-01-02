@@ -24,7 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Exam } from "@/lib/types";
 import { Clock, RotateCcw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import dayjs from "@/lib/date-utils";
+import dayjs, { formatDuration } from "@/lib/date-utils";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
@@ -40,26 +40,6 @@ interface StudentResult {
   unattempted: number;
   submitted_at: string;
   started_at?: string | null;
-}
-
-function formatDuration(start?: string | null, end?: string): string {
-  if (!start || !end) return "N/A";
-
-  const startTime = dayjs(start);
-  const endTime = dayjs(end);
-
-  const diffInMs = endTime.diff(startTime);
-  if (diffInMs < 0) return "N/A";
-
-  const totalSeconds = Math.floor(diffInMs / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}m ${seconds}s`;
-  }
-  return `${minutes}m ${seconds}s`;
 }
 
 export default function ExamLeaderboardPage() {

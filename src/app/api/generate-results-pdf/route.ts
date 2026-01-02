@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
 <head>
     <meta charset="UTF-8">
     <title>${exam.name} - ফলাফল</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="/SolaimanLipi.ttf" rel="preload" as="font" type="font/ttf" crossorigin>
     <style>
         @font-face {
@@ -80,9 +81,10 @@ export async function POST(request: NextRequest) {
           src: url('/SolaimanLipi.ttf') format('truetype');
         }
         body { 
-          font-family: 'SolaimanLipi', sans-serif; 
+          font-family: 'Hind Siliguri', 'SolaimanLipi', sans-serif; 
           line-height: 1.6;
           position: relative;
+          color: #1a1a1a;
         }
         .watermark {
           position: fixed;
@@ -102,23 +104,23 @@ export async function POST(request: NextRequest) {
             print-color-adjust: exact;
           }
         }
-        h1 { text-align: center; color: #333; margin-bottom: 5px; }
+        h1 { text-align: center; color: #111; margin-bottom: 5px; }
         .subtitle { text-align: center; color: #666; font-size: 12px; margin-bottom: 20px; }
-        hr { margin: 20px 0; border: 1px solid #ddd; }
+        hr { margin: 20px 0; border: 1px solid #eee; }
         .section { margin-bottom: 20px; }
-        .section-title { font-size: 14px; font-weight: bold; margin-bottom: 10px; color: #333; }
+        .section-title { font-size: 14px; font-weight: bold; margin-bottom: 10px; color: #111; border-left: 4px solid #14a159; padding-left: 8px; }
         .details-grid { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; font-size: 12px; }
         .details-grid span { color: #555; }
-        .details-grid strong { font-weight: bold; }
+        .details-grid strong { font-weight: 600; }
         .stats { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-box { padding: 10px; border: 1px solid #ddd; text-align: center; }
-        .stat-value { font-size: 18px; font-weight: bold; color: #007bff; }
+        .stat-box { padding: 10px; border: 1px solid #eee; text-align: center; background: #fcfcfc; }
+        .stat-value { font-size: 18px; font-weight: bold; color: #14a159; }
         .stat-label { font-size: 11px; color: #666; margin-top: 5px; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { background-color: #f0f0f0; padding: 8px; text-align: left; font-weight: bold; border-bottom: 2px solid #333; }
-        td { padding: 8px; border-bottom: 1px solid #ddd; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        .footer { text-align: center; font-size: 10px; color: #999; margin-top: 30px; }
+        th { background-color: #f8f8f8; padding: 10px 8px; text-align: left; font-weight: bold; border-bottom: 2px solid #333; }
+        td { padding: 8px; border-bottom: 1px solid #eee; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        .footer { text-align: center; font-size: 10px; color: #999; margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px; }
     </style>
 </head>
 <body>
@@ -203,8 +205,8 @@ export async function POST(request: NextRequest) {
           </table>
       </div>
 
-      <div className="footer">
-          <p style="font-weight: bold; font-size: 12px;">&copy; Examify</p>
+      <div class="footer">
+          <p style="font-weight: bold; font-size: 12px; margin-bottom: 4px;">&copy; Examify</p>
           <p>Generated on: ${formatDate(dayjs(), "DD MMMM YYYY, hh:mm A")}</p>
       </div>
     </div>

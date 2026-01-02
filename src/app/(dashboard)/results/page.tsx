@@ -50,7 +50,7 @@ import Link from "next/link";
 
 import { useQuery } from "@tanstack/react-query";
 
-import dayjs, { formatDate } from "@/lib/date-utils";
+import dayjs, { formatDate, formatDuration } from "@/lib/date-utils";
 
 interface ExamResult {
   id: string;
@@ -76,40 +76,6 @@ interface ExamResult {
   marks_per_question: number;
 
   batch_id: string | null;
-}
-
-function formatDuration(start?: string | null, end?: string): string {
-  if (!start || !end) return "N/A";
-
-  let startTime = dayjs(start);
-  let endTime = dayjs(end);
-
-  // If the string is like "YYYY-MM-DD HH:mm:ss" without T/Z (SQL format), treat as local time
-  if (
-    typeof start === "string" &&
-    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(start)
-  ) {
-    startTime = dayjs(start, "YYYY-MM-DD HH:mm:ss");
-  }
-  if (
-    typeof end === "string" &&
-    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(end)
-  ) {
-    endTime = dayjs(end, "YYYY-MM-DD HH:mm:ss");
-  }
-
-  const diffInMs = endTime.diff(startTime);
-  if (diffInMs < 0) return "N/A";
-
-  const duration = dayjs.duration(diffInMs);
-  const hours = Math.floor(duration.asHours());
-  const minutes = duration.minutes();
-  const seconds = duration.seconds();
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}m ${seconds}s`;
-  }
-  return `${minutes}m ${seconds}s`;
 }
 
 export default function ResultsPage() {

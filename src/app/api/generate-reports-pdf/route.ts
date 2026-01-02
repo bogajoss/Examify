@@ -35,13 +35,20 @@ export async function POST(req: NextRequest) {
       <head>
         <meta charset="UTF-8">
         <title>এটেন্ডেন্স ও টাস্ক রিপোর্ট - ${batchName}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <link href="/SolaimanLipi.ttf" rel="preload" as="font" type="font/ttf" crossorigin>
         <style>
           @font-face {
             font-family: 'SolaimanLipi';
             src: url('/SolaimanLipi.ttf') format('truetype');
           }
-          body { font-family: 'SolaimanLipi', sans-serif; padding: 20px; line-height: 1.6; position: relative; }
+          body { 
+            font-family: 'Hind Siliguri', 'SolaimanLipi', sans-serif; 
+            padding: 20px; 
+            line-height: 1.6; 
+            position: relative; 
+            color: #1a1a1a;
+          }
           .watermark {
             position: fixed;
             top: 50%;

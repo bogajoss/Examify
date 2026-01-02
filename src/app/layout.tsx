@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Hind_Siliguri } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
@@ -6,6 +7,13 @@ import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/components/theme-provider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import CacheCleaner from "@/components/CacheCleaner";
+
+const hindSiliguri = Hind_Siliguri({
+  subsets: ["bengali", "latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-hind-siliguri",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Examify — আপনার চূড়ান্ত পরীক্ষার প্রস্তুতি সঙ্গী",
@@ -32,7 +40,10 @@ export default function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className={cn("min-h-screen bg-background antialiased")}
+        className={cn(
+          "min-h-screen bg-background antialiased",
+          hindSiliguri.variable
+        )}
       >
         <ThemeProvider
           attribute="class"

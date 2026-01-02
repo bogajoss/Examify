@@ -238,7 +238,7 @@ export default function BulkQuestionList({
         } catch (err) {
           console.error("Print failed:", err);
         }
-      }, 400);
+      }, 1000);
     } catch (err) {
       console.error(err);
     }

@@ -58,19 +58,44 @@ export const getDuration = (start: DateInput, end: DateInput) => {
 };
 
 /**
- * Format duration in a human-readable way (e.g., "2h 30m" or "45m")
- * @param minutes - Duration in minutes
- * @returns Formatted string
+ * Format duration between two dates in a human-readable way (e.g., "2h 30m 15s" or "45m 10s")
+ * Handles both ISO and SQL format date strings.
+ * @param start - Start date/time
+ * @param end - End date/time
+ * @returns Formatted duration string
  */
-export const formatDuration = (minutes: number): string => {
-  const dur = dayjs.duration(minutes, "minutes");
-  const hours = Math.floor(dur.asHours());
-  const mins = dur.minutes();
+export const formatDuration = (start: DateInput, end: DateInput): string => {
+  if (!start || !end) return "N/A";
+
+  let startTime = dayjs(start);
+  let endTime = dayjs(end);
+
+  // If the string is like "YYYY-MM-DD HH:mm:ss" without T/Z (SQL format), treat as local time
+  if (
+    typeof start === "string" &&
+    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(start)
+  ) {
+    startTime = dayjs(start, "YYYY-MM-DD HH:mm:ss");
+  }
+  if (
+    typeof end === "string" &&
+    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(end)
+  ) {
+    endTime = dayjs(end, "YYYY-MM-DD HH:mm:ss");
+  }
+
+  const diffInMs = endTime.diff(startTime);
+  if (diffInMs < 0) return "N/A";
+
+  const duration = dayjs.duration(diffInMs);
+  const hours = Math.floor(duration.asHours());
+  const minutes = duration.minutes();
+  const seconds = duration.seconds();
 
   if (hours > 0) {
-    return `${hours}h ${mins > 0 ? `${mins}m` : ""}`;
+    return `${hours}h ${minutes}m ${seconds}s`;
   }
-  return `${mins}m`;
+  return `${minutes}m ${seconds}s`;
 };
 
 /**

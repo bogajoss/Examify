@@ -28,40 +28,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import dayjs from "@/lib/date-utils";
-
-function formatDuration(start?: string | null, end?: string): string {
-  if (!start || !end) return "N/A";
-
-  let startTime = dayjs(start);
-  let endTime = dayjs(end);
-
-  if (
-    typeof start === "string" &&
-    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(start)
-  ) {
-    startTime = dayjs(start, "YYYY-MM-DD HH:mm:ss");
-  }
-  if (
-    typeof end === "string" &&
-    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(end)
-  ) {
-    endTime = dayjs(end, "YYYY-MM-DD HH:mm:ss");
-  }
-
-  const diffInMs = endTime.diff(startTime);
-  if (diffInMs < 0) return "N/A";
-
-  const duration = dayjs.duration(diffInMs);
-  const hours = Math.floor(duration.asHours());
-  const minutes = duration.minutes();
-  const seconds = duration.seconds();
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}m ${seconds}s`;
-  }
-  return `${minutes}m ${seconds}s`;
-}
+import dayjs, { formatDuration } from "@/lib/date-utils";
 
 interface ResultInfo {
   started_at?: string;

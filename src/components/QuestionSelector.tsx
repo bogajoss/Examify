@@ -10,6 +10,9 @@ import {
   ChevronRight,
   ArrowLeft,
   CheckCircle2,
+  ListChecks,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { fetchQuestions, type RawQuestion } from "@/lib/fetchQuestions";
 import { apiRequest } from "@/lib/api";
@@ -44,10 +47,15 @@ export default function QuestionSelector({
   onChange,
   minimal = false,
 }: QuestionSelectorProps) {
+  const [viewMode, setViewMode] = useState<"review" | "browse">(
+    selectedIds.length > 0 ? "review" : "browse",
+  );
   const [files, setFiles] = useState<FileRecord[]>([]);
-  const [questions, setQuestions] = useState<RawQuestion[]>([]);
+  const [questions, setQuestions] = useState<RawQuestion[]>([]); // Browse mode questions
+  const [currentQuestions, setCurrentQuestions] = useState<RawQuestion[]>([]); // Selected questions
   const [loadingFiles, setLoadingFiles] = useState(true);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [loadingReview, setLoadingReview] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [filters, setFilters] = useState({
@@ -56,6 +64,36 @@ export default function QuestionSelector({
     chapter: "all",
     highlight: "all",
   });
+
+  // Load selected questions details when in review mode
+  useEffect(() => {
+    async function loadCurrentQuestions() {
+      if (viewMode !== "review" || selectedIds.length === 0) {
+        if (viewMode === "review" && selectedIds.length === 0) {
+            setViewMode("browse");
+        }
+        return;
+      }
+
+      try {
+        setLoadingReview(true);
+        const data = await fetchQuestions(
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          selectedIds,
+        );
+        setCurrentQuestions(data);
+      } catch (error) {
+        console.error("Failed to fetch current questions:", error);
+      } finally {
+        setLoadingReview(false);
+      }
+    }
+    loadCurrentQuestions();
+  }, [viewMode, selectedIds.length]);
 
   useEffect(() => {
     async function loadFiles() {
@@ -162,7 +200,12 @@ export default function QuestionSelector({
       <div className={cn("flex flex-col", minimal ? "gap-2" : "gap-3")}>
         <div className="flex items-center justify-between">
           <h3 className="text-xs md:text-sm font-bold flex items-center gap-2">
-            {selectedFileId ? (
+            {viewMode === "review" ? (
+              <>
+                <ListChecks className="h-4 w-4 text-primary" />
+                নির্বাচিত প্রশ্নসমূহ ({selectedIds.length})
+              </>
+            ) : selectedFileId ? (
               <Button
                 variant="ghost"
                 size="sm"
@@ -181,25 +224,45 @@ export default function QuestionSelector({
               </>
             )}
           </h3>
-          <Badge
-            variant="secondary"
-            className="text-[10px] px-2 py-0.5 rounded-full"
-          >
-            {selectedIds.length} নির্বাচিত
-          </Badge>
+
+          <div className="flex items-center gap-2">
+            {viewMode === "review" ? (
+              <Button
+                size="sm"
+                className="h-8 rounded-lg text-[10px] md:text-xs"
+                onClick={() => setViewMode("browse")}
+              >
+                <Plus className="h-3 w-3 mr-1" /> প্রশ্ন যোগ করুন
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 rounded-lg text-[10px] md:text-xs border-primary text-primary hover:bg-primary/5"
+                onClick={() => setViewMode("review")}
+                disabled={selectedIds.length === 0}
+              >
+                নির্বাচিত তালিকা ({selectedIds.length})
+              </Button>
+            )}
+          </div>
         </div>
 
-        <div className="relative">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={selectedFileId ? "প্রশ্ন খুঁজুন..." : "ফাইল খুঁজুন..."}
-            className="pl-9 bg-background rounded-xl h-10 text-sm border-muted-foreground/20 focus:ring-primary/20"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+        {viewMode === "browse" && (
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={
+                selectedFileId ? "প্রশ্ন খুঁজুন..." : "ফাইল খুঁজুন..."
+              }
+              className="pl-9 bg-background rounded-xl h-10 text-sm border-muted-foreground/20 focus:ring-primary/20"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        )}
 
-        {selectedFileId && (
+        {viewMode === "browse" && selectedFileId && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-1">
             <Select
               value={filters.subject}
@@ -273,8 +336,67 @@ export default function QuestionSelector({
       </div>
 
       {/* Content Area */}
-      <ScrollArea className="h-[300px] md:h-[350px] -mr-2 pr-2">
-        {loadingFiles || loadingQuestions ? (
+      <ScrollArea className="h-[400px] md:h-[450px] -mr-2 pr-2">
+        {viewMode === "review" ? (
+          /* Review Mode - Show already selected questions */
+          loadingReview ? (
+            <div className="flex flex-col items-center justify-center p-12">
+              <CustomLoader />
+            </div>
+          ) : currentQuestions.length > 0 ? (
+            <div className="space-y-2">
+              {currentQuestions.map((q, idx) => (
+                <div
+                  key={q.id || idx}
+                  className="flex items-start gap-3 p-3 rounded-xl border bg-primary/5 border-primary/20 relative group"
+                >
+                  <div className="shrink-0 pt-0.5">
+                    <Badge variant="secondary" className="h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px]">
+                        {idx + 1}
+                    </Badge>
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="text-xs md:text-sm font-semibold break-words">
+                        <LatexRenderer html={q.question_text || q.question || ""} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-[8px] h-3.5 bg-background">
+                            {q.subject || "No Subject"}
+                        </Badge>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-[10px] text-destructive hover:bg-destructive/10 hover:text-destructive"
+                            onClick={() => toggleQuestion(q.id || "")}
+                        >
+                            <Trash2 className="h-3 w-3 mr-1" /> বাদ দিন
+                        </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              <div className="pt-4">
+                 <Button 
+                    variant="outline" 
+                    className="w-full border-dashed py-8 flex flex-col gap-2 rounded-xl"
+                    onClick={() => setViewMode("browse")}
+                 >
+                    <Plus className="h-6 w-6" />
+                    <span className="text-sm font-bold">আরও প্রশ্ন যোগ করুন</span>
+                 </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+                <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center text-muted-foreground">
+                    <ListChecks className="h-8 w-8" />
+                </div>
+                <p className="text-sm text-muted-foreground font-medium">কোনো প্রশ্ন নির্বাচন করা হয়নি</p>
+                <Button onClick={() => setViewMode("browse")}>প্রশ্ন ব্যাংক ব্রাউজ করুন</Button>
+            </div>
+          )
+        ) : loadingFiles || loadingQuestions ? (
           <div className="flex flex-col items-center justify-center p-12">
             <CustomLoader />
           </div>
@@ -491,7 +613,7 @@ export default function QuestionSelector({
         )}
       </ScrollArea>
 
-      {selectedFileId && (
+      {viewMode === "browse" && selectedFileId && (
         <div className="pt-2 border-t flex justify-between items-center gap-2">
           <p className="text-[9px] text-muted-foreground italic leading-none">
             টিপস: প্রশ্নের ওপর ট্যাপ করে সিলেক্ট করুন

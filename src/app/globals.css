@@ -142,7 +142,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: "SolaimanLipi", sans-serif;
+    font-family: var(--font-hind-siliguri), "SolaimanLipi", sans-serif;
   }
   main {
     overflow-x: hidden;

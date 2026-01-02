@@ -1253,12 +1253,16 @@ export function EditExamModal({
                       )?.question_ids) || []
                 }
                 onChange={(ids) => {
-                  updateSubjectConfig(
-                    activeSubjectSelection.id,
-                    activeSubjectSelection.type,
-                    "question_ids",
-                    ids,
-                  );
+                  const updater = (prev: SubjectConfig[]) =>
+                    prev.map((s) =>
+                      s.id === activeSubjectSelection.id
+                        ? { ...s, question_ids: ids, count: ids.length }
+                        : s,
+                    );
+
+                  if (activeSubjectSelection.type === "mandatory")
+                    setMandatorySubjects(updater);
+                  else setOptionalSubjects(updater);
                 }}
               />
             )}

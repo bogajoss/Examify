@@ -54,27 +54,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RefreshCw } from "lucide-react";
-import dayjs from "@/lib/date-utils";
-
-function formatDuration(start?: string | null, end?: string): string {
-  if (!start || !end) return "N/A";
-
-  const startTime = dayjs(start);
-  const endTime = dayjs(end);
-
-  const diffInMs = endTime.diff(startTime);
-  if (diffInMs < 0) return "N/A";
-
-  const totalSeconds = Math.floor(diffInMs / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}m ${seconds}s`;
-  }
-  return `${minutes}m ${seconds}s`;
-}
+import { formatDuration } from "@/lib/date-utils";
 
 interface StudentResult {
   id: string;
@@ -240,7 +220,7 @@ export default function AdminExamResultsPage() {
             console.error("Print failed:", err);
             newWin.close();
           }
-        }, 500);
+        }, 1000);
       } else {
         toast({
           title: "পপ-আপ ব্লক করা হয়েছে",

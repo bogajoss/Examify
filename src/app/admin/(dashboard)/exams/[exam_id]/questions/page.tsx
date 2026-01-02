@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import BulkQuestionList from "@/components/BulkQuestionList";
 import { fetchQuestions, type RawQuestion } from "@/lib/fetchQuestions";
-import { Question } from "@/lib/types";
+import { Question, SubjectConfig } from "@/lib/types";
 import { apiRequest } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { CustomLoader, PageHeader, QuestionEditor } from "@/components";
@@ -43,8 +43,8 @@ export default function ExamQuestionsPage() {
             examData.question_ids.forEach((id: string) => allIds.add(id));
         }
 
-        const mSubs = (examData.mandatory_subjects as any[]) || [];
-        const oSubs = (examData.optional_subjects as any[]) || [];
+        const mSubs = (examData.mandatory_subjects as SubjectConfig[]) || [];
+        const oSubs = (examData.optional_subjects as SubjectConfig[]) || [];
 
         mSubs.forEach((sub) => {
             if (sub?.question_ids && Array.isArray(sub.question_ids)) {

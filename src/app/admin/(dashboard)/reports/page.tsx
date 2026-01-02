@@ -155,7 +155,7 @@ export default function ReportsPage() {
             console.error("Print failed:", err);
             newWin.close();
           }
-        }, 500);
+        }, 1000);
       }
     } catch (err) {
       console.error(err);
