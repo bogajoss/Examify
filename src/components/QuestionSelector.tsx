@@ -355,14 +355,99 @@ export default function QuestionSelector({
                         {idx + 1}
                     </Badge>
                   </div>
-                  <div className="flex-1 min-w-0 space-y-2">
-                    <div className="text-xs md:text-sm font-semibold break-words">
+                  <div className="flex-1 min-w-0 space-y-3">
+                    <div className="text-xs md:text-sm leading-relaxed font-semibold break-words">
                         <LatexRenderer html={q.question_text || q.question || ""} />
+                        {q.question_image_url && (
+                          <div className="mt-2">
+                            <img
+                              src={q.question_image_url}
+                              alt="Question"
+                              className="max-h-40 rounded-lg border object-contain bg-white"
+                            />
+                          </div>
+                        )}
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="text-[8px] h-3.5 bg-background">
-                            {q.subject || "No Subject"}
-                        </Badge>
+
+                    <div className="grid grid-cols-1 gap-1.5">
+                        {(Array.isArray(q.options) ? q.options : []).map(
+                          (opt, idx) => {
+                            const isCorrect = idx === Number(q.answer);
+                            return (
+                              <div
+                                key={idx}
+                                className={cn(
+                                  "text-[11px] md:text-xs p-2 rounded-lg border flex items-start gap-2",
+                                  isCorrect
+                                    ? "bg-green-50 border-green-200 text-green-900"
+                                    : "bg-muted/30 border-transparent text-muted-foreground",
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    "font-bold shrink-0 w-5 h-5 flex items-center justify-center rounded-full text-[10px]",
+                                    isCorrect
+                                      ? "bg-green-200 text-green-800"
+                                      : "bg-muted text-muted-foreground",
+                                  )}
+                                >
+                                  {String.fromCharCode(65 + idx)}
+                                </span>
+                                <div className="min-w-0 break-words">
+                                  <LatexRenderer html={opt} />
+                                </div>
+                              </div>
+                            );
+                          },
+                        )}
+                    </div>
+
+                    {(q.explanation || q.explanation_image_url) && (
+                        <div className="text-[11px] md:text-xs bg-blue-50/50 p-2.5 rounded-lg border border-blue-100/50 text-muted-foreground">
+                          <span className="font-bold text-blue-600 block mb-1 text-[10px] uppercase tracking-wider">
+                            ব্যাখ্যা
+                          </span>
+                          <div className="break-words">
+                            <LatexRenderer html={q.explanation || ""} />
+                          </div>
+                          {q.explanation_image_url && (
+                            <div className="mt-2">
+                              <img
+                                src={q.explanation_image_url}
+                                alt="Explanation"
+                                className="max-h-32 rounded border object-contain bg-white"
+                              />
+                            </div>
+                          )}
+                        </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-2 border-t border-dashed">
+                        <div className="flex flex-wrap gap-1">
+                            {q.subject && (
+                            <Badge variant="outline" className="text-[8px] h-3.5 px-1 bg-blue-50 text-blue-600 border-blue-200 font-normal">
+                                {q.subject}
+                            </Badge>
+                            )}
+                            {q.paper && (
+                            <Badge variant="outline" className="text-[8px] h-3.5 px-1 bg-green-50 text-green-600 border-green-200 font-normal">
+                                {q.paper}
+                            </Badge>
+                            )}
+                            {q.chapter && (
+                            <Badge variant="outline" className="text-[8px] h-3.5 px-1 bg-purple-50 text-purple-600 border-purple-200 font-normal">
+                                {q.chapter}
+                            </Badge>
+                            )}
+                             {q.highlight && (
+                              <Badge
+                                variant="outline"
+                                className="text-[8px] h-3.5 px-1 bg-amber-50 text-amber-600 border-amber-200 font-normal"
+                              >
+                                {q.highlight}
+                              </Badge>
+                            )}
+                        </div>
                         <Button
                             variant="ghost"
                             size="sm"
