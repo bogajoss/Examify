@@ -26,7 +26,10 @@ export async function POST(request: NextRequest) {
     const { data: results, error: resultsError } = await supabaseAdmin
       .from("student_exams")
       .select("*, users!inner(name, roll)")
-      .eq("exam_id", examId);
+      .eq("exam_id", examId)
+      .order("score", { ascending: false })
+      .order("wrong_answers", { ascending: true })
+      .order("submitted_at", { ascending: true });
 
     if (resultsError || !results) {
       return NextResponse.json(
