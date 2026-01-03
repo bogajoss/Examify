@@ -72,7 +72,9 @@ export default function ExamLeaderboardPage() {
         .from("student_exams")
         .select("*, users!inner(name, roll)")
         .eq("exam_id", exam_id)
-        .order("score", { ascending: false });
+        .order("score", { ascending: false })
+        .order("wrong_answers", { ascending: true })
+        .order("submitted_at", { ascending: true });
 
       if (error) throw error;
 

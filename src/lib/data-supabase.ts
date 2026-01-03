@@ -93,7 +93,9 @@ export async function getExamResults(examId: string) {
     .from("student_exams")
     .select("*, users!inner(name, roll, uid)")
     .eq("exam_id", examId)
-    .order("score", { ascending: false });
+    .order("score", { ascending: false })
+    .order("wrong_answers", { ascending: true })
+    .order("submitted_at", { ascending: true });
 
   if (error) throw error;
   return data;

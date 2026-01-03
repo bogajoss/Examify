@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { getExamResults } from "@/lib/data-supabase";
 import { useParams, useRouter } from "next/navigation";
@@ -80,6 +80,16 @@ export default function AdminExamResultsPage() {
   const exam_id = params.exam_id as string;
   const [exam, setExam] = useState<Exam | null>(null);
   const [results, setResults] = useState<StudentResult[]>([]);
+  const sortedResults = useMemo(() => {
+    return [...results].sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      if (a.wrong_answers !== b.wrong_answers)
+        return a.wrong_answers - b.wrong_answers;
+      return (
+        new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime()
+      );
+    });
+  }, [results]);
   const [loading, setLoading] = useState(true);
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [exportingCSV, setExportingCSV] = useState(false);
@@ -603,7 +613,7 @@ export default function AdminExamResultsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {results.length === 0 ? (
+              {sortedResults.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={9}
@@ -613,7 +623,7 @@ export default function AdminExamResultsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                results.map((result, idx) => (
+                sortedResults.map((result, idx) => (
                   <TableRow key={result.id} className="md:table-row">
                     {/* Mobile view - collapsed card style */}
                     <TableCell className="md:hidden p-0">
