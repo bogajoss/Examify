@@ -211,12 +211,14 @@ export function EditExamModal({
             if (config.count && config.count > 0) return config;
 
             // Try to find questions for this section
+            // Prioritize explicit question_ids over subject field to maintain correct assignments
+            // This prevents issues where questions might be reassigned due to subject field changes
             const sectionQuestions = currentQuestions.filter(
               (q) =>
-                q.subject === config.id ||
-                q.subject === config.name ||
-                (config.question_ids &&
-                  config.question_ids.includes(String(q.id))),
+                (config.question_ids && config.question_ids.length > 0
+                  ? config.question_ids.includes(String(q.id))  // Use explicit IDs if available
+                  : (q.subject === config.id || q.subject === config.name)  // Fallback to subject matching
+                )
             );
 
             if (sectionQuestions.length > 0) {
