@@ -187,8 +187,8 @@ function SubjectSelectionScreen({
   let isPractice = exam?.is_practice;
 
   // Auto-convert to practice mode if exam time has expired
-  const now = dayjs();
-  const currentEndDate = exam?.end_at ? dayjs(exam.end_at) : null;
+  const now = dayjs.utc();
+  const currentEndDate = exam?.end_at ? dayjs.utc(exam.end_at) : null;
   if (!isPractice && currentEndDate && now.isAfter(currentEndDate)) {
     isPractice = true; // Auto-enable practice mode after exam ends
   }
@@ -197,9 +197,9 @@ function SubjectSelectionScreen({
   const getExamTimeStatus = () => {
     if (isPractice) return { isValid: true, message: "" };
 
-    const now = dayjs();
-    const start = startDate ? dayjs(startDate) : null;
-    const end = endDate ? dayjs(endDate) : null;
+    const now = dayjs.utc();
+    const start = startDate ? dayjs.utc(startDate) : null;
+    const end = endDate ? dayjs.utc(endDate) : null;
 
     if (!start && !end) return { isValid: true, message: "" };
 

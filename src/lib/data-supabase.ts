@@ -102,7 +102,7 @@ export async function getExamResults(examId: string) {
 export async function getStudentResults(studentId: string) {
   const { data, error } = await supabase
     .from("student_exams")
-    .select("*, exams!inner(title, total_marks, duration_minutes)")
+    .select("*, exams!inner(name, duration_minutes)")
     .eq("student_id", studentId)
     .order("submitted_at", { ascending: false });
 

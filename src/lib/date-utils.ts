@@ -3,6 +3,7 @@ import duration from "dayjs/plugin/duration";
 import relativeTime from "dayjs/plugin/relativeTime";
 import isBetween from "dayjs/plugin/isBetween";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import utc from "dayjs/plugin/utc";
 import "dayjs/locale/bn-bd";
 
 // Extend dayjs with plugins
@@ -10,6 +11,7 @@ dayjs.extend(duration);
 dayjs.extend(relativeTime);
 dayjs.extend(isBetween);
 dayjs.extend(customParseFormat);
+dayjs.extend(utc);
 
 // Set default locale to Bangla (Bangladesh) if the app is primarily in Bangla
 // dayjs.locale('bn-bd');
@@ -19,6 +21,8 @@ export type DateInput = string | number | Date | dayjs.Dayjs | null | undefined;
 /**
  * Format a date to a standard readable string.
  * Uses 'bn-bd' locale for localized output if specified, otherwise English.
+ * We use .utc() to ensure the time is displayed exactly as stored in the database
+ * without any timezone conversions, as requested by the user ("no timezone games").
  * @param date - The date to format
  * @param format - Optional format string (default: 'DD MMM YYYY, h:mm A')
  * @param locale - Optional locale (default: 'bn-bd')
@@ -30,7 +34,8 @@ export const formatDate = (
   locale: string = "bn-bd",
 ): string => {
   if (!date) return "";
-  return dayjs(date).locale(locale).format(format);
+  // Use .utc() to ignore local timezone shifts
+  return dayjs.utc(date).locale(locale).format(format);
 };
 
 /**
@@ -52,8 +57,8 @@ export const formatTime = (
  * @returns Duration object
  */
 export const getDuration = (start: DateInput, end: DateInput) => {
-  const startDate = dayjs(start);
-  const endDate = dayjs(end);
+  const startDate = dayjs.utc(start);
+  const endDate = dayjs.utc(end);
   return dayjs.duration(endDate.diff(startDate));
 };
 
@@ -67,21 +72,22 @@ export const getDuration = (start: DateInput, end: DateInput) => {
 export const formatDuration = (start: DateInput, end: DateInput): string => {
   if (!start || !end) return "N/A";
 
-  let startTime = dayjs(start);
-  let endTime = dayjs(end);
+  // Use .utc() for consistent duration calculation regardless of local timezone
+  let startTime = dayjs.utc(start);
+  let endTime = dayjs.utc(end);
 
-  // If the string is like "YYYY-MM-DD HH:mm:ss" without T/Z (SQL format), treat as local time
+  // If the string is like "YYYY-MM-DD HH:mm:ss" without T/Z (SQL format), treat as UTC
   if (
     typeof start === "string" &&
     /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(start)
   ) {
-    startTime = dayjs(start, "YYYY-MM-DD HH:mm:ss");
+    startTime = dayjs.utc(start, "YYYY-MM-DD HH:mm:ss");
   }
   if (
     typeof end === "string" &&
     /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(end)
   ) {
-    endTime = dayjs(end, "YYYY-MM-DD HH:mm:ss");
+    endTime = dayjs.utc(end, "YYYY-MM-DD HH:mm:ss");
   }
 
   const diffInMs = endTime.diff(startTime);
@@ -109,7 +115,8 @@ export const getRelativeTime = (
   locale: string = "bn-bd",
 ): string => {
   if (!date) return "";
-  return dayjs(date).locale(locale).fromNow();
+  // Compare UTC time with UTC now
+  return dayjs.utc(date).locale(locale).from(dayjs.utc());
 };
 
 /**
@@ -120,35 +127,36 @@ export const getRelativeTime = (
  */
 export const isNowBetween = (start: DateInput, end: DateInput): boolean => {
   if (!start || !end) return false;
-  return dayjs().isBetween(start, end, null, "[]"); // [] includes start and end
+  // Use UTC now vs UTC range
+  return dayjs.utc().isBetween(dayjs.utc(start), dayjs.utc(end), null, "[]"); // [] includes start and end
 };
 
 /**
  * Check if a date is in the past
  */
 export const isPast = (date: DateInput): boolean => {
-  return dayjs(date).isBefore(dayjs());
+  return dayjs.utc(date).isBefore(dayjs.utc());
 };
 
 /**
  * Check if a date is in the future
  */
 export const isFuture = (date: DateInput): boolean => {
-  return dayjs(date).isAfter(dayjs());
+  return dayjs.utc(date).isAfter(dayjs.utc());
 };
 
 /**
  * Get current local time (ISO string)
  */
 export const getNowLocal = (): string => {
-  return dayjs().format();
+  return dayjs.utc().format();
 };
 
 /**
  * Parse a date string
  */
 export const parseLocalDate = (date: DateInput) => {
-  return dayjs(date);
+  return dayjs.utc(date);
 };
 
 // Re-export dayjs for direct use if needed

@@ -541,7 +541,7 @@ export async function exportUsersData() {
   }
 
   const exportData = {
-    exportedAt: dayjs().toISOString(),
+    exportedAt: dayjs.utc().toISOString(),
     version: "1.0",
     users: data,
   };
@@ -549,7 +549,7 @@ export async function exportUsersData() {
   return {
     success: true,
     data: JSON.stringify(exportData, null, 2),
-    filename: `users-backup-${dayjs().format("YYYY-MM-DD")}.json`,
+    filename: `users-backup-${dayjs.utc().format("YYYY-MM-DD")}.json`,
   };
 }
 
@@ -683,7 +683,7 @@ export async function exportBatchData(batchId: string) {
     if (eError) throw eError;
 
     const data = {
-      exportedAt: dayjs().toISOString(),
+      exportedAt: dayjs.utc().toISOString(),
       version: "1.0",
       batch,
       students,
@@ -693,7 +693,7 @@ export async function exportBatchData(batchId: string) {
     return {
       success: true,
       data: JSON.stringify(data, null, 2),
-      filename: `batch-${batch.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}-${dayjs().format("YYYY-MM-DD")}.json`,
+      filename: `batch-${batch.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}-${dayjs.utc().format("YYYY-MM-DD")}.json`,
     };
   } catch (error) {
     const err = error as Error;

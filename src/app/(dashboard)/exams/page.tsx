@@ -125,7 +125,7 @@ export default function ExamsPage() {
   });
 
   const { liveExams, practiceExams, upcomingExams } = useMemo(() => {
-    const now = dayjs();
+    const now = dayjs.utc();
     const live: Exam[] = [];
     const practice: Exam[] = [];
     const upcoming: Exam[] = [];
@@ -134,8 +134,8 @@ export default function ExamsPage() {
       if (exam.is_practice) {
         practice.push(exam);
       } else {
-        const startTime = exam.start_at ? dayjs(exam.start_at) : null;
-        const endTime = exam.end_at ? dayjs(exam.end_at) : null;
+        const startTime = exam.start_at ? dayjs.utc(exam.start_at) : null;
+        const endTime = exam.end_at ? dayjs.utc(exam.end_at) : null;
 
         if (startTime && now.isBefore(startTime)) {
           upcoming.push(exam);
@@ -164,9 +164,9 @@ export default function ExamsPage() {
   // Helper to render exam card
   const renderExamCard = (exam: Exam) => {
     const result = resultsMap[exam.id];
-    const now = dayjs();
-    const startAt = exam.start_at ? dayjs(exam.start_at) : null;
-    const endAt = exam.end_at ? dayjs(exam.end_at) : null;
+    const now = dayjs.utc();
+    const startAt = exam.start_at ? dayjs.utc(exam.start_at) : null;
+    const endAt = exam.end_at ? dayjs.utc(exam.end_at) : null;
 
     const timeExpired =
       !exam.is_practice && endAt !== null && now.isAfter(endAt);

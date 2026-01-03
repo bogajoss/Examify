@@ -11,17 +11,17 @@ export const safeParseDate = (
   dateStr: string | Date | null | undefined,
 ): Date | null => {
   if (!dateStr) return null;
-  const d = dayjs(dateStr);
+  const d = dayjs.utc(dateStr);
   return d.isValid() ? d.toDate() : null;
 };
 
-// Helper to get current local time
+// Helper to get current local time as UTC
 export function getCurrentLocalTime() {
-  return dayjs().toDate();
+  return dayjs.utc().toDate();
 }
 
 // Helper to combine date and time components into plain datetime string (YYYY-MM-DD HH:MM:SS)
-// No timezone conversion - just direct time as entered by user
+// We treat the input as UTC to avoid any timezone shifts - what you enter is what you get
 export const combineLocalDateTime = (
   dateInput: Date | string | undefined,
   hour: string,
@@ -40,20 +40,20 @@ export const combineLocalDateTime = (
     dateStr = dateInput;
   } else {
     // If it's a Date object, just use its date parts (no timezone conversion)
-    dateStr = dayjs(dateInput).format("YYYY-MM-DD");
+    dateStr = dayjs.utc(dateInput).format("YYYY-MM-DD");
   }
 
   const timeStr = `${String(h24).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`;
 
-  // Return plain datetime string - no ISO, no timezone conversion
-  return `${dateStr} ${timeStr}`;
+  // Return formatted ISO string in UTC
+  return dayjs.utc(`${dateStr} ${timeStr}`, "YYYY-MM-DD HH:mm:ss").format();
 };
 
 // Helper to parse a plain datetime string back to time components
-// No timezone conversion - just extract time as stored
+// No timezone conversion - just extract time as stored using UTC
 export const parseLocalDateTime = (datetimeString: string) => {
-  // Parse plain datetime string (YYYY-MM-DD HH:MM:SS or ISO format)
-  const d = dayjs(datetimeString);
+  // Parse using UTC to avoid local timezone shifts
+  const d = dayjs.utc(datetimeString);
 
   if (!d.isValid()) {
     return {
@@ -72,7 +72,7 @@ export const parseLocalDateTime = (datetimeString: string) => {
 
   return {
     dateStr: dateStr,
-    date: dayjs(dateStr).toDate(),
+    date: d.toDate(),
     hour: String(hour12).padStart(2, "0"),
     minute: String(d.minute()).padStart(2, "0"),
     period: period as "AM" | "PM",
@@ -82,7 +82,7 @@ export const parseLocalDateTime = (datetimeString: string) => {
 /**
  * Validate if current device time is within exam time window
  * Supports both ISO 8601 and MySQL (YYYY-MM-DD HH:MM:SS) datetime formats
- * All times are evaluated using the device's local time
+ * All times are evaluated using UTC to ensure "same time everywhere"
  * @param startTime - Exam start time (ISO string, MySQL format, or Date)
  * @param endTime - Exam end time (ISO string, MySQL format, or Date)
  * @returns { isAllowed: boolean, reason?: string }
@@ -92,37 +92,33 @@ export const validateExamTime = (
   endTime: string | Date | null | undefined,
 ): { isAllowed: boolean; reason?: string } => {
   try {
-    // Current time in local time
-    const now = dayjs();
+    // Compare against UTC now
+    const now = dayjs.utc();
 
     // If no time restrictions, allow
     if (!startTime && !endTime) {
       return { isAllowed: true };
     }
 
-    // Parse start time - handle both ISO and MySQL format
+    // Parse start time - treat as UTC
     let start: dayjs.Dayjs | null = null;
     if (startTime) {
       const startStr = String(startTime);
-      // If it looks like MySQL format (YYYY-MM-DD HH:MM:SS), parse as local time
       if (startStr.includes(" ") && !startStr.includes("T")) {
-        start = dayjs(startStr, "YYYY-MM-DD HH:mm:ss");
+        start = dayjs.utc(startStr, "YYYY-MM-DD HH:mm:ss");
       } else {
-        // ISO format or other - parse and convert to local
-        start = dayjs(startStr);
+        start = dayjs.utc(startStr);
       }
     }
 
-    // Parse end time - handle both ISO and MySQL format
+    // Parse end time - treat as UTC
     let end: dayjs.Dayjs | null = null;
     if (endTime) {
       const endStr = String(endTime);
-      // If it looks like MySQL format (YYYY-MM-DD HH:MM:SS), parse as local time
       if (endStr.includes(" ") && !endStr.includes("T")) {
-        end = dayjs(endStr, "YYYY-MM-DD HH:mm:ss");
+        end = dayjs.utc(endStr, "YYYY-MM-DD HH:mm:ss");
       } else {
-        // ISO format or other - parse and convert to local
-        end = dayjs(endStr);
+        end = dayjs.utc(endStr);
       }
     }
 
