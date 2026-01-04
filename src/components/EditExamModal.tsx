@@ -448,7 +448,7 @@ export function EditExamModal({
                   <Input
                     id="marks_per_question-edit"
                     type="number"
-                    step="0.1"
+                    step="0.01"
                     name="marks_per_question"
                     defaultValue={String(exam?.marks_per_question || "1")}
                     placeholder="প্রশ্ন প্রতি মার্ক"

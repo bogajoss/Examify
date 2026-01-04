@@ -247,6 +247,10 @@ export function ExamsClient({
                 value: `${exam.duration_minutes} Min`,
               },
               {
+                label: "Marks Per Question:",
+                value: exam.marks_per_question || 1,
+              },
+              {
                 label: "Negative Mark:",
                 value: exam.negative_marks_per_wrong,
               },
