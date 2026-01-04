@@ -13,14 +13,7 @@ import { supabase } from "@/lib/supabase";
 import { deleteQuestionAction } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  Trash2,
-  Edit,
-  Plus,
-  Search,
-  FileText,
-  ArrowLeft,
-} from "lucide-react";
+import { Trash2, Edit, Plus, Search, FileText, ArrowLeft } from "lucide-react";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";

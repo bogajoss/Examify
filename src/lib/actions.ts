@@ -192,9 +192,15 @@ export async function createExam(formData: FormData) {
   const durationRaw = formData.get("duration_minutes") as string;
   const duration_minutes = durationRaw ? parseInt(durationRaw, 10) : 120; // Default to 120 if not provided
   const marks_per_question_raw = formData.get("marks_per_question") as string;
-  const marks_per_question = marks_per_question_raw ? parseFloat(marks_per_question_raw) : 1; // Default to 1 if not provided
-  const negative_marks_per_wrong_raw = formData.get("negative_marks_per_wrong") as string;
-  const negative_marks_per_wrong = negative_marks_per_wrong_raw ? parseFloat(negative_marks_per_wrong_raw) : 0.25; // Default to 0.25 if not provided
+  const marks_per_question = marks_per_question_raw
+    ? parseFloat(marks_per_question_raw)
+    : 1; // Default to 1 if not provided
+  const negative_marks_per_wrong_raw = formData.get(
+    "negative_marks_per_wrong",
+  ) as string;
+  const negative_marks_per_wrong = negative_marks_per_wrong_raw
+    ? parseFloat(negative_marks_per_wrong_raw)
+    : 0.25; // Default to 0.25 if not provided
   const file_id = formData.get("file_id") as string;
   const is_practice = formData.get("is_practice") === "true";
   const shuffle_questions = formData.get("shuffle_questions") === "true";
@@ -209,7 +215,9 @@ export async function createExam(formData: FormData) {
   }
 
   const total_subjects_raw = formData.get("total_subjects") as string;
-  const total_subjects = total_subjects_raw ? parseInt(total_subjects_raw) : null;
+  const total_subjects = total_subjects_raw
+    ? parseInt(total_subjects_raw)
+    : null;
 
   let mandatory_subjects = [];
   try {
@@ -247,7 +255,9 @@ export async function createExam(formData: FormData) {
       batch_id,
       duration_minutes: isNaN(duration_minutes) ? 120 : duration_minutes,
       marks_per_question: isNaN(marks_per_question) ? 1 : marks_per_question,
-      negative_marks_per_wrong: isNaN(negative_marks_per_wrong) ? 0.25 : negative_marks_per_wrong,
+      negative_marks_per_wrong: isNaN(negative_marks_per_wrong)
+        ? 0.25
+        : negative_marks_per_wrong,
       file_id: file_id || null,
       is_practice,
       shuffle_questions,
@@ -593,31 +603,7 @@ export async function deleteStudentExamResult(formData: FormData) {
   return { success: true, message: "Result deleted" };
 }
 
-export async function exportUsersData() {
-  const { data, error } = await supabaseAdmin
-    .from("users")
-    .select("*")
-    .limit(1000000);
 
-  if (error) {
-    return {
-      success: false,
-      message: "Failed to fetch users data: " + error.message,
-    };
-  }
-
-  const exportData = {
-    exportedAt: dayjs.utc().toISOString(),
-    version: "1.0",
-    users: data,
-  };
-
-  return {
-    success: true,
-    data: JSON.stringify(exportData, null, 2),
-    filename: `users-backup-${dayjs.utc().format("YYYY-MM-DD")}.json`,
-  };
-}
 
 export async function importUsersData(formData: FormData) {
   try {
@@ -681,8 +667,11 @@ export async function importBatchData(_formData: FormData) {
   // With the full migration to Supabase, this logic needs to be rewritten to handle
   // batch and exam creation alongside question imports transactionally or sequentially.
   // For now, use the individual import/create actions.
-  
-  return { success: false, message: "Import Batch Data not yet implemented for Supabase" };
+
+  return {
+    success: false,
+    message: "Import Batch Data not yet implemented for Supabase",
+  };
 }
 
 export async function updateStudentResultScore(formData: FormData) {
@@ -718,50 +707,12 @@ export async function updateStudentResultScore(formData: FormData) {
   return { success: true, message: "Score updated successfully" };
 }
 
-export async function exportBatchData(batchId: string) {
-  try {
-    const { data: batch, error: bError } = await supabaseAdmin
-      .from("batches")
-      .select("*")
-      .eq("id", batchId)
-      .single();
-
-    if (bError) throw bError;
-
-    const { data: students, error: sError } = await supabaseAdmin
-      .from("users")
-      .select("*")
-      .contains("enrolled_batches", [batchId]);
-
-    if (sError) throw sError;
-
-    const { data: exams, error: eError } = await supabaseAdmin
-      .from("exams")
-      .select("*")
-      .eq("batch_id", batchId);
-
-    if (eError) throw eError;
-
-    const data = {
-      exportedAt: dayjs.utc().toISOString(),
-      version: "1.0",
-      batch,
-      students,
-      exams,
-    };
-
-    return {
-      success: true,
-      data: JSON.stringify(data, null, 2),
-      filename: `batch-${batch.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}-${dayjs.utc().format("YYYY-MM-DD")}.json`,
-    };
-  } catch (error) {
-    const err = error as Error;
-    return {
-      success: false,
-      message: "Export failed: " + (err.message || String(error)),
-    };
-  }
+export async function exportBatchData(_batchId: string) {
+  // Export functionality removed
+  return {
+    success: false,
+    message: "Export functionality has been removed",
+  };
 }
 
 export async function bulkUpdateExamScores(_formData: FormData) {
@@ -829,7 +780,11 @@ export async function uploadCSVAction(formData: FormData) {
     }
 
     // Validate file type
-    if (!csvFile.type.includes("text") && csvFile.type !== "application/csv" && !csvFile.name.endsWith('.csv')) {
+    if (
+      !csvFile.type.includes("text") &&
+      csvFile.type !== "application/csv" &&
+      !csvFile.name.endsWith(".csv")
+    ) {
       return {
         success: false,
         message: "Invalid file type. Only CSV files are allowed.",
@@ -855,7 +810,10 @@ export async function uploadCSVAction(formData: FormData) {
     }
 
     if (!questions || questions.length === 0) {
-      return { success: false, message: "No valid questions found in CSV file" };
+      return {
+        success: false,
+        message: "No valid questions found in CSV file",
+      };
     }
 
     // Create a file record
@@ -933,7 +891,10 @@ export async function deleteFileAction(fileId: string) {
   const { error } = await supabaseAdmin.from("files").delete().eq("id", fileId);
 
   if (error) {
-    return { success: false, message: "Failed to delete file: " + error.message };
+    return {
+      success: false,
+      message: "Failed to delete file: " + error.message,
+    };
   }
 
   revalidatePath("/admin/questions");
@@ -951,7 +912,10 @@ export async function renameFileAction(fileId: string, newName: string) {
     .eq("id", fileId);
 
   if (error) {
-    return { success: false, message: "Failed to rename file: " + error.message };
+    return {
+      success: false,
+      message: "Failed to rename file: " + error.message,
+    };
   }
 
   revalidatePath("/admin/questions");
@@ -988,13 +952,13 @@ export async function deleteQuestionAction(questionId: string) {
       .from("questions")
       .select("*", { count: "exact", head: true })
       .eq("file_id", q.file_id);
-      
+
     await supabaseAdmin
       .from("files")
       .update({ total_questions: count || 0 })
       .eq("id", q.file_id);
-      
-     revalidatePath(`/admin/questions/edit/${q.file_id}`);
+
+    revalidatePath(`/admin/questions/edit/${q.file_id}`);
   }
 
   return { success: true, message: "Question deleted successfully" };
@@ -1050,7 +1014,11 @@ export async function updateQuestionAction(
     };
   }
 
-  return { success: true, message: "Question updated successfully", data: updatedQ };
+  return {
+    success: true,
+    message: "Question updated successfully",
+    data: updatedQ,
+  };
 }
 
 export async function createQuestionAction(data: Record<string, unknown>) {
@@ -1107,14 +1075,18 @@ export async function createQuestionAction(data: Record<string, unknown>) {
       .from("questions")
       .select("*", { count: "exact", head: true })
       .eq("file_id", newQ.file_id);
-      
+
     await supabaseAdmin
       .from("files")
       .update({ total_questions: count || 0 })
       .eq("id", newQ.file_id);
-      
+
     revalidatePath(`/admin/questions/edit/${newQ.file_id}`);
   }
 
-  return { success: true, message: "Question created successfully", data: newQ };
+  return {
+    success: true,
+    message: "Question created successfully",
+    data: newQ,
+  };
 }

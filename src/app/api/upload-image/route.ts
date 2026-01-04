@@ -122,7 +122,8 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: unknown) {
     console.error("Error in POST /api/upload-image:", error);
-    const errorMessage = error instanceof Error ? error.message : "Internal server error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
       { success: false, error: errorMessage },
       { status: 500, headers: corsHeaders() },

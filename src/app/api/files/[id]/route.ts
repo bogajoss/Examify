@@ -62,7 +62,8 @@ export async function GET(req: NextRequest) {
     );
   } catch (error: unknown) {
     console.error("Error in GET /api/files/[id]:", error);
-    const errorMessage = error instanceof Error ? error.message : "Internal server error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
       { success: false, error: errorMessage },
       { status: 500, headers: corsHeaders() },
@@ -143,7 +144,8 @@ export async function PUT(req: NextRequest) {
     );
   } catch (error: unknown) {
     console.error("Error in PUT /api/files/[id]:", error);
-    const errorMessage = error instanceof Error ? error.message : "Internal server error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
       { success: false, error: errorMessage },
       { status: 500, headers: corsHeaders() },

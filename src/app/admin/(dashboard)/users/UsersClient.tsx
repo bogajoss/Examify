@@ -9,7 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Download,
   Upload,
   Check,
   Copy,
@@ -68,7 +67,6 @@ import {
   createUser,
   updateUser,
   deleteUser,
-  exportUsersData,
   importUsersData,
   enrollStudent,
 } from "@/lib/actions";
@@ -279,21 +277,7 @@ export function UsersClient({
     },
   });
 
-  const exportMutation = useMutation({
-    mutationFn: exportUsersData,
-    onSuccess: (result) => {
-      if (result.success && result.data) {
-        const element = document.createElement("a");
-        element.setAttribute(
-          "href",
-          "data:text/plain;charset=utf-8," + encodeURIComponent(result.data),
-        );
-        element.setAttribute("download", result.filename || "users.json");
-        element.click();
-        toast({ title: "এক্সপোর্ট সফল" });
-      }
-    },
-  });
+
 
   const handleAddUser = () => {
     setSelectedUser(null);
@@ -433,20 +417,6 @@ export function UsersClient({
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </form>
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1"
-                onClick={() => exportMutation.mutate()}
-                disabled={exportMutation.isPending}
-              >
-                <Download className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                  {exportMutation.isPending
-                    ? "এক্সপোর্ট করা হচ্ছে..."
-                    : "এক্সপোর্ট"}
-                </span>
-              </Button>
               <Dialog
                 open={isImportDialogOpen}
                 onOpenChange={setIsImportDialogOpen}

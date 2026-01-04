@@ -33,7 +33,11 @@ export async function withAuth(
     }
 
     // Attach auth context to request
-    (req as unknown as Record<string, unknown>).auth = { isAdmin, userId, token };
+    (req as unknown as Record<string, unknown>).auth = {
+      isAdmin,
+      userId,
+      token,
+    };
 
     return handler(req);
   };

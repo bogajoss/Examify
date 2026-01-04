@@ -113,7 +113,8 @@ export async function GET(req: NextRequest) {
     );
   } catch (error: unknown) {
     console.error("Error in GET /api/questions:", error);
-    const errorMessage = error instanceof Error ? error.message : "Internal server error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
       { success: false, error: errorMessage },
       { status: 500, headers: corsHeaders() },
@@ -281,7 +282,8 @@ export async function POST(req: NextRequest) {
     );
   } catch (error: unknown) {
     console.error("Error in POST /api/questions:", error);
-    const errorMessage = error instanceof Error ? error.message : "Internal server error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
       { success: false, error: errorMessage },
       { status: 500, headers: corsHeaders() },
@@ -387,7 +389,8 @@ export async function PUT(req: NextRequest) {
     );
   } catch (error: unknown) {
     console.error("Error in PUT /api/questions:", error);
-    const errorMessage = error instanceof Error ? error.message : "Internal server error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
       { success: false, error: errorMessage },
       { status: 500, headers: corsHeaders() },
@@ -478,7 +481,8 @@ export async function DELETE(req: NextRequest) {
     );
   } catch (error: unknown) {
     console.error("Error in DELETE /api/questions:", error);
-    const errorMessage = error instanceof Error ? error.message : "Internal server error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
       { success: false, error: errorMessage },
       { status: 500, headers: corsHeaders() },

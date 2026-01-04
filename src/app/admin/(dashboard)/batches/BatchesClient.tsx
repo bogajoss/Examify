@@ -21,7 +21,6 @@ import {
   createBatch,
   deleteBatch,
   importBatchData,
-  exportBatchData,
 } from "@/lib/actions";
 import { EditBatchModal } from "@/components/EditBatchModal";
 import { UniversalDetailsCard } from "@/components/UniversalDetailsCard";
@@ -32,7 +31,6 @@ import {
   Trash2,
   Users,
   FileText,
-  Download,
   Copy,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -167,22 +165,6 @@ export function BatchesClient({
         description: err.message,
         variant: "destructive",
       });
-    },
-  });
-
-  const exportMutation = useMutation({
-    mutationFn: exportBatchData,
-    onSuccess: (result) => {
-      if (result.success && result.data) {
-        const element = document.createElement("a");
-        element.setAttribute(
-          "href",
-          "data:text/plain;charset=utf-8," + encodeURIComponent(result.data),
-        );
-        element.setAttribute("download", result.filename || "batch.json");
-        element.click();
-        toast({ title: "এক্সপোর্ট সফল" });
-      }
     },
   });
 
@@ -471,7 +453,7 @@ export function BatchesClient({
                 ]}
                 actions={
                   <div className="flex flex-col gap-2 w-full">
-                    <div className="grid grid-cols-2 gap-2 w-full">
+                    <div className="grid grid-cols-3 gap-2 w-full">
                       <Button
                         variant="secondary"
                         size="sm"
@@ -480,15 +462,6 @@ export function BatchesClient({
                       >
                         <Copy className="h-3 w-3 md:h-4 md:w-4 mr-1" />
                         লিঙ্ক কপি
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => exportMutation.mutate(batch.id)}
-                        className="w-full text-[10px] md:text-xs px-1"
-                      >
-                        <Download className="h-3 w-3 md:h-4 md:w-4 mr-1" />
-                        এক্সপোর্ট
                       </Button>
                       <Button
                         variant="secondary"

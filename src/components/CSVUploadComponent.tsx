@@ -72,7 +72,7 @@ export default function CSVUploadComponent({
 
       const data = result.data || {};
       setUploadResult(data as Record<string, unknown>);
-      
+
       if (onUploadSuccess) {
         onUploadSuccess(data as Record<string, unknown>);
       }

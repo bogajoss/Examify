@@ -47,7 +47,6 @@ import {
   Trash2,
   Plus,
   Copy,
-  Download,
   Search,
   UserPlus,
 } from "lucide-react";
@@ -60,7 +59,6 @@ import {
   deleteExam,
   enrollStudent,
   removeStudentFromBatch,
-  exportBatchData,
 } from "@/lib/actions";
 import {
   Select,
@@ -277,22 +275,6 @@ export function BatchDetailsClient({
     },
   });
 
-  const exportBatchMutation = useMutation({
-    mutationFn: () => exportBatchData(batch_id),
-    onSuccess: (result) => {
-      if (result.success && result.data) {
-        const element = document.createElement("a");
-        element.setAttribute(
-          "href",
-          "data:text/plain;charset=utf-8," + encodeURIComponent(result.data),
-        );
-        element.setAttribute("download", result.filename || "batch.json");
-        element.click();
-        toast({ title: "এক্সপোর্ট সফল" });
-      }
-    },
-  });
-
   const requestDeleteExam = (examId: string, examName?: string) => {
     setPendingDelete({ type: "exam", id: examId, label: examName });
     setIsPasswordOpen(true);
@@ -381,10 +363,6 @@ export function BatchDetailsClient({
     createExamMutation.mutate(formData);
   };
 
-  const handleExportBatch = () => {
-    exportBatchMutation.mutate();
-  };
-
   if (!initialBatch) {
     return (
       <div className="flex justify-center items-center h-full">
@@ -401,20 +379,6 @@ export function BatchDetailsClient({
             <CardTitle>ব্যাচের তথ্য - {initialBatch.name}</CardTitle>
             <CardDescription>ব্যাচের বিবরণ এবং অবস্থা দেখুন।</CardDescription>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportBatch}
-            disabled={exportBatchMutation.isPending}
-          >
-            {exportBatchMutation.isPending ? (
-              <CustomLoader minimal />
-            ) : (
-              <Download className="h-4 w-4 mr-2" />
-            )}
-            <span className="hidden md:inline">এক্সপোর্ট</span>
-            <span className="md:hidden">ডাউনলোড</span>
-          </Button>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">

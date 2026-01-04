@@ -15,13 +15,15 @@ export const safeParseDate = (
   return d.isValid() ? d.toDate() : null;
 };
 
-// Helper to get current local time as UTC
+// Helper to get current local time in Bangladesh timezone (UTC+6)
 export function getCurrentLocalTime() {
-  return dayjs.utc().toDate();
+  // Use Bangladesh timezone (UTC+6) instead of UTC
+  return dayjs().utcOffset(6 * 60).toDate();
 }
 
-// Helper to combine date and time components into plain datetime string (YYYY-MM-DD HH:MM:SS)
-// We treat the input as UTC to avoid any timezone shifts - what you enter is what you get
+// Helper to combine date and time components into UTC ISO string
+// Admin enters Bangladesh local time, we convert to UTC for storage
+// So when student reads it back, it converts to Bangladesh and matches
 export const combineLocalDateTime = (
   dateInput: Date | string | undefined,
   hour: string,
@@ -39,23 +41,26 @@ export const combineLocalDateTime = (
   if (typeof dateInput === "string") {
     dateStr = dateInput;
   } else {
-    // If it's a Date object, just use its date parts (no timezone conversion)
-    dateStr = dayjs.utc(dateInput).format("YYYY-MM-DD");
+    // If it's a Date object, extract date in Bangladesh timezone
+    dateStr = dayjs(dateInput).utcOffset(6 * 60).format("YYYY-MM-DD");
   }
 
   const timeStr = `${String(h24).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`;
 
-  // Return formatted ISO string in UTC
-  return dayjs.utc(`${dateStr} ${timeStr}`, "YYYY-MM-DD HH:mm:ss").format();
+  // Parse as Bangladesh local time, then convert to UTC for storage
+  // So 4:00 PM Bangladesh (UTC+6) becomes 10:00 AM UTC
+  const bangladeshTime = dayjs(`${dateStr} ${timeStr}`, "YYYY-MM-DD HH:mm:ss").utcOffset(6 * 60);
+  
+  // Return as UTC ISO string for storage
+  return bangladeshTime.utc().format();
 };
 
-// Helper to parse a plain datetime string back to time components
-// No timezone conversion - just extract time as stored using UTC
+// Helper to parse UTC datetime string back to Bangladesh local time components
 export const parseLocalDateTime = (datetimeString: string) => {
-  // Parse using UTC to avoid local timezone shifts
-  const d = dayjs.utc(datetimeString);
+  // Parse UTC string
+  const utcTime = dayjs.utc(datetimeString);
 
-  if (!d.isValid()) {
+  if (!utcTime.isValid()) {
     return {
       dateStr: "",
       date: new Date(),
@@ -65,16 +70,19 @@ export const parseLocalDateTime = (datetimeString: string) => {
     };
   }
 
-  const hour = d.hour();
+  // Convert to Bangladesh timezone for display
+  const bangladeshTime = utcTime.utcOffset(6 * 60);
+  
+  const hour = bangladeshTime.hour();
   const period = hour >= 12 ? "PM" : "AM";
   const hour12 = hour % 12 || 12;
-  const dateStr = d.format("YYYY-MM-DD");
+  const dateStr = bangladeshTime.format("YYYY-MM-DD");
 
   return {
     dateStr: dateStr,
-    date: d.toDate(),
+    date: bangladeshTime.toDate(),
     hour: String(hour12).padStart(2, "0"),
-    minute: String(d.minute()).padStart(2, "0"),
+    minute: String(bangladeshTime.minute()).padStart(2, "0"),
     period: period as "AM" | "PM",
   };
 };
@@ -92,34 +100,40 @@ export const validateExamTime = (
   endTime: string | Date | null | undefined,
 ): { isAllowed: boolean; reason?: string } => {
   try {
-    // Compare against UTC now
-    const now = dayjs.utc();
+    // Compare against Bangladesh timezone (UTC+6) now
+    const now = dayjs().utcOffset(6 * 60);
 
     // If no time restrictions, allow
     if (!startTime && !endTime) {
       return { isAllowed: true };
     }
 
-    // Parse start time - treat as UTC
+    // Parse start time - convert to Bangladesh timezone (UTC+6)
     let start: dayjs.Dayjs | null = null;
     if (startTime) {
       const startStr = String(startTime);
+      let parsed: dayjs.Dayjs;
       if (startStr.includes(" ") && !startStr.includes("T")) {
-        start = dayjs.utc(startStr, "YYYY-MM-DD HH:mm:ss");
+        parsed = dayjs.utc(startStr, "YYYY-MM-DD HH:mm:ss");
       } else {
-        start = dayjs.utc(startStr);
+        parsed = dayjs.utc(startStr);
       }
+      // Convert UTC time to Bangladesh timezone
+      start = parsed.utcOffset(6 * 60);
     }
 
-    // Parse end time - treat as UTC
+    // Parse end time - convert to Bangladesh timezone (UTC+6)
     let end: dayjs.Dayjs | null = null;
     if (endTime) {
       const endStr = String(endTime);
+      let parsed: dayjs.Dayjs;
       if (endStr.includes(" ") && !endStr.includes("T")) {
-        end = dayjs.utc(endStr, "YYYY-MM-DD HH:mm:ss");
+        parsed = dayjs.utc(endStr, "YYYY-MM-DD HH:mm:ss");
       } else {
-        end = dayjs.utc(endStr);
+        parsed = dayjs.utc(endStr);
       }
+      // Convert UTC time to Bangladesh timezone
+      end = parsed.utcOffset(6 * 60);
     }
 
     // Check if current time is before exam start

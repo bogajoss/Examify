@@ -3,7 +3,7 @@
  * Handles parsing of CSV files with questions
  */
 
-import Papa from 'papaparse';
+import Papa from "papaparse";
 
 export interface ParsedQuestion {
   question_text: string;
@@ -30,7 +30,7 @@ export function cleanCsvHtml(text: string): string {
   if (!text) return text;
 
   // Remove <font> and </font> tags completely, keeping only the content inside
-  text = text.replace(/<font[^>]*>|<\/font>/gi, '');
+  text = text.replace(/<font[^>]*>|<\/font>/gi, "");
 
   return text;
 }
@@ -81,7 +81,7 @@ export function convertAnswersFromZeroToOne(questions: ParsedQuestion[]): void {
 export async function parseCSV(file: File): Promise<ParsedQuestion[]> {
   try {
     // For browser environments, use FileReader
-    if (typeof window !== 'undefined' && window.FileReader) {
+    if (typeof window !== "undefined" && window.FileReader) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
 
@@ -127,15 +127,19 @@ export async function parseCSVContent(csv: string): Promise<ParsedQuestion[]> {
     skipEmptyLines: true,
     transform: (value: string) => {
       // Remove surrounding quotes if present and handle escaped quotes
-      if (typeof value === 'string' && value.startsWith('"') && value.endsWith('"')) {
+      if (
+        typeof value === "string" &&
+        value.startsWith('"') &&
+        value.endsWith('"')
+      ) {
         return value.slice(1, -1).replace(/""/g, '"');
       }
       return value;
-    }
+    },
   });
 
   if (results.errors.length > 0) {
-    console.error('CSV parsing errors:', results.errors);
+    console.error("CSV parsing errors:", results.errors);
   }
 
   if (!results.data || results.data.length === 0) {
@@ -143,27 +147,36 @@ export async function parseCSVContent(csv: string): Promise<ParsedQuestion[]> {
   }
 
   // Get the headers from the parsed data
-  const headers = Object.keys(results.data[0] as Record<string, any>).map(h =>
-    h.trim().toLowerCase()
+  const headers = Object.keys(results.data[0] as Record<string, any>).map((h) =>
+    h.trim().toLowerCase(),
   );
 
   // Find column indices
   const findColumnIndex = (names: string[]): number => {
     for (const name of names) {
-      const index = headers.findIndex(h => h === name.toLowerCase());
+      const index = headers.findIndex((h) => h === name.toLowerCase());
       if (index !== -1) return index;
     }
     return -1;
   };
 
-  const questionCol = findColumnIndex(["question", "questions", "question_text", "q"]);
+  const questionCol = findColumnIndex([
+    "question",
+    "questions",
+    "question_text",
+    "q",
+  ]);
   const option1Col = findColumnIndex(["option1", "option_1", "opt1", "a"]);
   const option2Col = findColumnIndex(["option2", "option_2", "opt2", "b"]);
   const option3Col = findColumnIndex(["option3", "option_3", "opt3", "c"]);
   const option4Col = findColumnIndex(["option4", "option_4", "opt4", "d"]);
   const option5Col = findColumnIndex(["option5", "option_5", "opt5", "e"]);
   const answerCol = findColumnIndex(["answer", "ans", "correct_answer"]);
-  const explanationCol = findColumnIndex(["explanation", "exp", "explanation_text"]);
+  const explanationCol = findColumnIndex([
+    "explanation",
+    "exp",
+    "explanation_text",
+  ]);
   const subjectCol = findColumnIndex(["subject", "subject_name"]);
   const paperCol = findColumnIndex(["paper", "paper_name"]);
   const chapterCol = findColumnIndex(["chapter", "chapter_name"]);
@@ -179,7 +192,7 @@ export async function parseCSVContent(csv: string): Promise<ParsedQuestion[]> {
     answerCol === -1
   ) {
     throw new Error(
-      "CSV must have columns: question, option1, option2, option3, answer"
+      "CSV must have columns: question, option1, option2, option3, answer",
     );
   }
 
@@ -199,16 +212,41 @@ export async function parseCSVContent(csv: string): Promise<ParsedQuestion[]> {
       option1: cleanCsvHtml(rowValues[option1Col]?.toString() || ""),
       option2: cleanCsvHtml(rowValues[option2Col]?.toString() || ""),
       option3: cleanCsvHtml(rowValues[option3Col]?.toString() || ""),
-      option4: option4Col >= 0 ? cleanCsvHtml(rowValues[option4Col]?.toString() || "") : undefined,
-      option5: option5Col >= 0 ? cleanCsvHtml(rowValues[option5Col]?.toString() || "") : undefined,
+      option4:
+        option4Col >= 0
+          ? cleanCsvHtml(rowValues[option4Col]?.toString() || "")
+          : undefined,
+      option5:
+        option5Col >= 0
+          ? cleanCsvHtml(rowValues[option5Col]?.toString() || "")
+          : undefined,
       answer: rowValues[answerCol]?.toString() || "",
-      explanation: explanationCol >= 0 ? cleanCsvHtml(rowValues[explanationCol]?.toString() || "") : undefined,
-      subject: subjectCol >= 0 ? rowValues[subjectCol]?.toString()?.trim() || undefined : undefined,
-      paper: paperCol >= 0 ? rowValues[paperCol]?.toString()?.trim() || undefined : undefined,
-      chapter: chapterCol >= 0 ? rowValues[chapterCol]?.toString()?.trim() || undefined : undefined,
-      highlight: highlightCol >= 0 ? rowValues[highlightCol]?.toString()?.trim() || undefined : undefined,
-      type: typeCol >= 0 ? parseInt(rowValues[typeCol]?.toString() || "0") || 0 : 0,
-      section: sectionCol >= 0 ? rowValues[sectionCol]?.toString()?.trim() || undefined : undefined,
+      explanation:
+        explanationCol >= 0
+          ? cleanCsvHtml(rowValues[explanationCol]?.toString() || "")
+          : undefined,
+      subject:
+        subjectCol >= 0
+          ? rowValues[subjectCol]?.toString()?.trim() || undefined
+          : undefined,
+      paper:
+        paperCol >= 0
+          ? rowValues[paperCol]?.toString()?.trim() || undefined
+          : undefined,
+      chapter:
+        chapterCol >= 0
+          ? rowValues[chapterCol]?.toString()?.trim() || undefined
+          : undefined,
+      highlight:
+        highlightCol >= 0
+          ? rowValues[highlightCol]?.toString()?.trim() || undefined
+          : undefined,
+      type:
+        typeCol >= 0 ? parseInt(rowValues[typeCol]?.toString() || "0") || 0 : 0,
+      section:
+        sectionCol >= 0
+          ? rowValues[sectionCol]?.toString()?.trim() || undefined
+          : undefined,
     });
   }
 

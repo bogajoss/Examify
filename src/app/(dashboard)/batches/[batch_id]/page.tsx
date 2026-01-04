@@ -115,7 +115,7 @@ export default function StudentBatchExamsPage() {
   }, [batch_id, user, authLoading, router]);
 
   const { liveExams, practiceExams, upcomingExams } = useMemo(() => {
-    const now = dayjs.utc();
+    const now = dayjs().utcOffset(6 * 60); // Bangladesh timezone (UTC+6)
     const live: Exam[] = [];
     const practice: Exam[] = [];
     const upcoming: Exam[] = [];
@@ -124,8 +124,8 @@ export default function StudentBatchExamsPage() {
       if (exam.is_practice) {
         practice.push(exam);
       } else {
-        const startTime = exam.start_at ? dayjs.utc(exam.start_at) : null;
-        const endTime = exam.end_at ? dayjs.utc(exam.end_at) : null;
+        const startTime = exam.start_at ? dayjs.utc(exam.start_at).utcOffset(6 * 60) : null;
+        const endTime = exam.end_at ? dayjs.utc(exam.end_at).utcOffset(6 * 60) : null;
 
         if (startTime && now.isBefore(startTime)) {
           upcoming.push(exam);

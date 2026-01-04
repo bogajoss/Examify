@@ -73,7 +73,8 @@ export async function POST(request: NextRequest) {
     try {
       questions = await parseCSV(csvFile);
     } catch (parseError: unknown) {
-      const errorMessage = parseError instanceof Error ? parseError.message : "Unknown error";
+      const errorMessage =
+        parseError instanceof Error ? parseError.message : "Unknown error";
       return NextResponse.json(
         { success: false, error: `CSV parsing error: ${errorMessage}` },
         { status: 400, headers: corsHeaders() },
@@ -158,7 +159,8 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: unknown) {
     console.error("Error in POST /api/upload-csv:", error);
-    const errorMessage = error instanceof Error ? error.message : "Internal server error";
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
       { success: false, error: errorMessage },
       { status: 500, headers: corsHeaders() },
