@@ -701,7 +701,7 @@ export function EditExamModal({
                               const sectionMap = new Map<string, string[]>();
                               qs.forEach((q) => {
                                 const section = String(
-                                  q.subject || q.type || "1",
+                                  q.section || q.subject || q.type || "1",
                                 );
                                 if (!sectionMap.has(section)) {
                                   sectionMap.set(section, []);

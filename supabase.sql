@@ -79,6 +79,7 @@ create table if not exists questions (
   paper varchar(100),
   chapter varchar(255),
   highlight varchar(255),
+  section varchar(255),
   type integer default 0,
   order_index integer default 0,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
@@ -87,6 +88,7 @@ create table if not exists questions (
 create index if not exists idx_questions_file on questions(file_id);
 create index if not exists idx_questions_order on questions(order_index);
 create index if not exists idx_questions_subject on questions(subject);
+create index if not exists idx_questions_section on questions(section);
 create index if not exists idx_file_question on questions(file_id, id);
 
 -- ============================================================

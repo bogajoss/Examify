@@ -128,6 +128,7 @@ export async function POST(request: NextRequest) {
       paper: q.paper || null,
       chapter: q.chapter || null,
       highlight: q.highlight || null,
+      section: q.section || null,
       type: q.type,
       order_index: index,
     }));

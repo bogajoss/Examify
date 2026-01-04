@@ -744,7 +744,7 @@ export function BatchDetailsClient({
                                   >();
                                   qs.forEach((q) => {
                                     const section = String(
-                                      q.subject || q.type || "1",
+                                      q.section || q.subject || q.type || "1",
                                     );
                                     if (!sectionMap.has(section)) {
                                       sectionMap.set(section, []);

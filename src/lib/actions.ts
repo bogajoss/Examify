@@ -190,13 +190,11 @@ export async function createExam(formData: FormData) {
   const batch_id_raw = formData.get("batch_id") as string | null;
   const batch_id = batch_id_raw === "public" ? null : batch_id_raw;
   const durationRaw = formData.get("duration_minutes") as string;
-  const duration_minutes = durationRaw ? parseInt(durationRaw, 10) : null;
-  const marks_per_question = parseFloat(
-    formData.get("marks_per_question") as string,
-  );
-  const negative_marks_per_wrong = parseFloat(
-    formData.get("negative_marks_per_wrong") as string,
-  );
+  const duration_minutes = durationRaw ? parseInt(durationRaw, 10) : 120; // Default to 120 if not provided
+  const marks_per_question_raw = formData.get("marks_per_question") as string;
+  const marks_per_question = marks_per_question_raw ? parseFloat(marks_per_question_raw) : 1; // Default to 1 if not provided
+  const negative_marks_per_wrong_raw = formData.get("negative_marks_per_wrong") as string;
+  const negative_marks_per_wrong = negative_marks_per_wrong_raw ? parseFloat(negative_marks_per_wrong_raw) : 0.25; // Default to 0.25 if not provided
   const file_id = formData.get("file_id") as string;
   const is_practice = formData.get("is_practice") === "true";
   const shuffle_questions = formData.get("shuffle_questions") === "true";
@@ -210,9 +208,8 @@ export async function createExam(formData: FormData) {
     end_at = null;
   }
 
-  const total_subjects = formData.get("total_subjects")
-    ? parseInt(formData.get("total_subjects") as string)
-    : null;
+  const total_subjects_raw = formData.get("total_subjects") as string;
+  const total_subjects = total_subjects_raw ? parseInt(total_subjects_raw) : null;
 
   let mandatory_subjects = [];
   try {
@@ -238,6 +235,9 @@ export async function createExam(formData: FormData) {
     question_ids = [];
   }
 
+  // Set default status to 'live' for new exams
+  const status = "live";
+
   const { data, error } = await supabaseAdmin
     .from("exams")
     .insert({
@@ -245,10 +245,10 @@ export async function createExam(formData: FormData) {
       description,
       course_name,
       batch_id,
-      duration_minutes,
-      marks_per_question,
-      negative_marks_per_wrong,
-      file_id,
+      duration_minutes: isNaN(duration_minutes) ? 120 : duration_minutes,
+      marks_per_question: isNaN(marks_per_question) ? 1 : marks_per_question,
+      negative_marks_per_wrong: isNaN(negative_marks_per_wrong) ? 0.25 : negative_marks_per_wrong,
+      file_id: file_id || null,
       is_practice,
       shuffle_questions,
       start_at,
@@ -257,6 +257,7 @@ export async function createExam(formData: FormData) {
       mandatory_subjects,
       optional_subjects,
       number_of_attempts,
+      status, // Explicitly set status to 'live'
     })
     .select()
     .single();
@@ -890,6 +891,7 @@ export async function uploadCSVAction(formData: FormData) {
       paper: q.paper || null,
       chapter: q.chapter || null,
       highlight: q.highlight || null,
+      section: q.section || null,
       type: q.type,
       order_index: index,
     }));
@@ -1006,9 +1008,37 @@ export async function updateQuestionAction(
     return { success: false, message: "Unauthorized" };
   }
 
+  // Valid columns in questions table
+  const validColumns = [
+    "question_text",
+    "option1",
+    "option2",
+    "option3",
+    "option4",
+    "option5",
+    "answer",
+    "explanation",
+    "subject",
+    "paper",
+    "chapter",
+    "highlight",
+    "type",
+    "section",
+    "question_image",
+    "explanation_image",
+  ];
+
+  // Filter to only valid columns
+  const filteredData: Record<string, unknown> = {};
+  validColumns.forEach((col) => {
+    if (col in data) {
+      filteredData[col] = data[col];
+    }
+  });
+
   const { data: updatedQ, error } = await supabaseAdmin
     .from("questions")
-    .update(data)
+    .update(filteredData)
     .eq("id", questionId)
     .select()
     .single();
@@ -1028,9 +1058,39 @@ export async function createQuestionAction(data: Record<string, unknown>) {
     return { success: false, message: "Unauthorized" };
   }
 
+  // Valid columns in questions table
+  const validColumns = [
+    "file_id",
+    "question_text",
+    "option1",
+    "option2",
+    "option3",
+    "option4",
+    "option5",
+    "answer",
+    "explanation",
+    "subject",
+    "paper",
+    "chapter",
+    "highlight",
+    "type",
+    "section",
+    "question_image",
+    "explanation_image",
+    "order_index",
+  ];
+
+  // Filter to only valid columns
+  const filteredData: Record<string, unknown> = {};
+  validColumns.forEach((col) => {
+    if (col in data) {
+      filteredData[col] = data[col];
+    }
+  });
+
   const { data: newQ, error } = await supabaseAdmin
     .from("questions")
-    .insert(data)
+    .insert(filteredData)
     .select()
     .single();
 

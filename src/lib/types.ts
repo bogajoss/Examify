@@ -84,6 +84,7 @@ export type Question = {
   chapter?: string | null;
   highlight?: string | null;
   type?: string | null;
+  section?: string | null;
   order_index?: number;
   question_image?: string;
   explanation_image?: string;

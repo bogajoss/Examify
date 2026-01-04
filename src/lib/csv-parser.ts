@@ -3,6 +3,8 @@
  * Handles parsing of CSV files with questions
  */
 
+import Papa from 'papaparse';
+
 export interface ParsedQuestion {
   question_text: string;
   option1: string;
@@ -17,6 +19,7 @@ export interface ParsedQuestion {
   chapter?: string;
   highlight?: string;
   type: number;
+  section?: string;
 }
 
 /**
@@ -26,13 +29,8 @@ export interface ParsedQuestion {
 export function cleanCsvHtml(text: string): string {
   if (!text) return text;
 
-  // Remove color="..." attribute from <font> tags
-  text = text.replace(
-    /(<font\b[^>]*?)\bcolor\s*=\s*["']?[^"'>]*?["']?([^>]*?>)/gi,
-    function ($0, $1, $2) {
-      return $1 + $2;
-    },
-  );
+  // Remove <font> and </font> tags completely, keeping only the content inside
+  text = text.replace(/<font[^>]*>|<\/font>/gi, '');
 
   return text;
 }
@@ -81,92 +79,97 @@ export function convertAnswersFromZeroToOne(questions: ParsedQuestion[]): void {
  * Parse CSV content and extract questions
  */
 export async function parseCSV(file: File): Promise<ParsedQuestion[]> {
-  const content = await file.text();
+  try {
+    // For browser environments, use FileReader
+    if (typeof window !== 'undefined' && window.FileReader) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
 
+        reader.onload = (event) => {
+          try {
+            const csv = event.target?.result as string;
+            parseCSVContent(csv).then(resolve).catch(reject);
+          } catch (error) {
+            reject(error);
+          }
+        };
+
+        reader.onerror = () => {
+          reject(new Error("Failed to read file"));
+        };
+
+        reader.readAsText(file);
+      });
+    } else {
+      // For Node.js environments, get text directly from file
+      const content = await file.text();
+      return parseCSVContent(content);
+    }
+  } catch (error) {
+    throw error;
+  }
+}
+
+/**
+ * Parse CSV content string and extract questions
+ */
+export async function parseCSVContent(csv: string): Promise<ParsedQuestion[]> {
   // Detect and handle encoding
   // CSV files may have BOM (Byte Order Mark)
-  let csv = content;
-  if (csv.charCodeAt(0) === 0xfeff) {
-    csv = csv.slice(1);
+  let content = csv;
+  if (content.charCodeAt(0) === 0xfeff) {
+    content = content.slice(1);
   }
 
-  const lines = csv.split("\n").filter((line) => line.trim());
-  if (lines.length < 2) {
+  // Parse CSV using PapaParse which handles multi-line quoted fields properly
+  const results = Papa.parse(content, {
+    header: true,
+    skipEmptyLines: true,
+    transform: (value: string) => {
+      // Remove surrounding quotes if present and handle escaped quotes
+      if (typeof value === 'string' && value.startsWith('"') && value.endsWith('"')) {
+        return value.slice(1, -1).replace(/""/g, '"');
+      }
+      return value;
+    }
+  });
+
+  if (results.errors.length > 0) {
+    console.error('CSV parsing errors:', results.errors);
+  }
+
+  if (!results.data || results.data.length === 0) {
     throw new Error("CSV file must have header and at least one data row");
   }
 
-  // Parse header
-  const headerLine = lines[0];
-  const headers = headerLine.split(",").map((h) =>
-    h
-      .trim()
-      .toLowerCase()
-      .replace(/['"]|^\s+|\s+$/g, ""),
+  // Get the headers from the parsed data
+  const headers = Object.keys(results.data[0] as Record<string, any>).map(h =>
+    h.trim().toLowerCase()
   );
 
   // Find column indices
-  const findColumnIndex = (
-    names: string[],
-    ...alternatives: string[][]
-  ): number => {
-    for (let i = 0; i < names.length; i++) {
-      for (const alt of alternatives) {
-        if (alt.includes(names[i])) return i;
-      }
+  const findColumnIndex = (names: string[]): number => {
+    for (const name of names) {
+      const index = headers.findIndex(h => h === name.toLowerCase());
+      if (index !== -1) return index;
     }
     return -1;
   };
 
-  const questionCol = findColumnIndex(headers, [
-    "question",
-    "question_text",
-    "q",
-  ]);
-  const option1Col = findColumnIndex(headers, [
-    "option1",
-    "option_1",
-    "opt1",
-    "a",
-  ]);
-  const option2Col = findColumnIndex(headers, [
-    "option2",
-    "option_2",
-    "opt2",
-    "b",
-  ]);
-  const option3Col = findColumnIndex(headers, [
-    "option3",
-    "option_3",
-    "opt3",
-    "c",
-  ]);
-  const option4Col = findColumnIndex(headers, [
-    "option4",
-    "option_4",
-    "opt4",
-    "d",
-  ]);
-  const option5Col = findColumnIndex(headers, [
-    "option5",
-    "option_5",
-    "opt5",
-    "e",
-  ]);
-  const answerCol = findColumnIndex(headers, [
-    "answer",
-    "ans",
-    "correct_answer",
-  ]);
-  const explanationCol = findColumnIndex(headers, [
-    "explanation",
-    "exp",
-    "explanation_text",
-  ]);
-  const subjectCol = findColumnIndex(headers, ["subject", "subject_name"]);
-  const paperCol = findColumnIndex(headers, ["paper", "paper_name"]);
-  const chapterCol = findColumnIndex(headers, ["chapter", "chapter_name"]);
-  const highlightCol = findColumnIndex(headers, ["highlight", "tag"]);
-  const typeCol = findColumnIndex(headers, ["type", "question_type"]);
+  const questionCol = findColumnIndex(["question", "questions", "question_text", "q"]);
+  const option1Col = findColumnIndex(["option1", "option_1", "opt1", "a"]);
+  const option2Col = findColumnIndex(["option2", "option_2", "opt2", "b"]);
+  const option3Col = findColumnIndex(["option3", "option_3", "opt3", "c"]);
+  const option4Col = findColumnIndex(["option4", "option_4", "opt4", "d"]);
+  const option5Col = findColumnIndex(["option5", "option_5", "opt5", "e"]);
+  const answerCol = findColumnIndex(["answer", "ans", "correct_answer"]);
+  const explanationCol = findColumnIndex(["explanation", "exp", "explanation_text"]);
+  const subjectCol = findColumnIndex(["subject", "subject_name"]);
+  const paperCol = findColumnIndex(["paper", "paper_name"]);
+  const chapterCol = findColumnIndex(["chapter", "chapter_name"]);
+  const highlightCol = findColumnIndex(["highlight", "tag"]);
+  const typeCol = findColumnIndex(["type", "question_type"]);
+  const sectionCol = findColumnIndex(["section", "section_name"]);
 
   if (
     questionCol === -1 ||
@@ -176,61 +179,36 @@ export async function parseCSV(file: File): Promise<ParsedQuestion[]> {
     answerCol === -1
   ) {
     throw new Error(
-      "CSV must have columns: question, option1, option2, option3, answer",
+      "CSV must have columns: question, option1, option2, option3, answer"
     );
   }
 
   const questions: ParsedQuestion[] = [];
 
   // Parse data rows
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
+  for (const row of results.data) {
+    if (!row) continue;
 
-    // Robust CSV splitting that handles quoted commas
-    const values: string[] = [];
-    let current = "";
-    let inQuotes = false;
-    for (let j = 0; j < line.length; j++) {
-      const char = line[j];
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === "," && !inQuotes) {
-        values.push(current.trim().replace(/^["']|["']$/g, ""));
-        current = "";
-      } else {
-        current += char;
-      }
-    }
-    values.push(current.trim().replace(/^["']|["']$/g, ""));
+    const rowValues = Object.values(row as Record<string, any>);
 
-    const question_text = values[questionCol]?.trim() || "";
+    const question_text = rowValues[questionCol]?.toString()?.trim() || "";
     if (!question_text) continue;
 
     questions.push({
       question_text: cleanCsvHtml(question_text),
-      option1: cleanCsvHtml(values[option1Col] || ""),
-      option2: cleanCsvHtml(values[option2Col] || ""),
-      option3: cleanCsvHtml(values[option3Col] || ""),
-      option4:
-        option4Col >= 0 ? cleanCsvHtml(values[option4Col] || "") : undefined,
-      option5:
-        option5Col >= 0 ? cleanCsvHtml(values[option5Col] || "") : undefined,
-      answer: values[answerCol] || "",
-      explanation:
-        explanationCol >= 0
-          ? cleanCsvHtml(values[explanationCol] || "")
-          : undefined,
-      subject:
-        subjectCol >= 0 ? values[subjectCol]?.trim() || undefined : undefined,
-      paper: paperCol >= 0 ? values[paperCol]?.trim() || undefined : undefined,
-      chapter:
-        chapterCol >= 0 ? values[chapterCol]?.trim() || undefined : undefined,
-      highlight:
-        highlightCol >= 0
-          ? values[highlightCol]?.trim() || undefined
-          : undefined,
-      type: typeCol >= 0 ? parseInt(values[typeCol]) || 0 : 0,
+      option1: cleanCsvHtml(rowValues[option1Col]?.toString() || ""),
+      option2: cleanCsvHtml(rowValues[option2Col]?.toString() || ""),
+      option3: cleanCsvHtml(rowValues[option3Col]?.toString() || ""),
+      option4: option4Col >= 0 ? cleanCsvHtml(rowValues[option4Col]?.toString() || "") : undefined,
+      option5: option5Col >= 0 ? cleanCsvHtml(rowValues[option5Col]?.toString() || "") : undefined,
+      answer: rowValues[answerCol]?.toString() || "",
+      explanation: explanationCol >= 0 ? cleanCsvHtml(rowValues[explanationCol]?.toString() || "") : undefined,
+      subject: subjectCol >= 0 ? rowValues[subjectCol]?.toString()?.trim() || undefined : undefined,
+      paper: paperCol >= 0 ? rowValues[paperCol]?.toString()?.trim() || undefined : undefined,
+      chapter: chapterCol >= 0 ? rowValues[chapterCol]?.toString()?.trim() || undefined : undefined,
+      highlight: highlightCol >= 0 ? rowValues[highlightCol]?.toString()?.trim() || undefined : undefined,
+      type: typeCol >= 0 ? parseInt(rowValues[typeCol]?.toString() || "0") || 0 : 0,
+      section: sectionCol >= 0 ? rowValues[sectionCol]?.toString()?.trim() || undefined : undefined,
     });
   }
 

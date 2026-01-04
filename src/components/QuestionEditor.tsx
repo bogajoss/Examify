@@ -29,7 +29,6 @@ export default function QuestionEditor({
 }: QuestionEditorProps) {
   const [formData, setFormData] = useState<Question>({
     file_id: file_id,
-    exam_id: exam_id,
     question: initialQuestion?.question || initialQuestion?.question_text || "",
     question_text:
       initialQuestion?.question_text || initialQuestion?.question || "",
