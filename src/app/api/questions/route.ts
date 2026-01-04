@@ -1,184 +1,484 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin, validateApiToken, Question } from '@/lib/supabase';
+import { corsHeaders, handleCors } from '../middleware';
 
-const BACKEND_API_BASE = process.env.NEXT_PUBLIC_CSV_API_BASE_URL || "";
-const API_KEY = process.env.NEXT_PUBLIC_CSV_API_KEY || "";
+export async function GET(req: NextRequest) {
+  // Handle CORS
+  const corsResponse = await handleCors(req);
+  if (corsResponse) return corsResponse;
 
-if (!API_KEY) {
-  throw new Error("Missing CSV_API_KEY in environment");
-}
-
-const getBaseUrl = () =>
-  BACKEND_API_BASE.endsWith("/")
-    ? BACKEND_API_BASE.slice(0, -1)
-    : BACKEND_API_BASE;
-
-export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const url = new URL(req.url);
+    let token = url.searchParams.get('token');
+    const fileId = url.searchParams.get('file_id');
+    const examId = url.searchParams.get('exam_id');
+    const ids = url.searchParams.get('ids');
+    const search = url.searchParams.get('search');
+    const limit = url.searchParams.get('limit') ? parseInt(url.searchParams.get('limit')!) : 0;
+    const offset = url.searchParams.get('offset') ? parseInt(url.searchParams.get('offset')!) : 0;
 
-    // Build URL
-    const url = `${getBaseUrl()}/index.php?route=create-question`;
+    if (!token) {
+      const authHeader = req.headers.get('authorization');
+      if (authHeader?.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "Course-MNR-World-Backend/2.0",
-        "Authorization": `Bearer ${API_KEY}`,
-      },
-      body: JSON.stringify(body),
-    });
-
-    const contentType = response.headers.get("content-type");
-    if (!response.ok) {
-      const errorBody = contentType?.includes("application/json")
-        ? (await response.json()).error || "Create question failed"
-        : await response.text();
+    if (!token) {
       return NextResponse.json(
-        {
-          success: false,
-          message:
-            typeof errorBody === "string"
-              ? errorBody
-              : JSON.stringify(errorBody),
-        },
-        { status: response.status },
+        { success: false, error: 'Missing API Token' },
+        { status: 401, headers: corsHeaders() }
       );
     }
 
-    if (!contentType?.includes("application/json")) {
+    const { valid, isAdmin } = await validateApiToken(token);
+    if (!valid) {
       return NextResponse.json(
-        { success: false, message: "Unexpected response format from backend" },
-        { status: 502 },
+        { success: false, error: 'Invalid API Token' },
+        { status: 403, headers: corsHeaders() }
       );
     }
 
-    const result = await response.json();
+    let query = supabaseAdmin.from('questions').select('*');
 
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error("[CREATE-QUESTION] Error:", error);
+    // Filter by IDs if provided
+    if (ids) {
+      const idArray = ids.split(',').filter(id => id.trim());
+      if (idArray.length > 0) {
+        query = query.in('id', idArray);
+      }
+    }
+    // Filter by file_id if provided
+    else if (fileId) {
+      query = query.eq('file_id', fileId);
+    }
+    // Filter by exam_id if provided (through exam_questions junction table)
+    else if (examId) {
+      // Join through exam_questions table
+      const { data: examQuestions, error: eqError } = await supabaseAdmin
+        .from('exam_questions')
+        .select('question_id')
+        .eq('exam_id', examId);
+
+      if (eqError) {
+        return NextResponse.json(
+          { success: false, error: eqError.message },
+          { status: 500, headers: corsHeaders() }
+        );
+      }
+
+      const questionIds = examQuestions?.map(eq => eq.question_id) || [];
+      if (questionIds.length === 0) {
+        return NextResponse.json(
+          { success: true, data: [] },
+          { headers: corsHeaders() }
+        );
+      }
+
+      query = query.in('id', questionIds);
+    }
+
+    // Add search filter if provided
+    if (search) {
+      query = query.or(`question_text.ilike.%${search}%,explanation.ilike.%${search}%`);
+    }
+
+    // Add pagination
+    if (limit > 0) {
+      query = query.range(offset, offset + limit - 1);
+    }
+
+    // Order by order_index
+    query = query.order('order_index', { ascending: true });
+
+    const { data: questions, error } = await query;
+
+    if (error) {
+      console.error('Error fetching questions:', error);
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500, headers: corsHeaders() }
+      );
+    }
+
     return NextResponse.json(
-      {
-        success: false,
-        message:
-          error instanceof Error ? error.message : "Internal server error",
-      },
-      { status: 500 },
+      { success: true, data: questions },
+      { headers: corsHeaders() }
+    );
+  } catch (error: any) {
+    console.error('Error in GET /api/questions:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Internal server error' },
+      { status: 500, headers: corsHeaders() }
     );
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function POST(req: NextRequest) {
+  // Handle CORS
+  const corsResponse = await handleCors(req);
+  if (corsResponse) return corsResponse;
+
   try {
-    const body = await request.json();
+    const url = new URL(req.url);
+    let token = url.searchParams.get('token');
 
-    // Build URL
-    const url = `${getBaseUrl()}/index.php?route=update-question`;
+    if (!token) {
+      const authHeader = req.headers.get('authorization');
+      if (authHeader?.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
 
-    const response = await fetch(url, {
-      method: "PUT", // PHP backend accepts POST or PUT for updates, but PUT is more semantically correct
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "Course-MNR-World-Backend/2.0",
-        "Authorization": `Bearer ${API_KEY}`,
-      },
-      body: JSON.stringify(body),
-    });
-
-    const contentType = response.headers.get("content-type");
-    if (!response.ok) {
-      const errorBody = contentType?.includes("application/json")
-        ? (await response.json()).error || "Update question failed"
-        : await response.text();
+    if (!token) {
       return NextResponse.json(
-        {
-          success: false,
-          message:
-            typeof errorBody === "string"
-              ? errorBody
-              : JSON.stringify(errorBody),
-        },
-        { status: response.status },
+        { success: false, error: 'Missing API Token' },
+        { status: 401, headers: corsHeaders() }
       );
     }
 
-    if (!contentType?.includes("application/json")) {
+    const { valid } = await validateApiToken(token);
+    if (!valid) {
       return NextResponse.json(
-        { success: false, message: "Unexpected response format from backend" },
-        { status: 502 },
+        { success: false, error: 'Invalid API Token' },
+        { status: 403, headers: corsHeaders() }
       );
     }
 
-    const result = await response.json();
+    const body = await req.json();
+    const {
+      file_id,
+      exam_id,
+      question_text,
+      option1 = '',
+      option2 = '',
+      option3 = '',
+      option4 = '',
+      option5 = '',
+      answer = '',
+      explanation = '',
+      subject = null,
+      paper = null,
+      chapter = null,
+      highlight = null,
+      type = 0,
+    } = body;
 
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error("[UPDATE-QUESTION] Error:", error);
+    if (!question_text) {
+      return NextResponse.json(
+        { success: false, error: 'Missing required field: question_text' },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    // Database generates UUID via uuid_generate_v4() default value
+
+    // Determine file_id - if not provided, try to get from exam or create default
+    let finalFileId = file_id;
+    if (!finalFileId || finalFileId === 'default') {
+      if (exam_id) {
+        // Try to get file_id from exam's questions
+        const { data: examQs } = await supabaseAdmin
+          .from('exam_questions')
+          .select('question_id')
+          .eq('exam_id', exam_id)
+          .limit(1);
+
+        if (examQs && examQs.length > 0) {
+          const { data: q } = await supabaseAdmin
+            .from('questions')
+            .select('file_id')
+            .eq('id', examQs[0].question_id)
+            .single();
+          if (q) finalFileId = q.file_id;
+        }
+      }
+
+      // If still no file_id, create a default file
+      if (!finalFileId) {
+        const { data: newFile, error: fileError } = await supabaseAdmin
+          .from('files')
+          .insert({
+            original_filename: 'default.csv',
+            display_name: 'Default Question Bank',
+            uploaded_at: new Date().toISOString(),
+            total_questions: 0,
+            is_bank: true,
+          })
+          .select()
+          .single();
+
+        if (fileError) {
+          console.error('Error creating default file:', fileError);
+          return NextResponse.json(
+            { success: false, error: 'Failed to create default file' },
+            { status: 500, headers: corsHeaders() }
+          );
+        }
+
+        finalFileId = newFile?.id;
+      }
+    }
+
+    // Insert the question
+    const { data: question, error } = await supabaseAdmin
+      .from('questions')
+      .insert({
+        file_id: finalFileId,
+        question_text,
+        option1,
+        option2,
+        option3,
+        option4,
+        option5,
+        answer,
+        explanation,
+        subject,
+        paper,
+        chapter,
+        highlight,
+        type,
+        order_index: 0,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating question:', error);
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500, headers: corsHeaders() }
+      );
+    }
+
+    // Update file's total_questions count
+    const { data: fileData } = await supabaseAdmin
+      .from('questions')
+      .select('id', { count: 'exact' })
+      .eq('file_id', finalFileId);
+
+    if (fileData) {
+      await supabaseAdmin
+        .from('files')
+        .update({ total_questions: fileData.length })
+        .eq('id', finalFileId);
+    }
+
     return NextResponse.json(
       {
-        success: false,
-        message:
-          error instanceof Error ? error.message : "Internal server error",
+        success: true,
+        message: 'Question created successfully',
+        data: question,
       },
-      { status: 500 },
+      { headers: corsHeaders() }
+    );
+  } catch (error: any) {
+    console.error('Error in POST /api/questions:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Internal server error' },
+      { status: 500, headers: corsHeaders() }
     );
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function PUT(req: NextRequest) {
+  // Handle CORS
+  const corsResponse = await handleCors(req);
+  if (corsResponse) return corsResponse;
+
   try {
-    const body = await request.json();
+    const url = new URL(req.url);
+    let token = url.searchParams.get('token');
 
-    // Build URL
-    const url = `${getBaseUrl()}/index.php?route=delete-question`;
+    if (!token) {
+      const authHeader = req.headers.get('authorization');
+      if (authHeader?.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
 
-    const response = await fetch(url, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "Course-MNR-World-Backend/2.0",
-        "Authorization": `Bearer ${API_KEY}`,
-      },
-      body: JSON.stringify(body),
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: 'Missing API Token' },
+        { status: 401, headers: corsHeaders() }
+      );
+    }
+
+    const { valid } = await validateApiToken(token);
+    if (!valid) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid API Token' },
+        { status: 403, headers: corsHeaders() }
+      );
+    }
+
+    const body = await req.json();
+    const { id } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Missing Question ID' },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    const allowedFields = [
+      'question_text',
+      'option1',
+      'option2',
+      'option3',
+      'option4',
+      'option5',
+      'answer',
+      'explanation',
+      'type',
+      'question_image',
+      'explanation_image',
+      'subject',
+      'paper',
+      'chapter',
+      'highlight',
+    ];
+
+    const updateData: any = {};
+    allowedFields.forEach(field => {
+      if (field in body) {
+        updateData[field] = body[field];
+      }
     });
 
-    const contentType = response.headers.get("content-type");
-    if (!response.ok) {
-      const errorBody = contentType?.includes("application/json")
-        ? (await response.json()).error || "Delete question failed"
-        : await response.text();
+    if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
-        {
-          success: false,
-          message:
-            typeof errorBody === "string"
-              ? errorBody
-              : JSON.stringify(errorBody),
-        },
-        { status: response.status },
+        { success: false, error: 'No fields to update' },
+        { status: 400, headers: corsHeaders() }
       );
     }
 
-    if (!contentType?.includes("application/json")) {
+    const { data: question, error } = await supabaseAdmin
+      .from('questions')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating question:', error);
       return NextResponse.json(
-        { success: false, message: "Unexpected response format from backend" },
-        { status: 502 },
+        { success: false, error: error.message },
+        { status: 500, headers: corsHeaders() }
       );
     }
 
-    const result = await response.json();
-
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error("[DELETE-QUESTION] Error:", error);
     return NextResponse.json(
       {
-        success: false,
-        message:
-          error instanceof Error ? error.message : "Internal server error",
+        success: true,
+        message: 'Question updated successfully',
+        data: question,
       },
-      { status: 500 },
+      { headers: corsHeaders() }
+    );
+  } catch (error: any) {
+    console.error('Error in PUT /api/questions:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Internal server error' },
+      { status: 500, headers: corsHeaders() }
     );
   }
+}
+
+export async function DELETE(req: NextRequest) {
+  // Handle CORS
+  const corsResponse = await handleCors(req);
+  if (corsResponse) return corsResponse;
+
+  try {
+    const url = new URL(req.url);
+    let token = url.searchParams.get('token');
+
+    if (!token) {
+      const authHeader = req.headers.get('authorization');
+      if (authHeader?.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: 'Missing API Token' },
+        { status: 401, headers: corsHeaders() }
+      );
+    }
+
+    const { valid } = await validateApiToken(token);
+    if (!valid) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid API Token' },
+        { status: 403, headers: corsHeaders() }
+      );
+    }
+
+    const body = await req.json();
+    const { id } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'Missing Question ID' },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    // Get the question to find its file_id
+    const { data: question } = await supabaseAdmin
+      .from('questions')
+      .select('file_id')
+      .eq('id', id)
+      .single();
+
+    // Delete the question
+    const { error } = await supabaseAdmin
+      .from('questions')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting question:', error);
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500, headers: corsHeaders() }
+      );
+    }
+
+    // Update file's total_questions count
+    if (question?.file_id) {
+      const { data: fileData } = await supabaseAdmin
+        .from('questions')
+        .select('id', { count: 'exact' })
+        .eq('file_id', question.file_id);
+
+      if (fileData) {
+        await supabaseAdmin
+          .from('files')
+          .update({ total_questions: fileData.length })
+          .eq('id', question.file_id);
+      }
+    }
+
+    return NextResponse.json(
+      { success: true, message: 'Question deleted successfully' },
+      { headers: corsHeaders() }
+    );
+  } catch (error: any) {
+    console.error('Error in DELETE /api/questions:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Internal server error' },
+      { status: 500, headers: corsHeaders() }
+    );
+  }
+}
+
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: corsHeaders(),
+  });
 }

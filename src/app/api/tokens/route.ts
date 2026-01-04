@@ -33,15 +33,21 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Fetch all files
-    const { data: files, error } = await supabaseAdmin
-      .from('files')
+    // Only admins can view all tokens
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, error: 'Admin access required' },
+        { status: 403, headers: corsHeaders() }
+      );
+    }
+
+    const { data: tokens, error } = await supabaseAdmin
+      .from('api_tokens')
       .select('*')
-      .eq('is_bank', true)
-      .order('uploaded_at', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching files:', error);
+      console.error('Error fetching tokens:', error);
       return NextResponse.json(
         { success: false, error: error.message },
         { status: 500, headers: corsHeaders() }
@@ -49,11 +55,11 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json(
-      { success: true, data: files },
+      { success: true, data: tokens },
       { headers: corsHeaders() }
     );
   } catch (error: any) {
-    console.error('Error in GET /api/files:', error);
+    console.error('Error in GET /api/tokens:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Internal server error' },
       { status: 500, headers: corsHeaders() }
@@ -61,17 +67,17 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   // Handle CORS
-  const corsResponse = await handleCors(request);
+  const corsResponse = await handleCors(req);
   if (corsResponse) return corsResponse;
 
   try {
-    const url = new URL(request.url);
+    const url = new URL(req.url);
     let token = url.searchParams.get('token');
 
     if (!token) {
-      const authHeader = request.headers.get('authorization');
+      const authHeader = req.headers.get('authorization');
       if (authHeader?.startsWith('Bearer ')) {
         token = authHeader.substring(7);
       }
@@ -92,33 +98,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { original_filename, display_name } = body;
-
-    if (!original_filename) {
+    // Only admins can create tokens
+    if (!isAdmin) {
       return NextResponse.json(
-        { success: false, error: 'Missing original_filename' },
+        { success: false, error: 'Admin access required' },
+        { status: 403, headers: corsHeaders() }
+      );
+    }
+
+    const body = await req.json();
+    const { name, is_admin = false } = body;
+
+    if (!name) {
+      return NextResponse.json(
+        { success: false, error: 'Missing token name' },
         { status: 400, headers: corsHeaders() }
       );
     }
 
-    // Database generates UUID via uuid_generate_v4() default value
-    const now = new Date().toISOString();
+    // Generate random token string (not UUID format)
+    const new_token = Math.random().toString(36).substring(2, 15) + 
+                      Math.random().toString(36).substring(2, 15);
 
-    const { data: file, error } = await supabaseAdmin
-      .from('files')
+    // For user_id, generate a simple UUID format string
+    const userId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+
+    // Database generates UUID for id via uuid_generate_v4() default value
+    const { data: newToken, error } = await supabaseAdmin
+      .from('api_tokens')
       .insert({
-        original_filename,
-        display_name: display_name || original_filename,
-        uploaded_at: now,
-        total_questions: 0,
-        is_bank: true,
+        user_id: userId,
+        token: new_token,
+        name,
+        is_active: true,
+        is_admin: is_admin,
       })
       .select()
       .single();
 
     if (error) {
-      console.error('Error creating file:', error);
+      console.error('Error creating token:', error);
       return NextResponse.json(
         { success: false, error: error.message },
         { status: 500, headers: corsHeaders() }
@@ -128,14 +151,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: 'File record created successfully',
-        file_id: file.id,
-        file,
+        message: 'Token created successfully',
+        data: newToken,
       },
       { headers: corsHeaders() }
     );
   } catch (error: any) {
-    console.error('Error in POST /api/files:', error);
+    console.error('Error in POST /api/tokens:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Internal server error' },
       { status: 500, headers: corsHeaders() }
@@ -143,17 +165,17 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(req: NextRequest) {
   // Handle CORS
-  const corsResponse = await handleCors(request);
+  const corsResponse = await handleCors(req);
   if (corsResponse) return corsResponse;
 
   try {
-    const url = new URL(request.url);
+    const url = new URL(req.url);
     let token = url.searchParams.get('token');
 
     if (!token) {
-      const authHeader = request.headers.get('authorization');
+      const authHeader = req.headers.get('authorization');
       if (authHeader?.startsWith('Bearer ')) {
         token = authHeader.substring(7);
       }
@@ -174,30 +196,31 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    // Only admins can delete tokens
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, error: 'Admin access required' },
+        { status: 403, headers: corsHeaders() }
+      );
+    }
+
+    const body = await req.json();
     const { id } = body;
 
     if (!id) {
       return NextResponse.json(
-        { success: false, error: 'Missing file ID' },
+        { success: false, error: 'Missing token ID' },
         { status: 400, headers: corsHeaders() }
       );
     }
 
-    // Delete all questions in the file first
-    await supabaseAdmin
-      .from('questions')
-      .delete()
-      .eq('file_id', id);
-
-    // Then delete the file
     const { error } = await supabaseAdmin
-      .from('files')
+      .from('api_tokens')
       .delete()
       .eq('id', id);
 
     if (error) {
-      console.error('Error deleting file:', error);
+      console.error('Error deleting token:', error);
       return NextResponse.json(
         { success: false, error: error.message },
         { status: 500, headers: corsHeaders() }
@@ -205,11 +228,11 @@ export async function DELETE(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { success: true, message: 'File deleted successfully' },
+      { success: true, message: 'Token deleted successfully' },
       { headers: corsHeaders() }
     );
   } catch (error: any) {
-    console.error('Error in DELETE /api/files:', error);
+    console.error('Error in DELETE /api/tokens:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Internal server error' },
       { status: 500, headers: corsHeaders() }

@@ -1,80 +1,163 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin, validateApiToken } from '@/lib/supabase';
+import { parseCSV } from '@/lib/csv-parser';
+import { corsHeaders, handleCors } from '../middleware';
 
-const BACKEND_API_BASE = process.env.NEXT_PUBLIC_CSV_API_BASE_URL || "";
-const API_KEY = process.env.NEXT_PUBLIC_CSV_API_KEY || "";
-
-if (!API_KEY) {
-  throw new Error("Missing CSV_API_KEY in environment");
-}
-
-const getBaseUrl = () =>
-  BACKEND_API_BASE.endsWith("/")
-    ? BACKEND_API_BASE.slice(0, -1)
-    : BACKEND_API_BASE;
+const MAX_CSV_SIZE = 5 * 1024 * 1024; // 5MB
 
 export async function POST(request: NextRequest) {
+  // Handle CORS
+  const corsResponse = await handleCors(request);
+  if (corsResponse) return corsResponse;
+
   try {
-    // For CSV upload, we need to handle multipart form data
+    const url = new URL(request.url);
+    let token = url.searchParams.get('token');
+
+    if (!token) {
+      const authHeader = request.headers.get('authorization');
+      if (authHeader?.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, error: 'Missing API Token' },
+        { status: 401, headers: corsHeaders() }
+      );
+    }
+
+    const { valid } = await validateApiToken(token);
+    if (!valid) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid API Token' },
+        { status: 403, headers: corsHeaders() }
+      );
+    }
+
     const formData = await request.formData();
+    const csvFile = formData.get('csv_file') as File | null;
 
-    // Create a new FormData to send to the backend API
-    const backendFormData = new FormData();
-
-    // Add the CSV file
-    const csvFile = formData.get("csv_file") as File | null;
     if (!csvFile) {
       return NextResponse.json(
-        { success: false, message: "No CSV file provided" },
-        { status: 400 },
+        { success: false, error: 'No CSV file provided' },
+        { status: 400, headers: corsHeaders() }
       );
     }
 
-    backendFormData.append("csv_file", csvFile);
-
-    // Build URL with token
-    const url = `${getBaseUrl()}/index.php?route=upload-csv&token=${encodeURIComponent(API_KEY)}`;
-
-    const response = await fetch(url, {
-      method: "POST",
-      body: backendFormData,
-      headers: {
-        "User-Agent": "Course-MNR-World-Backend/2.0",
-      },
-    });
-
-    const contentType = response.headers.get("content-type");
-    let result;
-
-    if (contentType && contentType.includes("application/json")) {
-      result = await response.json();
-    } else {
-      const text = await response.text();
+    // Validate file type
+    if (!csvFile.type.includes('text') && csvFile.type !== 'application/csv') {
       return NextResponse.json(
-        {
-          success: false,
-          message: text || `Upload failed (${response.status})`,
-        },
-        { status: response.status === 200 ? 502 : response.status },
+        { success: false, error: 'Invalid file type. Only CSV files are allowed.' },
+        { status: 400, headers: corsHeaders() }
       );
     }
 
-    if (!response.ok) {
+    // Validate file size
+    if (csvFile.size > MAX_CSV_SIZE) {
       return NextResponse.json(
-        { success: false, message: result.error || "Upload failed" },
-        { status: response.status },
+        { success: false, error: `File too large. Maximum size is ${MAX_CSV_SIZE / 1024 / 1024}MB.` },
+        { status: 400, headers: corsHeaders() }
       );
     }
 
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error("[UPLOAD-CSV] Error:", error);
+    // Parse CSV
+    let questions;
+    try {
+      questions = await parseCSV(csvFile);
+    } catch (parseError: any) {
+      return NextResponse.json(
+        { success: false, error: `CSV parsing error: ${parseError.message}` },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    if (!questions || questions.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'No valid questions found in CSV file' },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    // Create a file record
+    // Database generates UUID via uuid_generate_v4() default value
+    const is_bank = formData.get('is_bank') ? parseInt(formData.get('is_bank') as string) : 1;
+
+    // Start transaction - insert file
+    const { data: file, error: fileError } = await supabaseAdmin
+      .from('files')
+      .insert({
+        original_filename: csvFile.name,
+        display_name: csvFile.name,
+        total_questions: questions.length,
+        is_bank: is_bank === 1,
+      })
+      .select()
+      .single();
+
+    if (fileError) {
+      console.error('Error creating file record:', fileError);
+      return NextResponse.json(
+        { success: false, error: fileError.message },
+        { status: 500, headers: corsHeaders() }
+      );
+    }
+
+    // Insert all questions
+    const questionRecords = questions.map((q, index) => ({
+      file_id: file.id,
+      question_text: q.question_text,
+      option1: q.option1,
+      option2: q.option2,
+      option3: q.option3,
+      option4: q.option4 || null,
+      option5: q.option5 || null,
+      answer: q.answer,
+      explanation: q.explanation || null,
+      subject: q.subject || null,
+      paper: q.paper || null,
+      chapter: q.chapter || null,
+      highlight: q.highlight || null,
+      type: q.type,
+      order_index: index,
+    }));
+
+    const { error: questionsError } = await supabaseAdmin
+      .from('questions')
+      .insert(questionRecords);
+
+    if (questionsError) {
+      console.error('Error inserting questions:', questionsError);
+      // Try to rollback file creation
+      await supabaseAdmin.from('files').delete().eq('id', file.id);
+      return NextResponse.json(
+        { success: false, error: questionsError.message },
+        { status: 500, headers: corsHeaders() }
+      );
+    }
+
     return NextResponse.json(
       {
-        success: false,
-        message:
-          error instanceof Error ? error.message : "Internal server error",
+        success: true,
+        message: `${questions.length} questions imported successfully`,
+        file_id: file.id,
+        total_questions: questions.length,
       },
-      { status: 500 },
+      { headers: corsHeaders() }
+    );
+  } catch (error: any) {
+    console.error('Error in POST /api/upload-csv:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Internal server error' },
+      { status: 500, headers: corsHeaders() }
     );
   }
+}
+
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: corsHeaders(),
+  });
 }

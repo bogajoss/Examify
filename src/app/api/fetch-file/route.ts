@@ -1,69 +1,53 @@
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase";
+import { corsHeaders, handleCors } from "../middleware";
 
-const BACKEND_API_BASE = process.env.NEXT_PUBLIC_CSV_API_BASE_URL || "";
-const API_KEY = process.env.NEXT_PUBLIC_CSV_API_KEY || "";
-
-if (!API_KEY) {
-  throw new Error("Missing CSV_API_KEY in environment");
-}
-
-function buildBackendUrl(params: Record<string, string | undefined>) {
-  const route = params.route || "file";
-  const baseUrl = BACKEND_API_BASE.endsWith("/")
-    ? BACKEND_API_BASE.slice(0, -1)
-    : BACKEND_API_BASE;
-  let u = `${baseUrl}/index.php?route=${route}`;
-
-  // id should come first for file routes if present
-  if (params.id) u += `&id=${encodeURIComponent(params.id)}`;
-
-  // any other params (stable order)
-  Object.keys(params)
-    .filter((k) => k !== "id" && k !== "route")
-    .sort()
-    .forEach((k) => {
-      const v = params[k];
-      if (v) u += `&${k}=${encodeURIComponent(v)}`;
-    });
-
-  u += `&token=${encodeURIComponent(API_KEY)}`;
-  return u;
-}
-
+/**
+ * @deprecated This route proxies to legacy CSV API for backward compatibility.
+ * New code should use /api/files directly with Supabase.
+ */
 export async function GET(request: NextRequest) {
+  // Handle CORS
+  const corsResponse = await handleCors(request);
+  if (corsResponse) return corsResponse;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-    const route = searchParams.get("route");
 
-    // Build URL in exact format: route=...&id=...&token=...
-    const url = buildBackendUrl({
-      id: id || undefined,
-      route: route || undefined,
-    });
-
-    const res = await fetch(url, {
-      headers: { "User-Agent": "Course-MNR-World-Backend/1.0" },
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
+    if (!id) {
       return NextResponse.json(
-        { success: false, message: text },
-        { status: res.status },
+        { success: false, error: "Missing file id parameter" },
+        { status: 400, headers: corsHeaders() }
       );
     }
 
-    const payload = await res.json();
-    return NextResponse.json(payload);
+    // Fetch from Supabase instead of legacy API
+    const { data: file, error } = await supabaseAdmin
+      .from("files")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error || !file) {
+      return NextResponse.json(
+        { success: false, error: "File not found" },
+        { status: 404, headers: corsHeaders() }
+      );
+    }
+
+    return NextResponse.json(
+      { success: true, data: file },
+      { headers: corsHeaders() }
+    );
   } catch (err) {
     console.error("[FETCH-FILE] Error:", err);
     return NextResponse.json(
       {
         success: false,
-        message: err instanceof Error ? err.message : String(err),
+        error: err instanceof Error ? err.message : "Internal server error",
       },
-      { status: 500 },
+      { status: 500, headers: corsHeaders() }
     );
   }
 }
