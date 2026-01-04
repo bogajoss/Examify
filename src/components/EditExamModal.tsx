@@ -302,10 +302,26 @@ export function EditExamModal({
     const input = e.target as HTMLInputElement;
     const start = input.selectionStart;
     const end = input.selectionEnd;
+    const oldValue = input.value;
+
+    // Update the value
     input.value = bengaliToEnglishNumber(input.value);
-    // Restore cursor position to prevent jumping
+
+    // Calculate the difference in length to adjust cursor position
+    const lengthDiff = input.value.length - oldValue.length;
+
+    // Restore cursor position, adjusting for any length changes
     if (start !== null && end !== null) {
-      input.setSelectionRange(start, end);
+      const newStart = Math.max(0, start + lengthDiff);
+      const newEnd = Math.max(0, end + lengthDiff);
+      // Use setTimeout to ensure the DOM update is complete before setting selection
+      setTimeout(() => {
+        try {
+          input.setSelectionRange(newStart, newEnd);
+        } catch (e) {
+          // If setting selection fails (e.g., input is not focused), ignore
+        }
+      }, 0);
     }
   };
 
