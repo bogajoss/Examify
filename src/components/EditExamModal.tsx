@@ -44,6 +44,7 @@ const subjects = [
 ];
 
 const bengaliToEnglishNumber = (str: string) => {
+  // Only convert Bengali numerals to English, preserve all other characters including decimal point
   const bengaliNumerals = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
   let newStr = str;
   for (let i = 0; i < 10; i++) {
@@ -299,7 +300,13 @@ export function EditExamModal({
 
   const handleNumberInput = (e: FormEvent<HTMLInputElement>) => {
     const input = e.target as HTMLInputElement;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
     input.value = bengaliToEnglishNumber(input.value);
+    // Restore cursor position to prevent jumping
+    if (start !== null && end !== null) {
+      input.setSelectionRange(start, end);
+    }
   };
 
   const updateSubjectConfig = (
