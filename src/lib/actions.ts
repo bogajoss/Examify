@@ -228,6 +228,14 @@ export async function createExam(formData: FormData) {
     optional_subjects = [];
   }
 
+  let question_ids: string[] = [];
+  try {
+    const raw = formData.get("question_ids") as string;
+    question_ids = raw ? JSON.parse(raw) : [];
+  } catch {
+    question_ids = [];
+  }
+
   const { data, error } = await supabaseAdmin
     .from("exams")
     .insert({
@@ -256,6 +264,24 @@ export async function createExam(formData: FormData) {
       success: false,
       message: "Failed to create exam: " + error.message,
     };
+  }
+
+  // Insert exam questions if question_ids provided
+  if (question_ids.length > 0 && data?.id) {
+    const exam_questions_data = question_ids.map((question_id, index) => ({
+      exam_id: data.id,
+      question_id,
+      order_index: index,
+    }));
+
+    const { error: questionsError } = await supabaseAdmin
+      .from("exam_questions")
+      .insert(exam_questions_data);
+
+    if (questionsError) {
+      console.error("Failed to insert exam questions:", questionsError);
+      // Don't fail the whole operation, but log the error
+    }
   }
 
   if (batch_id) {
@@ -360,6 +386,14 @@ export async function updateExam(formData: FormData) {
     optional_subjects = [];
   }
 
+  let question_ids: string[] = [];
+  try {
+    const raw = formData.get("question_ids") as string;
+    question_ids = raw ? JSON.parse(raw) : [];
+  } catch {
+    question_ids = [];
+  }
+
   const updateData: Record<string, unknown> = {
       name,
       description,
@@ -394,6 +428,35 @@ export async function updateExam(formData: FormData) {
       success: false,
       message: "Failed to update exam: " + error.message,
     };
+  }
+
+  // Update exam questions if question_ids provided
+  if (question_ids.length > 0 && data?.id) {
+    // First delete existing exam questions
+    const { error: deleteError } = await supabaseAdmin
+      .from("exam_questions")
+      .delete()
+      .eq("exam_id", data.id);
+
+    if (deleteError) {
+      console.error("Failed to delete existing exam questions:", deleteError);
+    }
+
+    // Then insert new exam questions
+    const exam_questions_data = question_ids.map((question_id, index) => ({
+      exam_id: data.id,
+      question_id,
+      order_index: index,
+    }));
+
+    const { error: questionsError } = await supabaseAdmin
+      .from("exam_questions")
+      .insert(exam_questions_data);
+
+    if (questionsError) {
+      console.error("Failed to insert exam questions:", questionsError);
+      // Don't fail the whole operation, but log the error
+    }
   }
 
   const revalidatePathString = `/admin/batches/${String(batch_id)}`;
