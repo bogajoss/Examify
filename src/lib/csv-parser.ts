@@ -180,6 +180,8 @@ export async function parseCSV(file: File): Promise<ParsedQuestion[]> {
     );
   }
 
+  const questions: ParsedQuestion[] = [];
+
   // Parse data rows
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();

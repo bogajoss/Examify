@@ -170,7 +170,8 @@ export default function QuestionEditor({
       }
 
       // Use the returned data if available, otherwise fallback to formData
-      const savedQuestion = (result.data as Question) || formData;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const savedQuestion = ((result as any).data as Question) || formData;
       onSave(savedQuestion);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to save question");

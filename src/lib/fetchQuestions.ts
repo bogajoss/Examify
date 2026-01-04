@@ -66,11 +66,17 @@ export async function fetchQuestions(
 
     if (!data) return [];
 
-    let processedData = data;
+    const processedData = data as (Record<string, unknown> & {
+      exam_questions?: { order_index: number }[];
+    })[];
 
     // Sort by order_index if fetched via exam_id
-    if (exam_id && processedData.length > 0 && processedData[0].exam_questions) {
-      processedData.sort((a: any, b: any) => {
+    if (
+      exam_id &&
+      processedData.length > 0 &&
+      processedData[0].exam_questions
+    ) {
+      processedData.sort((a, b) => {
         const orderA = a.exam_questions?.[0]?.order_index ?? 0;
         const orderB = b.exam_questions?.[0]?.order_index ?? 0;
         return orderA - orderB;
@@ -78,8 +84,8 @@ export async function fetchQuestions(
     }
 
     // Transform the data
-    const transformed: RawQuestion[] = processedData.map((q: any) =>
-      normalizeQuestion(q),
+    const transformed: RawQuestion[] = processedData.map((q) =>
+      normalizeQuestion(q as RawQuestion),
     );
 
     return transformed;

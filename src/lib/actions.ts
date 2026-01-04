@@ -7,6 +7,12 @@ import { parseCSV } from "@/lib/csv-parser";
 
 const randomUUID = () => globalThis.crypto.randomUUID();
 
+// Helper function to verify password internally
+async function verifyPasswordInternal() {
+  // Bypassing password verification as per user request
+  return true;
+}
+
 export async function createUser(formData: FormData) {
   const name = formData.get("name") as string;
   const roll = formData.get("roll") as string;
@@ -1000,10 +1006,12 @@ export async function updateQuestionAction(
     return { success: false, message: "Unauthorized" };
   }
 
-  const { error } = await supabaseAdmin
+  const { data: updatedQ, error } = await supabaseAdmin
     .from("questions")
     .update(data)
-    .eq("id", questionId);
+    .eq("id", questionId)
+    .select()
+    .single();
 
   if (error) {
     return {
@@ -1012,7 +1020,7 @@ export async function updateQuestionAction(
     };
   }
 
-  return { success: true, message: "Question updated successfully" };
+  return { success: true, message: "Question updated successfully", data: updatedQ };
 }
 
 export async function createQuestionAction(data: Record<string, unknown>) {
