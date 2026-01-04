@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import BulkQuestionList from "@/components/BulkQuestionList";
 import { fetchQuestions, type RawQuestion } from "@/lib/fetchQuestions";
 import { Question, SubjectConfig } from "@/lib/types";
-import { apiRequest } from "@/lib/api";
+import { deleteQuestionAction } from "@/lib/actions";
 import { supabase } from "@/lib/supabase";
 import { CustomLoader, PageHeader, QuestionEditor } from "@/components";
 import { Button } from "@/components/ui/button";
@@ -81,7 +81,7 @@ export default function ExamQuestionsPage() {
           const fetched = await fetchQuestions(examData.file_id);
           setQuestions(fetched || []);
         } else {
-          // If no file_id on exam, fetch questions by exam_id from MySQL
+          // If no file_id on exam, fetch questions by exam_id from Supabase via fetchQuestions
           const fetched = await fetchQuestions(undefined, exam_id);
           setQuestions(fetched || []);
           if (fetched && fetched.length > 0 && fetched[0].file_id) {
@@ -107,9 +107,7 @@ export default function ExamQuestionsPage() {
   const handleDelete = async (questionId: string) => {
     if (!confirm("Are you sure you want to delete this question?")) return;
     try {
-      const result = await apiRequest("delete-question", "DELETE", {
-        id: questionId,
-      });
+      const result = await deleteQuestionAction(questionId);
       if (result.success) {
         setQuestions((prev) => prev.filter((q) => q.id !== questionId));
       } else {

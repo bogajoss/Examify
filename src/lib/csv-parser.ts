@@ -180,16 +180,27 @@ export async function parseCSV(file: File): Promise<ParsedQuestion[]> {
     );
   }
 
-  const questions: ParsedQuestion[] = [];
-
   // Parse data rows
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
 
-    const values = line
-      .split(",")
-      .map((v) => v.trim().replace(/^["']|["']$/g, ""));
+    // Robust CSV splitting that handles quoted commas
+    const values: string[] = [];
+    let current = "";
+    let inQuotes = false;
+    for (let j = 0; j < line.length; j++) {
+      const char = line[j];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === "," && !inQuotes) {
+        values.push(current.trim().replace(/^["']|["']$/g, ""));
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    values.push(current.trim().replace(/^["']|["']$/g, ""));
 
     const question_text = values[questionCol]?.trim() || "";
     if (!question_text) continue;

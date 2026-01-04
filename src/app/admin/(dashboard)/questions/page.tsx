@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { CustomLoader, CSVUploadComponent, EmptyState } from "@/components";
-import { apiRequest } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
+import { deleteFileAction, renameFileAction } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -65,23 +66,26 @@ export default function AdminFilesPage() {
   const fetchFiles = async () => {
     try {
       setLoading(true);
-      const params: Record<string, string> = {};
+      let query = supabase
+        .from("files")
+        .select("*")
+        .order("uploaded_at", { ascending: false });
+
       if (debouncedSearchTerm) {
-        params.search = debouncedSearchTerm;
+        query = query.or(
+          `display_name.ilike.%${debouncedSearchTerm}%,original_filename.ilike.%${debouncedSearchTerm}%`,
+        );
       }
-      const result = await apiRequest<FileRecord[]>(
-        "files",
-        "GET",
-        null,
-        params,
-      );
-      if (result.success && result.data) {
-        setFiles(result.data);
-      } else if (Array.isArray(result)) {
-        setFiles(result);
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Failed to fetch files:", error);
+      } else {
+        setFiles((data as FileRecord[]) || []);
       }
-    } catch {
-      console.error("Failed to fetch files");
+    } catch (err) {
+      console.error("Failed to fetch files", err);
     } finally {
       setLoading(false);
     }
@@ -100,9 +104,7 @@ export default function AdminFilesPage() {
       return;
 
     try {
-      const result = await apiRequest("delete-file", "DELETE", {
-        file_id: fileId,
-      });
+      const result = await deleteFileAction(fileId);
       if (result.success) {
         fetchFiles();
       } else {
@@ -121,10 +123,7 @@ export default function AdminFilesPage() {
   const submitRename = async () => {
     if (!renamingFile) return;
     try {
-      const result = await apiRequest("update-file", "POST", {
-        id: renamingFile.id,
-        display_name: newName,
-      });
+      const result = await renameFileAction(renamingFile.id, newName);
       if (result.success) {
         setRenamingFile(null);
         fetchFiles();

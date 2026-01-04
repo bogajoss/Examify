@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, Fragment } from "react";
-import { apiRequest } from "@/lib/api";
 import { supabase } from "@/lib/supabase";
 import { fetchQuestions, type RawQuestion } from "@/lib/fetchQuestions";
 import { Button } from "@/components/ui/button";
@@ -1384,12 +1383,14 @@ export default function TakeExamPage() {
       if (exam?.number_of_attempts === "one_time" && user?.uid) {
         try {
           // Check if user has already submitted this exam
-          const resultCheck = await apiRequest("results", "GET", null, {
-            exam_id: exam_id,
-            student_id: user.uid,
-          });
+          const { data: existingResult } = await supabase
+            .from("student_exams")
+            .select("id")
+            .eq("exam_id", exam_id)
+            .eq("student_id", user.uid)
+            .single();
 
-          if (resultCheck.success && resultCheck.data) {
+          if (existingResult) {
             // User has already attempted this exam
             toast({
               title: "একটি প্রচেষ্টা ইতিমধ্যে জমা হয়েছে",

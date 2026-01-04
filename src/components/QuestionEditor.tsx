@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { apiRequest } from "@/lib/api";
+import { createQuestionAction, updateQuestionAction } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -156,13 +156,13 @@ export default function QuestionEditor({
 
     try {
       let result;
+      // Convert formData to a plain object compatible with actions
+      const actionData = { ...formData };
+
       if (initialQuestion?.id) {
-        result = await apiRequest("update-question", "PUT", {
-          ...formData,
-          id: initialQuestion.id,
-        });
+        result = await updateQuestionAction(initialQuestion.id, actionData);
       } else {
-        result = await apiRequest("create-question", "POST", formData);
+        result = await createQuestionAction(actionData);
       }
 
       if (!result.success) {

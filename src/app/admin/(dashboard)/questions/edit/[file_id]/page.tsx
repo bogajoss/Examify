@@ -9,7 +9,8 @@ import {
   EmptyState,
   QuestionEditor,
 } from "@/components";
-import { apiRequest } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
+import { deleteQuestionAction } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -27,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { useParams, useRouter } from "next/navigation";
 import { useDebounce } from "use-debounce";
 import type { Question } from "@/lib/types";
+import { normalizeQuestion, type RawQuestion } from "@/lib/fetchQuestions";
 
 // Lazy load LatexRenderer - only used in this page
 const LatexRenderer = dynamic(() => import("@/components/LatexRenderer"), {
@@ -68,26 +70,38 @@ export default function EditFileQuestionsPage() {
       setLoading(true);
       // Fetch File Details (only on first load or if needed)
       if (!file) {
-        const filesResult = await apiRequest<FileRecord[]>("files", "GET");
-        if (filesResult.success && Array.isArray(filesResult.data)) {
-          const foundFile = filesResult.data.find((f) => f.id === file_id);
-          setFile(foundFile || null);
+        const { data: fileData, error: fileError } = await supabase
+          .from("files")
+          .select("*")
+          .eq("id", file_id)
+          .single();
+
+        if (fileError) {
+          console.error("Error fetching file:", fileError);
+        } else {
+          setFile(fileData as FileRecord);
         }
       }
 
       // Fetch Questions with search
-      const params: Record<string, string> = { file_id };
+      let query = supabase.from("questions").select("*").eq("file_id", file_id);
+
       if (debouncedSearchTerm) {
-        params.search = debouncedSearchTerm;
+        query = query.or(
+          `question_text.ilike.%${debouncedSearchTerm}%,explanation.ilike.%${debouncedSearchTerm}%`,
+        );
       }
-      const questionsResult = await apiRequest<Question[]>(
-        "questions",
-        "GET",
-        null,
-        params,
-      );
-      if (questionsResult.success && Array.isArray(questionsResult.data)) {
-        setQuestions(questionsResult.data);
+
+      const { data: questionsData, error: questionsError } = await query;
+
+      if (questionsError) {
+        console.error("Error fetching questions:", questionsError);
+      } else if (questionsData) {
+        // Normalize questions to match frontend structure
+        const normalized = questionsData.map((q) =>
+          normalizeQuestion(q as RawQuestion),
+        ) as unknown as Question[];
+        setQuestions(normalized);
       }
     } catch {
       setError("তথ্য লোড করতে সমস্যা হয়েছে");
@@ -100,9 +114,7 @@ export default function EditFileQuestionsPage() {
     if (!confirm("Are you sure you want to delete this question?")) return;
 
     try {
-      const result = await apiRequest("delete-question", "DELETE", {
-        id: questionId,
-      });
+      const result = await deleteQuestionAction(questionId);
       if (result.success) {
         fetchData();
       } else {
@@ -197,20 +209,7 @@ export default function EditFileQuestionsPage() {
           </div>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 sm:flex-initial rounded-xl gap-2"
-            onClick={() => {
-              const link = document.createElement("a");
-              link.href = `/api/proxy?route=file&id=${file_id}`;
-              link.download = file?.original_filename || "questions.csv";
-              link.click();
-            }}
-          >
-            <Download className="h-4 w-4" />
-            Download CSV
-          </Button>
+          {/* CSV Download removed for now as it relied on legacy backend */}
           <Button
             size="sm"
             className="flex-1 sm:flex-initial rounded-xl gap-2 shadow-lg shadow-primary/10"

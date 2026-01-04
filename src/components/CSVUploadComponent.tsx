@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, ChangeEvent } from "react";
-import { apiRequest } from "@/lib/api";
+import { uploadCSVAction } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -64,18 +64,17 @@ export default function CSVUploadComponent({
       formData.append("csv_file", file);
       formData.append("is_bank", isBank ? "1" : "0");
 
-      const result = await apiRequest("upload-csv", "POST", formData);
+      const result = await uploadCSVAction(formData);
 
       if (!result.success) {
         throw new Error(result.message || "Upload failed");
       }
 
-      setUploadResult(
-        (result.data as Record<string, unknown>) ||
-          (result as Record<string, unknown>),
-      );
+      const data = result.data || {};
+      setUploadResult(data as Record<string, unknown>);
+      
       if (onUploadSuccess) {
-        onUploadSuccess(result.data as Record<string, unknown>);
+        onUploadSuccess(data as Record<string, unknown>);
       }
 
       // Clear the file input

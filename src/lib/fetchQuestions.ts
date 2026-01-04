@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import { Question } from "./types";
 
 export interface RawQuestion extends Partial<Question> {
@@ -24,69 +24,63 @@ export async function fetchQuestions(
   }
 
   try {
-    const params: Record<string, string> = {};
-    let method = "GET";
-    let body: unknown = null;
+    let query = supabase.from("questions").select("*");
 
-    if (fileId) {
-      params.file_id = String(fileId);
-    }
-    if (exam_id) {
-      params.exam_id = exam_id;
-    }
-
-    // If fetching by specific IDs, use POST to avoid URL length limits
+    // Filter by IDs if provided
     if (ids && ids.length > 0) {
-      method = "POST";
-      body = { ids: ids };
-      // We don't add ids to params to keep URL short
+      query = query.in("id", ids);
+    }
+    // Filter by exam_id if provided (through exam_questions junction table)
+    else if (exam_id) {
+      // Use the inner join syntax to filter questions by exam_id via exam_questions table
+      // Note: This assumes foreign key relationship is set up correctly in Supabase
+      query = supabase
+        .from("questions")
+        .select("*, exam_questions!inner(exam_id, order_index)")
+        .eq("exam_questions.exam_id", exam_id);
+    }
+    // Filter by file_id if provided
+    else if (fileId) {
+      query = query.eq("file_id", fileId);
     }
 
-    if (limit !== undefined) {
-      params.limit = String(limit);
-    }
-    if (offset !== undefined) {
-      params.offset = String(offset);
-    }
+    // Add search filter if provided
     if (search) {
-      params.search = search;
+      query = query.or(
+        `question_text.ilike.%${search}%,explanation.ilike.%${search}%`,
+      );
     }
 
-    const result = await apiRequest<RawQuestion[]>(
-      "questions",
-      method,
-      body,
-      params,
-    );
-
-    if (!result) {
-      throw new Error("No response from API");
+    // Add pagination
+    if (limit) {
+      const from = offset || 0;
+      query = query.range(from, from + limit - 1);
     }
 
-    let rawData: RawQuestion[] = [];
+    const { data, error } = await query;
 
-    if (result.success && Array.isArray(result.data)) {
-      rawData = result.data;
-    } else if (Array.isArray(result)) {
-      // Fallback for direct array response
-      rawData = result as unknown as RawQuestion[];
-    } else {
-      if (result.success === false) {
-        throw new Error(result.message || "Failed to fetch questions");
-      }
-      console.warn("Unexpected API response format in fetchQuestions", result);
-      rawData = [];
+    if (error) {
+      console.error("Error fetching questions from Supabase:", error);
+      throw new Error(error.message);
+    }
+
+    if (!data) return [];
+
+    let processedData = data;
+
+    // Sort by order_index if fetched via exam_id
+    if (exam_id && processedData.length > 0 && processedData[0].exam_questions) {
+      processedData.sort((a: any, b: any) => {
+        const orderA = a.exam_questions?.[0]?.order_index ?? 0;
+        const orderB = b.exam_questions?.[0]?.order_index ?? 0;
+        return orderA - orderB;
+      });
     }
 
     // Transform the data
-    const transformed: RawQuestion[] = rawData.map(normalizeQuestion);
-
-    // Client-side filtering as a safety net because backend might be returning too much
-    // Only filter by fileId if we are NOT fetching by exam_id.
-    // If we fetched by exam_id, we trust the backend to return the exam's questions.
-    if (fileId && !exam_id) {
-      return transformed.filter((q) => String(q.file_id) === String(fileId));
-    }
+    const transformed: RawQuestion[] = processedData.map((q: any) =>
+      normalizeQuestion(q),
+    );
 
     return transformed;
   } catch (error) {

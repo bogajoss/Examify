@@ -15,7 +15,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { fetchQuestions, type RawQuestion } from "@/lib/fetchQuestions";
-import { apiRequest } from "@/lib/api";
+import { supabase } from "@/lib/supabase";
 import LatexRenderer from "@/components/LatexRenderer";
 import { CustomLoader } from "@/components";
 import { Badge } from "@/components/ui/badge";
@@ -99,16 +99,17 @@ export default function QuestionSelector({
     async function loadFiles() {
       try {
         setLoadingFiles(true);
-        const result = await apiRequest<Record<string, unknown>>(
-          "files",
-          "GET",
-        );
-        if (result.success && result.data) {
-          setFiles(
-            (Array.isArray(result.data) ? result.data : []) as FileRecord[],
-          );
-        } else if (Array.isArray(result)) {
-          setFiles(result as FileRecord[]);
+        const { data, error } = await supabase
+          .from("files")
+          .select("*")
+          .order("uploaded_at", { ascending: false });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data) {
+          setFiles(data as FileRecord[]);
         }
       } catch (error) {
         console.error("Failed to fetch files:", error);

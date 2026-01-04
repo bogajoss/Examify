@@ -1,25 +1,20 @@
 import { supabase } from "./supabase";
-import { apiRequest } from "./api";
 import { User, Batch, Exam } from "./types";
 
 export async function getAdminStats() {
-  const [usersCount, examsCount, batchesCount] = await Promise.all([
-    supabase.from("users").select("*", { count: "exact", head: true }),
-    supabase.from("exams").select("*", { count: "exact", head: true }),
-    supabase.from("batches").select("*", { count: "exact", head: true }),
-  ]);
-
-  // Questions count still from MySQL
-  const mysqlStats = await apiRequest<{ questionsCount: number }>("stats");
-  const questionsCount = mysqlStats.success
-    ? mysqlStats.data.questionsCount
-    : 0;
+  const [usersCount, examsCount, batchesCount, questionsCount] =
+    await Promise.all([
+      supabase.from("users").select("*", { count: "exact", head: true }),
+      supabase.from("exams").select("*", { count: "exact", head: true }),
+      supabase.from("batches").select("*", { count: "exact", head: true }),
+      supabase.from("questions").select("*", { count: "exact", head: true }),
+    ]);
 
   return {
     usersCount: usersCount.count || 0,
     examsCount: examsCount.count || 0,
     batchesCount: batchesCount.count || 0,
-    questionsCount: questionsCount,
+    questionsCount: questionsCount.count || 0,
   };
 }
 

@@ -3,14 +3,9 @@
 import { revalidatePath } from "next/cache";
 import dayjs from "@/lib/date-utils";
 import { supabaseAdmin } from "./supabase";
+import { parseCSV } from "@/lib/csv-parser";
 
 const randomUUID = () => globalThis.crypto.randomUUID();
-
-// Helper function to verify password internally
-async function verifyPasswordInternal() {
-  // Bypassing password verification as per user request
-  return true;
-}
 
 export async function createUser(formData: FormData) {
   const name = formData.get("name") as string;
@@ -673,22 +668,14 @@ export async function importUsersData(formData: FormData) {
   }
 }
 
-// Keeping Question-related API calls to MySQL backend as requested
+// Keeping Question-related API calls to Supabase if needed in future
 export async function importBatchData(_formData: FormData) {
-  // This is a complex one, it involves creating batches, exams and questions.
-  // Questions MUST stay in MySQL.
-  // For simplicity and keeping questions in MySQL, we'll maintain the apiRequest approach for this entire flow,
-  // or refactor it partially. Given the complexity, keeping the original logic which calls the backend index.php
-  // might be safer if the backend is already handling this orchestration.
-  // However, the user wants "others in Supabase".
-
-  // Actually, the current importBatchData in actions.ts does a lot of orchestration.
-  // I'll leave it as is for now since it involves create-question which must go to MySQL.
-  // If the user wants to migrate the batch/exam metadata to Supabase during import,
-  // this would need a complete rewrite.
-
-  // For now, I'll stick to the core CRUD above.
-  return { success: false, message: "Import Batch Data refactoring pending" };
+  // This function was originally intended to coordinate imports across multiple services.
+  // With the full migration to Supabase, this logic needs to be rewritten to handle
+  // batch and exam creation alongside question imports transactionally or sequentially.
+  // For now, use the individual import/create actions.
+  
+  return { success: false, message: "Import Batch Data not yet implemented for Supabase" };
 }
 
 export async function updateStudentResultScore(formData: FormData) {
@@ -820,4 +807,246 @@ export async function cleanupUnrolledStudents() {
   }
 
   return { success: true, message: `${count} users cleaned up.`, count };
+}
+
+export async function uploadCSVAction(formData: FormData) {
+  const MAX_CSV_SIZE = 5 * 1024 * 1024; // 5MB
+
+  try {
+    const csvFile = formData.get("csv_file") as File | null;
+    const is_bank_raw = formData.get("is_bank");
+    const is_bank = is_bank_raw ? parseInt(is_bank_raw as string) : 1;
+
+    if (!csvFile) {
+      return { success: false, message: "No CSV file provided" };
+    }
+
+    // Validate file type
+    if (!csvFile.type.includes("text") && csvFile.type !== "application/csv" && !csvFile.name.endsWith('.csv')) {
+      return {
+        success: false,
+        message: "Invalid file type. Only CSV files are allowed.",
+      };
+    }
+
+    // Validate file size
+    if (csvFile.size > MAX_CSV_SIZE) {
+      return {
+        success: false,
+        message: `File too large. Maximum size is ${MAX_CSV_SIZE / 1024 / 1024}MB.`,
+      };
+    }
+
+    // Parse CSV
+    let questions;
+    try {
+      questions = await parseCSV(csvFile);
+    } catch (parseError: unknown) {
+      const errorMessage =
+        parseError instanceof Error ? parseError.message : "Unknown error";
+      return { success: false, message: `CSV parsing error: ${errorMessage}` };
+    }
+
+    if (!questions || questions.length === 0) {
+      return { success: false, message: "No valid questions found in CSV file" };
+    }
+
+    // Create a file record
+    // Start transaction - insert file
+    const { data: file, error: fileError } = await supabaseAdmin
+      .from("files")
+      .insert({
+        original_filename: csvFile.name,
+        display_name: csvFile.name,
+        total_questions: questions.length,
+        is_bank: is_bank === 1,
+      })
+      .select()
+      .single();
+
+    if (fileError) {
+      console.error("Error creating file record:", fileError);
+      return { success: false, message: fileError.message };
+    }
+
+    // Insert all questions
+    const questionRecords = questions.map((q, index) => ({
+      file_id: file.id,
+      question_text: q.question_text,
+      option1: q.option1,
+      option2: q.option2,
+      option3: q.option3,
+      option4: q.option4 || null,
+      option5: q.option5 || null,
+      answer: q.answer,
+      explanation: q.explanation || null,
+      subject: q.subject || null,
+      paper: q.paper || null,
+      chapter: q.chapter || null,
+      highlight: q.highlight || null,
+      type: q.type,
+      order_index: index,
+    }));
+
+    const { error: questionsError } = await supabaseAdmin
+      .from("questions")
+      .insert(questionRecords);
+
+    if (questionsError) {
+      console.error("Error inserting questions:", questionsError);
+      // Try to rollback file creation
+      await supabaseAdmin.from("files").delete().eq("id", file.id);
+      return { success: false, message: questionsError.message };
+    }
+
+    revalidatePath("/admin/files");
+
+    return {
+      success: true,
+      message: `${questions.length} questions imported successfully`,
+      data: {
+        file_id: file.id,
+        total_questions: questions.length,
+      },
+    };
+  } catch (error: unknown) {
+    console.error("Error in uploadCSVAction:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Internal server error";
+    return { success: false, message: errorMessage };
+  }
+}
+
+export async function deleteFileAction(fileId: string) {
+  if (!(await verifyPasswordInternal())) {
+    return { success: false, message: "Unauthorized" };
+  }
+
+  const { error } = await supabaseAdmin.from("files").delete().eq("id", fileId);
+
+  if (error) {
+    return { success: false, message: "Failed to delete file: " + error.message };
+  }
+
+  revalidatePath("/admin/questions");
+  return { success: true, message: "File deleted successfully" };
+}
+
+export async function renameFileAction(fileId: string, newName: string) {
+  if (!(await verifyPasswordInternal())) {
+    return { success: false, message: "Unauthorized" };
+  }
+
+  const { error } = await supabaseAdmin
+    .from("files")
+    .update({ display_name: newName })
+    .eq("id", fileId);
+
+  if (error) {
+    return { success: false, message: "Failed to rename file: " + error.message };
+  }
+
+  revalidatePath("/admin/questions");
+  return { success: true, message: "File renamed successfully" };
+}
+
+export async function deleteQuestionAction(questionId: string) {
+  if (!(await verifyPasswordInternal())) {
+    return { success: false, message: "Unauthorized" };
+  }
+
+  // Get file_id first for revalidation (optional but good)
+  const { data: q } = await supabaseAdmin
+    .from("questions")
+    .select("file_id")
+    .eq("id", questionId)
+    .single();
+
+  const { error } = await supabaseAdmin
+    .from("questions")
+    .delete()
+    .eq("id", questionId);
+
+  if (error) {
+    return {
+      success: false,
+      message: "Failed to delete question: " + error.message,
+    };
+  }
+
+  // Update file total count
+  if (q?.file_id) {
+    const { count } = await supabaseAdmin
+      .from("questions")
+      .select("*", { count: "exact", head: true })
+      .eq("file_id", q.file_id);
+      
+    await supabaseAdmin
+      .from("files")
+      .update({ total_questions: count || 0 })
+      .eq("id", q.file_id);
+      
+     revalidatePath(`/admin/questions/edit/${q.file_id}`);
+  }
+
+  return { success: true, message: "Question deleted successfully" };
+}
+
+export async function updateQuestionAction(
+  questionId: string,
+  data: Record<string, unknown>,
+) {
+  if (!(await verifyPasswordInternal())) {
+    return { success: false, message: "Unauthorized" };
+  }
+
+  const { error } = await supabaseAdmin
+    .from("questions")
+    .update(data)
+    .eq("id", questionId);
+
+  if (error) {
+    return {
+      success: false,
+      message: "Failed to update question: " + error.message,
+    };
+  }
+
+  return { success: true, message: "Question updated successfully" };
+}
+
+export async function createQuestionAction(data: Record<string, unknown>) {
+  if (!(await verifyPasswordInternal())) {
+    return { success: false, message: "Unauthorized" };
+  }
+
+  const { data: newQ, error } = await supabaseAdmin
+    .from("questions")
+    .insert(data)
+    .select()
+    .single();
+
+  if (error) {
+    return {
+      success: false,
+      message: "Failed to create question: " + error.message,
+    };
+  }
+
+  // Update file total count
+  if (newQ?.file_id) {
+    const { count } = await supabaseAdmin
+      .from("questions")
+      .select("*", { count: "exact", head: true })
+      .eq("file_id", newQ.file_id);
+      
+    await supabaseAdmin
+      .from("files")
+      .update({ total_questions: count || 0 })
+      .eq("id", newQ.file_id);
+      
+    revalidatePath(`/admin/questions/edit/${newQ.file_id}`);
+  }
+
+  return { success: true, message: "Question created successfully", data: newQ };
 }
