@@ -304,8 +304,15 @@ export function EditExamModal({
     const end = input.selectionEnd;
     const oldValue = input.value;
 
-    // Update the value
-    input.value = bengaliToEnglishNumber(input.value);
+    // Update the value - preserve trailing decimal point if present
+    let newValue = bengaliToEnglishNumber(input.value);
+
+    // If the old value ended with a dot and the new value doesn't, preserve the dot
+    if (oldValue.endsWith('.') && !newValue.endsWith('.')) {
+      newValue += '.';
+    }
+
+    input.value = newValue;
 
     // Calculate the difference in length to adjust cursor position
     const lengthDiff = input.value.length - oldValue.length;
