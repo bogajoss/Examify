@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin, validateApiToken } from '@/lib/supabase';
-import { corsHeaders, handleCors } from '../middleware';
+import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin, validateApiToken } from "@/lib/supabase";
+import { corsHeaders, handleCors } from "../middleware";
 
 export async function GET(req: NextRequest) {
   // Handle CORS
@@ -9,54 +9,55 @@ export async function GET(req: NextRequest) {
 
   try {
     const url = new URL(req.url);
-    let token = url.searchParams.get('token');
+    let token = url.searchParams.get("token");
 
     if (!token) {
-      const authHeader = req.headers.get('authorization');
-      if (authHeader?.startsWith('Bearer ')) {
+      const authHeader = req.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
         token = authHeader.substring(7);
       }
     }
 
     if (!token) {
       return NextResponse.json(
-        { success: false, error: 'Missing API Token' },
-        { status: 401, headers: corsHeaders() }
+        { success: false, error: "Missing API Token" },
+        { status: 401, headers: corsHeaders() },
       );
     }
 
-    const { valid, isAdmin } = await validateApiToken(token);
+    const { valid } = await validateApiToken(token);
     if (!valid) {
       return NextResponse.json(
-        { success: false, error: 'Invalid API Token' },
-        { status: 403, headers: corsHeaders() }
+        { success: false, error: "Invalid API Token" },
+        { status: 403, headers: corsHeaders() },
       );
     }
 
     // Fetch all files
     const { data: files, error } = await supabaseAdmin
-      .from('files')
-      .select('*')
-      .eq('is_bank', true)
-      .order('uploaded_at', { ascending: false });
+      .from("files")
+      .select("*")
+      .eq("is_bank", true)
+      .order("uploaded_at", { ascending: false });
 
     if (error) {
-      console.error('Error fetching files:', error);
+      console.error("Error fetching files:", error);
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: 500, headers: corsHeaders() }
+        { status: 500, headers: corsHeaders() },
       );
     }
 
     return NextResponse.json(
       { success: true, data: files },
-      { headers: corsHeaders() }
+      { headers: corsHeaders() },
     );
-  } catch (error: any) {
-    console.error('Error in GET /api/files:', error);
+  } catch (error: unknown) {
+    console.error("Error in GET /api/files:", error);
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500, headers: corsHeaders() }
+      { success: false, error: errorMessage },
+      { status: 500, headers: corsHeaders() },
     );
   }
 }
@@ -68,27 +69,27 @@ export async function POST(request: NextRequest) {
 
   try {
     const url = new URL(request.url);
-    let token = url.searchParams.get('token');
+    let token = url.searchParams.get("token");
 
     if (!token) {
-      const authHeader = request.headers.get('authorization');
-      if (authHeader?.startsWith('Bearer ')) {
+      const authHeader = request.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
         token = authHeader.substring(7);
       }
     }
 
     if (!token) {
       return NextResponse.json(
-        { success: false, error: 'Missing API Token' },
-        { status: 401, headers: corsHeaders() }
+        { success: false, error: "Missing API Token" },
+        { status: 401, headers: corsHeaders() },
       );
     }
 
-    const { valid, isAdmin } = await validateApiToken(token);
+    const { valid } = await validateApiToken(token);
     if (!valid) {
       return NextResponse.json(
-        { success: false, error: 'Invalid API Token' },
-        { status: 403, headers: corsHeaders() }
+        { success: false, error: "Invalid API Token" },
+        { status: 403, headers: corsHeaders() },
       );
     }
 
@@ -97,8 +98,8 @@ export async function POST(request: NextRequest) {
 
     if (!original_filename) {
       return NextResponse.json(
-        { success: false, error: 'Missing original_filename' },
-        { status: 400, headers: corsHeaders() }
+        { success: false, error: "Missing original_filename" },
+        { status: 400, headers: corsHeaders() },
       );
     }
 
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
     const now = new Date().toISOString();
 
     const { data: file, error } = await supabaseAdmin
-      .from('files')
+      .from("files")
       .insert({
         original_filename,
         display_name: display_name || original_filename,
@@ -118,27 +119,28 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating file:', error);
+      console.error("Error creating file:", error);
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: 500, headers: corsHeaders() }
+        { status: 500, headers: corsHeaders() },
       );
     }
 
     return NextResponse.json(
       {
         success: true,
-        message: 'File record created successfully',
+        message: "File record created successfully",
         file_id: file.id,
         file,
       },
-      { headers: corsHeaders() }
+      { headers: corsHeaders() },
     );
-  } catch (error: any) {
-    console.error('Error in POST /api/files:', error);
+  } catch (error: unknown) {
+    console.error("Error in POST /api/files:", error);
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500, headers: corsHeaders() }
+      { success: false, error: errorMessage },
+      { status: 500, headers: corsHeaders() },
     );
   }
 }
@@ -150,27 +152,27 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const url = new URL(request.url);
-    let token = url.searchParams.get('token');
+    let token = url.searchParams.get("token");
 
     if (!token) {
-      const authHeader = request.headers.get('authorization');
-      if (authHeader?.startsWith('Bearer ')) {
+      const authHeader = request.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
         token = authHeader.substring(7);
       }
     }
 
     if (!token) {
       return NextResponse.json(
-        { success: false, error: 'Missing API Token' },
-        { status: 401, headers: corsHeaders() }
+        { success: false, error: "Missing API Token" },
+        { status: 401, headers: corsHeaders() },
       );
     }
 
-    const { valid, isAdmin } = await validateApiToken(token);
+    const { valid } = await validateApiToken(token);
     if (!valid) {
       return NextResponse.json(
-        { success: false, error: 'Invalid API Token' },
-        { status: 403, headers: corsHeaders() }
+        { success: false, error: "Invalid API Token" },
+        { status: 403, headers: corsHeaders() },
       );
     }
 
@@ -179,45 +181,40 @@ export async function DELETE(request: NextRequest) {
 
     if (!id) {
       return NextResponse.json(
-        { success: false, error: 'Missing file ID' },
-        { status: 400, headers: corsHeaders() }
+        { success: false, error: "Missing file ID" },
+        { status: 400, headers: corsHeaders() },
       );
     }
 
     // Delete all questions in the file first
-    await supabaseAdmin
-      .from('questions')
-      .delete()
-      .eq('file_id', id);
+    await supabaseAdmin.from("questions").delete().eq("file_id", id);
 
     // Then delete the file
-    const { error } = await supabaseAdmin
-      .from('files')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabaseAdmin.from("files").delete().eq("id", id);
 
     if (error) {
-      console.error('Error deleting file:', error);
+      console.error("Error deleting file:", error);
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: 500, headers: corsHeaders() }
+        { status: 500, headers: corsHeaders() },
       );
     }
 
     return NextResponse.json(
-      { success: true, message: 'File deleted successfully' },
-      { headers: corsHeaders() }
+      { success: true, message: "File deleted successfully" },
+      { headers: corsHeaders() },
     );
-  } catch (error: any) {
-    console.error('Error in DELETE /api/files:', error);
+  } catch (error: unknown) {
+    console.error("Error in DELETE /api/files:", error);
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500, headers: corsHeaders() }
+      { success: false, error: errorMessage },
+      { status: 500, headers: corsHeaders() },
     );
   }
 }
 
-export async function OPTIONS(req: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: corsHeaders(),

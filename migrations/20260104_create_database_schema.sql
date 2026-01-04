@@ -293,12 +293,3 @@ create table if not exists student_tasks (
 create index if not exists idx_student_tasks_student on student_tasks(student_id);
 create index if not exists idx_student_tasks_batch on student_tasks(batch_id);
 create index if not exists idx_student_tasks_date on student_tasks(task_date);
-
--- ============================================================
--- MIGRATION COMPLETE
--- ============================================================
--- Total: 14 tables, 40+ indexes, full referential integrity
--- All CASCADE deletes properly configured
--- All foreign keys indexed for performance
--- All dates in UTC timezone
--- UUID generation via PostgreSQL uuid_generate_v4()

@@ -22,7 +22,7 @@ export async function DELETE(request: NextRequest) {
 async function handleRequest(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     const baseUrl = BACKEND_API_BASE.endsWith("/")
       ? BACKEND_API_BASE.slice(0, -1)
       : BACKEND_API_BASE;
@@ -31,7 +31,7 @@ async function handleRequest(request: NextRequest) {
 
     const headers: Record<string, string> = {
       "User-Agent": "Course-MNR-World-Backend/2.0",
-      "Authorization": `Bearer ${API_KEY}`,
+      Authorization: `Bearer ${API_KEY}`,
     };
 
     let body: BodyInit | null = null;
@@ -86,13 +86,18 @@ async function handleRequest(request: NextRequest) {
       }
     } else {
       // Handle HTML or text errors (often from WAF or load balancers)
-      console.warn(`[API-PROXY] Non-JSON response for ${method} ${url}:`, response.status, contentType);
-      
+      console.warn(
+        `[API-PROXY] Non-JSON response for ${method} ${url}:`,
+        response.status,
+        contentType,
+      );
+
       // If its a 403 HTML page, it's likely a WAF block
-      const isWafBlock = response.status === 403 && responseText.includes("<html");
-      const message = isWafBlock 
-        ? "Request blocked by server firewall (WAF). content might be too large or contain forbidden characters." 
-        : (responseText || `Error ${response.status}`);
+      const isWafBlock =
+        response.status === 403 && responseText.includes("<html");
+      const message = isWafBlock
+        ? "Request blocked by server firewall (WAF). content might be too large or contain forbidden characters."
+        : responseText || `Error ${response.status}`;
 
       return NextResponse.json(
         {
@@ -100,7 +105,7 @@ async function handleRequest(request: NextRequest) {
           message: message,
           data: response.ok ? responseText : null,
           debug_status: response.status,
-          debug_content_type: contentType
+          debug_content_type: contentType,
         },
         {
           status: response.ok

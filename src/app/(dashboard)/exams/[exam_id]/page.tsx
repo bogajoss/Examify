@@ -733,7 +733,8 @@ export default function TakeExamPage() {
         console.error("Error submitting exam:", error);
         toast({
           title: "ত্রুটি",
-          description: "পরীক্ষা জমা দিতে সমস্যা হয়েছে: " + (error.message || ""),
+          description:
+            "পরীক্ষা জমা দিতে সমস্যা হয়েছে: " + (error.message || ""),
           variant: "destructive",
         });
       }
@@ -1073,10 +1074,7 @@ export default function TakeExamPage() {
       });
 
       const embeddedQuestions = (examData as Record<string, unknown>).questions;
-      if (
-        Array.isArray(embeddedQuestions) &&
-        embeddedQuestions.length > 0
-      ) {
+      if (Array.isArray(embeddedQuestions) && embeddedQuestions.length > 0) {
         finalQuestions = (embeddedQuestions as Question[]).map((q) => {
           let answerIndex = -1;
           if (typeof q.answer === "number") {

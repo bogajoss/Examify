@@ -36,10 +36,17 @@ function VerifyPageContent() {
           const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
           const host = window.location.hostname;
           const domain = host.startsWith("www.") ? host.slice(4) : host;
-          
-          document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-          document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + domain;
-          document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=." + domain;
+
+          document.cookie =
+            name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+          document.cookie =
+            name +
+            "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" +
+            domain;
+          document.cookie =
+            name +
+            "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=." +
+            domain;
         }
       } catch (e) {
         console.error("Cookie clear failed", e);
@@ -68,11 +75,12 @@ function VerifyPageContent() {
           console.error("IndexedDB clear failed", e);
         }
       }
-      
+
       // Step 6: Unregister Service Workers
       if ("serviceWorker" in navigator) {
         try {
-          const registrations = await navigator.serviceWorker.getRegistrations();
+          const registrations =
+            await navigator.serviceWorker.getRegistrations();
           for (const registration of registrations) {
             await registration.unregister();
           }
@@ -118,20 +126,21 @@ function VerifyPageContent() {
         <CardContent className="space-y-6 text-center">
           <div className="space-y-2">
             <p className="text-muted-foreground">
-              আমরা আমাদের সিস্টেম আপডেট করেছি। আপনার ব্রাউজারের পুরানো তথ্য মুছে ফেলা হচ্ছে যাতে আপনি নির্বিঘ্নে ব্যবহার করতে পারেন।
+              আমরা আমাদের সিস্টেম আপডেট করেছি। আপনার ব্রাউজারের পুরানো তথ্য মুছে
+              ফেলা হচ্ছে যাতে আপনি নির্বিঘ্নে ব্যবহার করতে পারেন।
             </p>
             <p className="font-semibold text-primary">{status}</p>
           </div>
 
           <div className="w-full bg-secondary/30 h-2 rounded-full overflow-hidden">
-            <div 
+            <div
               className="bg-primary h-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
 
-          <Button 
-            className="w-full mt-4" 
+          <Button
+            className="w-full mt-4"
             disabled={progress < 100}
             onClick={handleManualRedirect}
           >
@@ -152,11 +161,13 @@ function VerifyPageContent() {
 
 export default function VerifyPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      }
+    >
       <VerifyPageContent />
     </Suspense>
   );

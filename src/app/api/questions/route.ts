@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin, validateApiToken, Question } from '@/lib/supabase';
-import { corsHeaders, handleCors } from '../middleware';
+import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin, validateApiToken } from "@/lib/supabase";
+import { corsHeaders, handleCors } from "../middleware";
 
 export async function GET(req: NextRequest) {
   // Handle CORS
@@ -9,78 +9,84 @@ export async function GET(req: NextRequest) {
 
   try {
     const url = new URL(req.url);
-    let token = url.searchParams.get('token');
-    const fileId = url.searchParams.get('file_id');
-    const examId = url.searchParams.get('exam_id');
-    const ids = url.searchParams.get('ids');
-    const search = url.searchParams.get('search');
-    const limit = url.searchParams.get('limit') ? parseInt(url.searchParams.get('limit')!) : 0;
-    const offset = url.searchParams.get('offset') ? parseInt(url.searchParams.get('offset')!) : 0;
+    let token = url.searchParams.get("token");
+    const fileId = url.searchParams.get("file_id");
+    const examId = url.searchParams.get("exam_id");
+    const ids = url.searchParams.get("ids");
+    const search = url.searchParams.get("search");
+    const limit = url.searchParams.get("limit")
+      ? parseInt(url.searchParams.get("limit")!)
+      : 0;
+    const offset = url.searchParams.get("offset")
+      ? parseInt(url.searchParams.get("offset")!)
+      : 0;
 
     if (!token) {
-      const authHeader = req.headers.get('authorization');
-      if (authHeader?.startsWith('Bearer ')) {
+      const authHeader = req.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
         token = authHeader.substring(7);
       }
     }
 
     if (!token) {
       return NextResponse.json(
-        { success: false, error: 'Missing API Token' },
-        { status: 401, headers: corsHeaders() }
+        { success: false, error: "Missing API Token" },
+        { status: 401, headers: corsHeaders() },
       );
     }
 
-    const { valid, isAdmin } = await validateApiToken(token);
+    const { valid } = await validateApiToken(token);
     if (!valid) {
       return NextResponse.json(
-        { success: false, error: 'Invalid API Token' },
-        { status: 403, headers: corsHeaders() }
+        { success: false, error: "Invalid API Token" },
+        { status: 403, headers: corsHeaders() },
       );
     }
 
-    let query = supabaseAdmin.from('questions').select('*');
+    let query = supabaseAdmin.from("questions").select("*");
 
     // Filter by IDs if provided
     if (ids) {
-      const idArray = ids.split(',').filter(id => id.trim());
+      const idArray = ids.split(",").filter((id) => id.trim());
       if (idArray.length > 0) {
-        query = query.in('id', idArray);
+        query = query.in("id", idArray);
       }
     }
     // Filter by file_id if provided
     else if (fileId) {
-      query = query.eq('file_id', fileId);
+      query = query.eq("file_id", fileId);
     }
     // Filter by exam_id if provided (through exam_questions junction table)
     else if (examId) {
       // Join through exam_questions table
       const { data: examQuestions, error: eqError } = await supabaseAdmin
-        .from('exam_questions')
-        .select('question_id')
-        .eq('exam_id', examId);
+        .from("exam_questions")
+        .select("question_id")
+        .eq("exam_id", examId);
 
       if (eqError) {
         return NextResponse.json(
           { success: false, error: eqError.message },
-          { status: 500, headers: corsHeaders() }
+          { status: 500, headers: corsHeaders() },
         );
       }
 
-      const questionIds = examQuestions?.map(eq => eq.question_id) || [];
+      const questionIds = examQuestions?.map((eq) => eq.question_id) || [];
       if (questionIds.length === 0) {
         return NextResponse.json(
           { success: true, data: [] },
-          { headers: corsHeaders() }
+          { headers: corsHeaders() },
         );
       }
 
-      query = query.in('id', questionIds);
+      query = query.in("id", questionIds);
     }
 
     // Add search filter if provided
     if (search) {
-      query = query.or(`question_text.ilike.%${search}%,explanation.ilike.%${search}%`);
+      query = query.or(
+        `question_text.ilike.%${search}%,explanation.ilike.%${search}%`,
+      );
     }
 
     // Add pagination
@@ -89,27 +95,28 @@ export async function GET(req: NextRequest) {
     }
 
     // Order by order_index
-    query = query.order('order_index', { ascending: true });
+    query = query.order("order_index", { ascending: true });
 
     const { data: questions, error } = await query;
 
     if (error) {
-      console.error('Error fetching questions:', error);
+      console.error("Error fetching questions:", error);
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: 500, headers: corsHeaders() }
+        { status: 500, headers: corsHeaders() },
       );
     }
 
     return NextResponse.json(
       { success: true, data: questions },
-      { headers: corsHeaders() }
+      { headers: corsHeaders() },
     );
-  } catch (error: any) {
-    console.error('Error in GET /api/questions:', error);
+  } catch (error: unknown) {
+    console.error("Error in GET /api/questions:", error);
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500, headers: corsHeaders() }
+      { success: false, error: errorMessage },
+      { status: 500, headers: corsHeaders() },
     );
   }
 }
@@ -121,27 +128,27 @@ export async function POST(req: NextRequest) {
 
   try {
     const url = new URL(req.url);
-    let token = url.searchParams.get('token');
+    let token = url.searchParams.get("token");
 
     if (!token) {
-      const authHeader = req.headers.get('authorization');
-      if (authHeader?.startsWith('Bearer ')) {
+      const authHeader = req.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
         token = authHeader.substring(7);
       }
     }
 
     if (!token) {
       return NextResponse.json(
-        { success: false, error: 'Missing API Token' },
-        { status: 401, headers: corsHeaders() }
+        { success: false, error: "Missing API Token" },
+        { status: 401, headers: corsHeaders() },
       );
     }
 
     const { valid } = await validateApiToken(token);
     if (!valid) {
       return NextResponse.json(
-        { success: false, error: 'Invalid API Token' },
-        { status: 403, headers: corsHeaders() }
+        { success: false, error: "Invalid API Token" },
+        { status: 403, headers: corsHeaders() },
       );
     }
 
@@ -150,13 +157,13 @@ export async function POST(req: NextRequest) {
       file_id,
       exam_id,
       question_text,
-      option1 = '',
-      option2 = '',
-      option3 = '',
-      option4 = '',
-      option5 = '',
-      answer = '',
-      explanation = '',
+      option1 = "",
+      option2 = "",
+      option3 = "",
+      option4 = "",
+      option5 = "",
+      answer = "",
+      explanation = "",
       subject = null,
       paper = null,
       chapter = null,
@@ -166,8 +173,8 @@ export async function POST(req: NextRequest) {
 
     if (!question_text) {
       return NextResponse.json(
-        { success: false, error: 'Missing required field: question_text' },
-        { status: 400, headers: corsHeaders() }
+        { success: false, error: "Missing required field: question_text" },
+        { status: 400, headers: corsHeaders() },
       );
     }
 
@@ -175,20 +182,20 @@ export async function POST(req: NextRequest) {
 
     // Determine file_id - if not provided, try to get from exam or create default
     let finalFileId = file_id;
-    if (!finalFileId || finalFileId === 'default') {
+    if (!finalFileId || finalFileId === "default") {
       if (exam_id) {
         // Try to get file_id from exam's questions
         const { data: examQs } = await supabaseAdmin
-          .from('exam_questions')
-          .select('question_id')
-          .eq('exam_id', exam_id)
+          .from("exam_questions")
+          .select("question_id")
+          .eq("exam_id", exam_id)
           .limit(1);
 
         if (examQs && examQs.length > 0) {
           const { data: q } = await supabaseAdmin
-            .from('questions')
-            .select('file_id')
-            .eq('id', examQs[0].question_id)
+            .from("questions")
+            .select("file_id")
+            .eq("id", examQs[0].question_id)
             .single();
           if (q) finalFileId = q.file_id;
         }
@@ -197,10 +204,10 @@ export async function POST(req: NextRequest) {
       // If still no file_id, create a default file
       if (!finalFileId) {
         const { data: newFile, error: fileError } = await supabaseAdmin
-          .from('files')
+          .from("files")
           .insert({
-            original_filename: 'default.csv',
-            display_name: 'Default Question Bank',
+            original_filename: "default.csv",
+            display_name: "Default Question Bank",
             uploaded_at: new Date().toISOString(),
             total_questions: 0,
             is_bank: true,
@@ -209,10 +216,10 @@ export async function POST(req: NextRequest) {
           .single();
 
         if (fileError) {
-          console.error('Error creating default file:', fileError);
+          console.error("Error creating default file:", fileError);
           return NextResponse.json(
-            { success: false, error: 'Failed to create default file' },
-            { status: 500, headers: corsHeaders() }
+            { success: false, error: "Failed to create default file" },
+            { status: 500, headers: corsHeaders() },
           );
         }
 
@@ -222,7 +229,7 @@ export async function POST(req: NextRequest) {
 
     // Insert the question
     const { data: question, error } = await supabaseAdmin
-      .from('questions')
+      .from("questions")
       .insert({
         file_id: finalFileId,
         question_text,
@@ -244,39 +251,40 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating question:', error);
+      console.error("Error creating question:", error);
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: 500, headers: corsHeaders() }
+        { status: 500, headers: corsHeaders() },
       );
     }
 
     // Update file's total_questions count
     const { data: fileData } = await supabaseAdmin
-      .from('questions')
-      .select('id', { count: 'exact' })
-      .eq('file_id', finalFileId);
+      .from("questions")
+      .select("id", { count: "exact" })
+      .eq("file_id", finalFileId);
 
     if (fileData) {
       await supabaseAdmin
-        .from('files')
+        .from("files")
         .update({ total_questions: fileData.length })
-        .eq('id', finalFileId);
+        .eq("id", finalFileId);
     }
 
     return NextResponse.json(
       {
         success: true,
-        message: 'Question created successfully',
+        message: "Question created successfully",
         data: question,
       },
-      { headers: corsHeaders() }
+      { headers: corsHeaders() },
     );
-  } catch (error: any) {
-    console.error('Error in POST /api/questions:', error);
+  } catch (error: unknown) {
+    console.error("Error in POST /api/questions:", error);
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500, headers: corsHeaders() }
+      { success: false, error: errorMessage },
+      { status: 500, headers: corsHeaders() },
     );
   }
 }
@@ -288,27 +296,27 @@ export async function PUT(req: NextRequest) {
 
   try {
     const url = new URL(req.url);
-    let token = url.searchParams.get('token');
+    let token = url.searchParams.get("token");
 
     if (!token) {
-      const authHeader = req.headers.get('authorization');
-      if (authHeader?.startsWith('Bearer ')) {
+      const authHeader = req.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
         token = authHeader.substring(7);
       }
     }
 
     if (!token) {
       return NextResponse.json(
-        { success: false, error: 'Missing API Token' },
-        { status: 401, headers: corsHeaders() }
+        { success: false, error: "Missing API Token" },
+        { status: 401, headers: corsHeaders() },
       );
     }
 
     const { valid } = await validateApiToken(token);
     if (!valid) {
       return NextResponse.json(
-        { success: false, error: 'Invalid API Token' },
-        { status: 403, headers: corsHeaders() }
+        { success: false, error: "Invalid API Token" },
+        { status: 403, headers: corsHeaders() },
       );
     }
 
@@ -317,31 +325,31 @@ export async function PUT(req: NextRequest) {
 
     if (!id) {
       return NextResponse.json(
-        { success: false, error: 'Missing Question ID' },
-        { status: 400, headers: corsHeaders() }
+        { success: false, error: "Missing Question ID" },
+        { status: 400, headers: corsHeaders() },
       );
     }
 
     const allowedFields = [
-      'question_text',
-      'option1',
-      'option2',
-      'option3',
-      'option4',
-      'option5',
-      'answer',
-      'explanation',
-      'type',
-      'question_image',
-      'explanation_image',
-      'subject',
-      'paper',
-      'chapter',
-      'highlight',
+      "question_text",
+      "option1",
+      "option2",
+      "option3",
+      "option4",
+      "option5",
+      "answer",
+      "explanation",
+      "type",
+      "question_image",
+      "explanation_image",
+      "subject",
+      "paper",
+      "chapter",
+      "highlight",
     ];
 
-    const updateData: any = {};
-    allowedFields.forEach(field => {
+    const updateData: Record<string, unknown> = {};
+    allowedFields.forEach((field) => {
       if (field in body) {
         updateData[field] = body[field];
       }
@@ -349,39 +357,40 @@ export async function PUT(req: NextRequest) {
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
-        { success: false, error: 'No fields to update' },
-        { status: 400, headers: corsHeaders() }
+        { success: false, error: "No fields to update" },
+        { status: 400, headers: corsHeaders() },
       );
     }
 
     const { data: question, error } = await supabaseAdmin
-      .from('questions')
+      .from("questions")
       .update(updateData)
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single();
 
     if (error) {
-      console.error('Error updating question:', error);
+      console.error("Error updating question:", error);
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: 500, headers: corsHeaders() }
+        { status: 500, headers: corsHeaders() },
       );
     }
 
     return NextResponse.json(
       {
         success: true,
-        message: 'Question updated successfully',
+        message: "Question updated successfully",
         data: question,
       },
-      { headers: corsHeaders() }
+      { headers: corsHeaders() },
     );
-  } catch (error: any) {
-    console.error('Error in PUT /api/questions:', error);
+  } catch (error: unknown) {
+    console.error("Error in PUT /api/questions:", error);
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500, headers: corsHeaders() }
+      { success: false, error: errorMessage },
+      { status: 500, headers: corsHeaders() },
     );
   }
 }
@@ -393,27 +402,27 @@ export async function DELETE(req: NextRequest) {
 
   try {
     const url = new URL(req.url);
-    let token = url.searchParams.get('token');
+    let token = url.searchParams.get("token");
 
     if (!token) {
-      const authHeader = req.headers.get('authorization');
-      if (authHeader?.startsWith('Bearer ')) {
+      const authHeader = req.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
         token = authHeader.substring(7);
       }
     }
 
     if (!token) {
       return NextResponse.json(
-        { success: false, error: 'Missing API Token' },
-        { status: 401, headers: corsHeaders() }
+        { success: false, error: "Missing API Token" },
+        { status: 401, headers: corsHeaders() },
       );
     }
 
     const { valid } = await validateApiToken(token);
     if (!valid) {
       return NextResponse.json(
-        { success: false, error: 'Invalid API Token' },
-        { status: 403, headers: corsHeaders() }
+        { success: false, error: "Invalid API Token" },
+        { status: 403, headers: corsHeaders() },
       );
     }
 
@@ -422,61 +431,62 @@ export async function DELETE(req: NextRequest) {
 
     if (!id) {
       return NextResponse.json(
-        { success: false, error: 'Missing Question ID' },
-        { status: 400, headers: corsHeaders() }
+        { success: false, error: "Missing Question ID" },
+        { status: 400, headers: corsHeaders() },
       );
     }
 
     // Get the question to find its file_id
     const { data: question } = await supabaseAdmin
-      .from('questions')
-      .select('file_id')
-      .eq('id', id)
+      .from("questions")
+      .select("file_id")
+      .eq("id", id)
       .single();
 
     // Delete the question
     const { error } = await supabaseAdmin
-      .from('questions')
+      .from("questions")
       .delete()
-      .eq('id', id);
+      .eq("id", id);
 
     if (error) {
-      console.error('Error deleting question:', error);
+      console.error("Error deleting question:", error);
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: 500, headers: corsHeaders() }
+        { status: 500, headers: corsHeaders() },
       );
     }
 
     // Update file's total_questions count
     if (question?.file_id) {
       const { data: fileData } = await supabaseAdmin
-        .from('questions')
-        .select('id', { count: 'exact' })
-        .eq('file_id', question.file_id);
+        .from("questions")
+        .select("id", { count: "exact" })
+        .eq("file_id", question.file_id);
 
       if (fileData) {
         await supabaseAdmin
-          .from('files')
+          .from("files")
           .update({ total_questions: fileData.length })
-          .eq('id', question.file_id);
+          .eq("id", question.file_id);
       }
     }
 
     return NextResponse.json(
-      { success: true, message: 'Question deleted successfully' },
-      { headers: corsHeaders() }
+      { success: true, message: "Question deleted successfully" },
+      { headers: corsHeaders() },
     );
-  } catch (error: any) {
-    console.error('Error in DELETE /api/questions:', error);
+  } catch (error: unknown) {
+    console.error("Error in DELETE /api/questions:", error);
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500, headers: corsHeaders() }
+      { success: false, error: errorMessage },
+      { status: 500, headers: corsHeaders() },
     );
   }
 }
 
-export async function OPTIONS(req: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: corsHeaders(),

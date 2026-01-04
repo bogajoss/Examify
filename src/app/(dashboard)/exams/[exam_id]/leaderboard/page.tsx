@@ -105,18 +105,20 @@ export default function ExamLeaderboardPage() {
   });
 
   // Filter results to only show submissions within exam time window
-  const officialResults = results.filter((result) => {
-    if (!exam?.end_at) return true; // If no end time, show all
+  const officialResults = results
+    .filter((result) => {
+      if (!exam?.end_at) return true; // If no end time, show all
 
-    const submittedTime = dayjs(result.submitted_at);
-    const examEndTime = dayjs(exam.end_at);
+      const submittedTime = dayjs(result.submitted_at);
+      const examEndTime = dayjs(exam.end_at);
 
-    // Only include submissions that were made before or at exam end time
-    // (within the actual exam time window, not practice mode submissions)
-    return (
-      submittedTime.isBefore(examEndTime) || submittedTime.isSame(examEndTime)
-    );
-  }).map((r, i) => ({ ...r, rank: i + 1 }));
+      // Only include submissions that were made before or at exam end time
+      // (within the actual exam time window, not practice mode submissions)
+      return (
+        submittedTime.isBefore(examEndTime) || submittedTime.isSame(examEndTime)
+      );
+    })
+    .map((r, i) => ({ ...r, rank: i + 1 }));
 
   const allResults = results.map((r, i) => ({ ...r, rank: i + 1 }));
 
@@ -126,7 +128,9 @@ export default function ExamLeaderboardPage() {
     return <CustomLoader />;
   }
 
-  const renderLeaderboardTable = (data: (StudentResult & { rank: number })[]) => {
+  const renderLeaderboardTable = (
+    data: (StudentResult & { rank: number })[],
+  ) => {
     // Calculate summary statistics
     const avgScore =
       data.length > 0
@@ -312,7 +316,10 @@ export default function ExamLeaderboardPage() {
                       <TableCell className="hidden md:table-cell">
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4 text-muted-foreground" />
-                          {formatDuration(result.started_at, result.submitted_at)}
+                          {formatDuration(
+                            result.started_at,
+                            result.submitted_at,
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -381,13 +388,14 @@ export default function ExamLeaderboardPage() {
         </TabsList>
         <TabsContent value="official" className="mt-6">
           <div className="mb-4 text-sm text-muted-foreground">
-            * শুধুমাত্র নির্ধারিত সময়ের মধ্যে জমা দেওয়া ফলাফল এখানে দেখানো হয়েছে।
+            * শুধুমাত্র নির্ধারিত সময়ের মধ্যে জমা দেওয়া ফলাফল এখানে দেখানো
+            হয়েছে।
           </div>
           {renderLeaderboardTable(officialResults)}
         </TabsContent>
         <TabsContent value="all" className="mt-6">
           <div className="mb-4 text-sm text-muted-foreground">
-             * নির্ধারিত সময় এবং প্রাকটিস মোড সহ সকল ফলাফল এখানে দেখানো হয়েছে।
+            * নির্ধারিত সময় এবং প্রাকটিস মোড সহ সকল ফলাফল এখানে দেখানো হয়েছে।
           </div>
           {renderLeaderboardTable(allResults)}
         </TabsContent>

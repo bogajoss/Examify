@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // reactCompiler: true,
+  reactCompiler: true,
 
   // Optimize bundle size by preventing the compiler from scanning entire libraries
   experimental: {
@@ -38,7 +38,6 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Remove console logs in production for better performance and security
   compiler: {
     removeConsole:
       process.env.NODE_ENV === "production"

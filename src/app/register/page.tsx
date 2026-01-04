@@ -72,9 +72,10 @@ function RegisterPageContent() {
       if (result.success) {
         toast({
           title: "নিবন্ধন সফল",
-          description: "আপনার অ্যাকাউন্ট তৈরি হয়েছে। আপনাকে লগইন করানো হচ্ছে...",
+          description:
+            "আপনার অ্যাকাউন্ট তৈরি হয়েছে। আপনাকে লগইন করানো হচ্ছে...",
         });
-        
+
         // Auto-login after successful registration
         const redirectTo = searchParams.get("redirect") || undefined;
         await signIn(formData.roll, formData.password, redirectTo);
@@ -125,7 +126,8 @@ function RegisterPageContent() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="roll">
-                রোল নম্বর / ফোন নম্বর (অফিসিয়ালি রোল না পেলে তোমার ফোন নম্বর দাও)
+                রোল নম্বর / ফোন নম্বর (অফিসিয়ালি রোল না পেলে তোমার ফোন নম্বর
+                দাও)
               </Label>
               <Input
                 id="roll"

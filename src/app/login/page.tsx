@@ -70,7 +70,8 @@ function LoginPageContent() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="roll-number">
-                রোল নম্বর / ফোন নম্বর (অফিসিয়ালি রোল না পেলে তোমার ফোন নম্বর দাও)
+                রোল নম্বর / ফোন নম্বর (অফিসিয়ালি রোল না পেলে তোমার ফোন নম্বর
+                দাও)
               </Label>
               <Input
                 id="roll-number"
@@ -115,8 +116,8 @@ function LoginPageContent() {
             </Button>
             <p className="mt-4 text-center text-sm text-muted-foreground">
               অ্যাকাউন্ট নেই?{" "}
-              <Link 
-                href={`/register${searchParams.get("redirect") ? `?redirect=${searchParams.get("redirect")}` : ""}`} 
+              <Link
+                href={`/register${searchParams.get("redirect") ? `?redirect=${searchParams.get("redirect")}` : ""}`}
                 className="underline hover:text-primary"
               >
                 নিবন্ধন করুন

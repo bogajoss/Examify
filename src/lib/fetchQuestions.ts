@@ -34,11 +34,11 @@ export async function fetchQuestions(
     if (exam_id) {
       params.exam_id = exam_id;
     }
-    
+
     // If fetching by specific IDs, use POST to avoid URL length limits
     if (ids && ids.length > 0) {
       method = "POST";
-      body = { ids: ids }; 
+      body = { ids: ids };
       // We don't add ids to params to keep URL short
     }
 

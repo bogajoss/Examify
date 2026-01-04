@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0");
 
     console.log(
-      `[FETCH-QUESTIONS] Request received. file_id: ${fileId || "N/A"}, exam_id: ${examId || "N/A"}`
+      `[FETCH-QUESTIONS] Request received. file_id: ${fileId || "N/A"}, exam_id: ${examId || "N/A"}`,
     );
 
     // Build query from Supabase
@@ -44,30 +44,36 @@ export async function GET(request: NextRequest) {
         console.error("[FETCH-QUESTIONS] Database error:", error);
         return NextResponse.json(
           { success: false, error: error.message },
-          { status: 500, headers: corsHeaders() }
+          { status: 500, headers: corsHeaders() },
         );
       }
 
       // Transform exam_questions result
-      const questions = (data || []).map((eq: any) => ({
-        ...eq.questions,
-        order_index: eq.order_index,
-      }));
+      const questions = (data || []).map((eq: Record<string, unknown>) => {
+        const eqQuestions = eq.questions as Record<string, unknown>;
+        return {
+          ...eqQuestions,
+          order_index: eq.order_index,
+        };
+      });
 
       return NextResponse.json(
         { success: true, data: questions },
-        { headers: corsHeaders() }
+        { headers: corsHeaders() },
       );
     }
 
     // Regular file query with pagination
-    const { data, error, count } = await query.range(offset, offset + limit - 1);
+    const { data, error, count } = await query.range(
+      offset,
+      offset + limit - 1,
+    );
 
     if (error) {
       console.error("[FETCH-QUESTIONS] Database error:", error);
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: 500, headers: corsHeaders() }
+        { status: 500, headers: corsHeaders() },
       );
     }
 
@@ -78,7 +84,7 @@ export async function GET(request: NextRequest) {
       question: q.question_text || "",
       question_text: q.question_text || "",
       options: [q.option1, q.option2, q.option3, q.option4, q.option5].filter(
-        (o) => o && o.trim() !== ""
+        (o) => o && o.trim() !== "",
       ),
       option1: q.option1,
       option2: q.option2,
@@ -101,7 +107,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       { success: true, data: transformed, count, limit, offset },
-      { headers: corsHeaders() }
+      { headers: corsHeaders() },
     );
   } catch (err) {
     console.error("[FETCH-QUESTIONS] Error:", err);
@@ -110,7 +116,7 @@ export async function GET(request: NextRequest) {
         success: false,
         error: err instanceof Error ? err.message : "Internal server error",
       },
-      { status: 500, headers: corsHeaders() }
+      { status: 500, headers: corsHeaders() },
     );
   }
 }
@@ -137,7 +143,7 @@ export async function POST(request: NextRequest) {
       console.error("[FETCH-QUESTIONS-POST] Database error:", error);
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: 500, headers: corsHeaders() }
+        { status: 500, headers: corsHeaders() },
       );
     }
 
@@ -147,7 +153,7 @@ export async function POST(request: NextRequest) {
       question: q.question_text || "",
       question_text: q.question_text || "",
       options: [q.option1, q.option2, q.option3, q.option4, q.option5].filter(
-        (o) => o && o.trim() !== ""
+        (o) => o && o.trim() !== "",
       ),
       option1: q.option1,
       option2: q.option2,
@@ -170,7 +176,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { success: true, questions: transformed },
-      { headers: corsHeaders() }
+      { headers: corsHeaders() },
     );
   } catch (error) {
     console.error("[FETCH-QUESTIONS-POST] Error:", error);
@@ -179,7 +185,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: error instanceof Error ? error.message : "Internal server error",
       },
-      { status: 500, headers: corsHeaders() }
+      { status: 500, headers: corsHeaders() },
     );
   }
 }

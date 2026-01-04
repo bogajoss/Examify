@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin, validateApiToken } from '@/lib/supabase';
-import { corsHeaders, handleCors } from '../middleware';
+import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin, validateApiToken } from "@/lib/supabase";
+import { corsHeaders, handleCors } from "../middleware";
 
 export async function GET(req: NextRequest) {
   // Handle CORS
@@ -9,60 +9,61 @@ export async function GET(req: NextRequest) {
 
   try {
     const url = new URL(req.url);
-    let token = url.searchParams.get('token');
+    let token = url.searchParams.get("token");
 
     if (!token) {
-      const authHeader = req.headers.get('authorization');
-      if (authHeader?.startsWith('Bearer ')) {
+      const authHeader = req.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
         token = authHeader.substring(7);
       }
     }
 
     if (!token) {
       return NextResponse.json(
-        { success: false, error: 'Missing API Token' },
-        { status: 401, headers: corsHeaders() }
+        { success: false, error: "Missing API Token" },
+        { status: 401, headers: corsHeaders() },
       );
     }
 
     const { valid, isAdmin } = await validateApiToken(token);
     if (!valid) {
       return NextResponse.json(
-        { success: false, error: 'Invalid API Token' },
-        { status: 403, headers: corsHeaders() }
+        { success: false, error: "Invalid API Token" },
+        { status: 403, headers: corsHeaders() },
       );
     }
 
     // Only admins can view all tokens
     if (!isAdmin) {
       return NextResponse.json(
-        { success: false, error: 'Admin access required' },
-        { status: 403, headers: corsHeaders() }
+        { success: false, error: "Admin access required" },
+        { status: 403, headers: corsHeaders() },
       );
     }
 
     const { data: tokens, error } = await supabaseAdmin
-      .from('api_tokens')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .from("api_tokens")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error('Error fetching tokens:', error);
+      console.error("Error fetching tokens:", error);
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: 500, headers: corsHeaders() }
+        { status: 500, headers: corsHeaders() },
       );
     }
 
     return NextResponse.json(
       { success: true, data: tokens },
-      { headers: corsHeaders() }
+      { headers: corsHeaders() },
     );
-  } catch (error: any) {
-    console.error('Error in GET /api/tokens:', error);
+  } catch (error: unknown) {
+    console.error("Error in GET /api/tokens:", error);
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500, headers: corsHeaders() }
+      { success: false, error: errorMessage },
+      { status: 500, headers: corsHeaders() },
     );
   }
 }
@@ -74,35 +75,35 @@ export async function POST(req: NextRequest) {
 
   try {
     const url = new URL(req.url);
-    let token = url.searchParams.get('token');
+    let token = url.searchParams.get("token");
 
     if (!token) {
-      const authHeader = req.headers.get('authorization');
-      if (authHeader?.startsWith('Bearer ')) {
+      const authHeader = req.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
         token = authHeader.substring(7);
       }
     }
 
     if (!token) {
       return NextResponse.json(
-        { success: false, error: 'Missing API Token' },
-        { status: 401, headers: corsHeaders() }
+        { success: false, error: "Missing API Token" },
+        { status: 401, headers: corsHeaders() },
       );
     }
 
     const { valid, isAdmin } = await validateApiToken(token);
     if (!valid) {
       return NextResponse.json(
-        { success: false, error: 'Invalid API Token' },
-        { status: 403, headers: corsHeaders() }
+        { success: false, error: "Invalid API Token" },
+        { status: 403, headers: corsHeaders() },
       );
     }
 
     // Only admins can create tokens
     if (!isAdmin) {
       return NextResponse.json(
-        { success: false, error: 'Admin access required' },
-        { status: 403, headers: corsHeaders() }
+        { success: false, error: "Admin access required" },
+        { status: 403, headers: corsHeaders() },
       );
     }
 
@@ -111,25 +112,29 @@ export async function POST(req: NextRequest) {
 
     if (!name) {
       return NextResponse.json(
-        { success: false, error: 'Missing token name' },
-        { status: 400, headers: corsHeaders() }
+        { success: false, error: "Missing token name" },
+        { status: 400, headers: corsHeaders() },
       );
     }
 
     // Generate random token string (not UUID format)
-    const new_token = Math.random().toString(36).substring(2, 15) + 
-                      Math.random().toString(36).substring(2, 15);
+    const new_token =
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15);
 
     // For user_id, generate a simple UUID format string
-    const userId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = (Math.random() * 16) | 0;
-      const v = c === 'x' ? r : (r & 0x3) | 0x8;
-      return v.toString(16);
-    });
+    const userId = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+      /[xy]/g,
+      (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      },
+    );
 
     // Database generates UUID for id via uuid_generate_v4() default value
     const { data: newToken, error } = await supabaseAdmin
-      .from('api_tokens')
+      .from("api_tokens")
       .insert({
         user_id: userId,
         token: new_token,
@@ -141,26 +146,27 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creating token:', error);
+      console.error("Error creating token:", error);
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: 500, headers: corsHeaders() }
+        { status: 500, headers: corsHeaders() },
       );
     }
 
     return NextResponse.json(
       {
         success: true,
-        message: 'Token created successfully',
+        message: "Token created successfully",
         data: newToken,
       },
-      { headers: corsHeaders() }
+      { headers: corsHeaders() },
     );
-  } catch (error: any) {
-    console.error('Error in POST /api/tokens:', error);
+  } catch (error: unknown) {
+    console.error("Error in POST /api/tokens:", error);
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500, headers: corsHeaders() }
+      { success: false, error: errorMessage },
+      { status: 500, headers: corsHeaders() },
     );
   }
 }
@@ -172,35 +178,35 @@ export async function DELETE(req: NextRequest) {
 
   try {
     const url = new URL(req.url);
-    let token = url.searchParams.get('token');
+    let token = url.searchParams.get("token");
 
     if (!token) {
-      const authHeader = req.headers.get('authorization');
-      if (authHeader?.startsWith('Bearer ')) {
+      const authHeader = req.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
         token = authHeader.substring(7);
       }
     }
 
     if (!token) {
       return NextResponse.json(
-        { success: false, error: 'Missing API Token' },
-        { status: 401, headers: corsHeaders() }
+        { success: false, error: "Missing API Token" },
+        { status: 401, headers: corsHeaders() },
       );
     }
 
     const { valid, isAdmin } = await validateApiToken(token);
     if (!valid) {
       return NextResponse.json(
-        { success: false, error: 'Invalid API Token' },
-        { status: 403, headers: corsHeaders() }
+        { success: false, error: "Invalid API Token" },
+        { status: 403, headers: corsHeaders() },
       );
     }
 
     // Only admins can delete tokens
     if (!isAdmin) {
       return NextResponse.json(
-        { success: false, error: 'Admin access required' },
-        { status: 403, headers: corsHeaders() }
+        { success: false, error: "Admin access required" },
+        { status: 403, headers: corsHeaders() },
       );
     }
 
@@ -209,38 +215,39 @@ export async function DELETE(req: NextRequest) {
 
     if (!id) {
       return NextResponse.json(
-        { success: false, error: 'Missing token ID' },
-        { status: 400, headers: corsHeaders() }
+        { success: false, error: "Missing token ID" },
+        { status: 400, headers: corsHeaders() },
       );
     }
 
     const { error } = await supabaseAdmin
-      .from('api_tokens')
+      .from("api_tokens")
       .delete()
-      .eq('id', id);
+      .eq("id", id);
 
     if (error) {
-      console.error('Error deleting token:', error);
+      console.error("Error deleting token:", error);
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: 500, headers: corsHeaders() }
+        { status: 500, headers: corsHeaders() },
       );
     }
 
     return NextResponse.json(
-      { success: true, message: 'Token deleted successfully' },
-      { headers: corsHeaders() }
+      { success: true, message: "Token deleted successfully" },
+      { headers: corsHeaders() },
     );
-  } catch (error: any) {
-    console.error('Error in DELETE /api/tokens:', error);
+  } catch (error: unknown) {
+    console.error("Error in DELETE /api/tokens:", error);
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500, headers: corsHeaders() }
+      { success: false, error: errorMessage },
+      { status: 500, headers: corsHeaders() },
     );
   }
 }
 
-export async function OPTIONS(req: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: corsHeaders(),

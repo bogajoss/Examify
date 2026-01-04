@@ -199,7 +199,8 @@ export async function createExam(formData: FormData) {
   const file_id = formData.get("file_id") as string;
   const is_practice = formData.get("is_practice") === "true";
   const shuffle_questions = formData.get("shuffle_questions") === "true";
-  const number_of_attempts = (formData.get("number_of_attempts") as string) || "one_time";
+  const number_of_attempts =
+    (formData.get("number_of_attempts") as string) || "one_time";
   let start_at = formData.get("start_at") as string | null;
   let end_at = formData.get("end_at") as string | null;
 
@@ -345,14 +346,14 @@ export async function updateExam(formData: FormData) {
   const file_id = formData.get("file_id") as string;
   const is_practice = formData.get("is_practice") === "true";
   const shuffle_questions = formData.get("shuffle_questions") === "true";
-  
+
   // Map legacy is_enabled toggle to status
   // If is_enabled is "1" (true) -> status = "live"
   // If is_enabled is "0" (false) -> status = "draft"
   const is_enabled_input = formData.get("is_enabled");
   let status = undefined;
   if (is_enabled_input !== null) {
-     status = is_enabled_input !== "0" ? "live" : "draft";
+    status = is_enabled_input !== "0" ? "live" : "draft";
   }
 
   const number_of_attempts =
@@ -395,25 +396,25 @@ export async function updateExam(formData: FormData) {
   }
 
   const updateData: Record<string, unknown> = {
-      name,
-      description,
-      course_name,
-      duration_minutes: isNaN(duration_minutes) ? null : duration_minutes,
-      marks_per_question,
-      negative_marks_per_wrong,
-      file_id: file_id || null,
-      is_practice: is_practice || false,
-      shuffle_questions,
-      start_at,
-      end_at,
-      total_subjects,
-      mandatory_subjects,
-      optional_subjects,
-      number_of_attempts,
-    };
-  
+    name,
+    description,
+    course_name,
+    duration_minutes: isNaN(duration_minutes) ? null : duration_minutes,
+    marks_per_question,
+    negative_marks_per_wrong,
+    file_id: file_id || null,
+    is_practice: is_practice || false,
+    shuffle_questions,
+    start_at,
+    end_at,
+    total_subjects,
+    mandatory_subjects,
+    optional_subjects,
+    number_of_attempts,
+  };
+
   if (status) {
-      updateData.status = status;
+    updateData.status = status;
   }
 
   const { data, error } = await supabaseAdmin
@@ -636,19 +637,21 @@ export async function importUsersData(formData: FormData) {
     }
 
     const { error } = await supabaseAdmin.from("users").upsert(
-      importedData.users.map((u: {
-        uid?: string;
-        name: string;
-        roll: string;
-        pass?: string;
-        enrolled_batches?: string[];
-      }) => ({
-        uid: u.uid || randomUUID(),
-        name: u.name,
-        roll: u.roll,
-        pass: u.pass || "",
-        enrolled_batches: u.enrolled_batches || [],
-      })),
+      importedData.users.map(
+        (u: {
+          uid?: string;
+          name: string;
+          roll: string;
+          pass?: string;
+          enrolled_batches?: string[];
+        }) => ({
+          uid: u.uid || randomUUID(),
+          name: u.name,
+          roll: u.roll,
+          pass: u.pass || "",
+          enrolled_batches: u.enrolled_batches || [],
+        }),
+      ),
       { onConflict: "roll" },
     );
 

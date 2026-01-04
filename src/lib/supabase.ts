@@ -68,13 +68,15 @@ export interface ExamQuestion {
 }
 
 // Helper function to validate API token
-export async function validateApiToken(token: string): Promise<{ valid: boolean; isAdmin: boolean; userId?: string }> {
+export async function validateApiToken(
+  token: string,
+): Promise<{ valid: boolean; isAdmin: boolean; userId?: string }> {
   try {
     const { data, error } = await supabaseAdmin
-      .from('api_tokens')
-      .select('*')
-      .eq('token', token)
-      .eq('is_active', true)
+      .from("api_tokens")
+      .select("*")
+      .eq("token", token)
+      .eq("is_active", true)
       .single();
 
     if (error || !data) {
@@ -87,7 +89,7 @@ export async function validateApiToken(token: string): Promise<{ valid: boolean;
       userId: data.user_id,
     };
   } catch (error) {
-    console.error('Token validation error:', error);
+    console.error("Token validation error:", error);
     return { valid: false, isAdmin: false };
   }
 }
@@ -98,10 +100,12 @@ export async function validateApiToken(token: string): Promise<{ valid: boolean;
 export function generateUUID(): string {
   // DEPRECATED: This function is no longer used
   // Database generates UUIDs via uuid_generate_v4() default value in all INSERT operations
-  console.warn('generateUUID() is deprecated - database generates UUIDs via uuid_generate_v4()');
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+  console.warn(
+    "generateUUID() is deprecated - database generates UUIDs via uuid_generate_v4()",
+  );
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
     const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }

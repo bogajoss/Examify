@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     if (!id) {
       return NextResponse.json(
         { success: false, error: "Missing file id parameter" },
-        { status: 400, headers: corsHeaders() }
+        { status: 400, headers: corsHeaders() },
       );
     }
 
@@ -32,13 +32,13 @@ export async function GET(request: NextRequest) {
     if (error || !file) {
       return NextResponse.json(
         { success: false, error: "File not found" },
-        { status: 404, headers: corsHeaders() }
+        { status: 404, headers: corsHeaders() },
       );
     }
 
     return NextResponse.json(
       { success: true, data: file },
-      { headers: corsHeaders() }
+      { headers: corsHeaders() },
     );
   } catch (err) {
     console.error("[FETCH-FILE] Error:", err);
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
         success: false,
         error: err instanceof Error ? err.message : "Internal server error",
       },
-      { status: 500, headers: corsHeaders() }
+      { status: 500, headers: corsHeaders() },
     );
   }
 }

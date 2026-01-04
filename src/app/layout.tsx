@@ -42,7 +42,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className={cn(
           "min-h-screen bg-background antialiased",
-          hindSiliguri.variable
+          hindSiliguri.variable,
         )}
       >
         <ThemeProvider

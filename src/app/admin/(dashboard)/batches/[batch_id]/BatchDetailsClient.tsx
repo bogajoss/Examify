@@ -1407,7 +1407,10 @@ export function BatchDetailsClient({
                           variant="destructive"
                           size="sm"
                           onClick={() =>
-                            requestDeleteStudent(student.uid, maskRollNumber(student.roll))
+                            requestDeleteStudent(
+                              student.uid,
+                              maskRollNumber(student.roll),
+                            )
                           }
                         >
                           মুছে ফেলুন

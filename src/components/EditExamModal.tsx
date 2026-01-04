@@ -155,38 +155,45 @@ export function EditExamModal({
 
         // Fetch full exam details to get ALL questions if not present
         let currentQuestions = exam.questions || [];
-        
+
         // Collect all question IDs from all sources
         const allIds = new Set<string>();
         if (exam.question_ids) {
-            exam.question_ids.forEach(id => allIds.add(id));
+          exam.question_ids.forEach((id) => allIds.add(id));
         }
-        
-        const mSubsRaw = normalizeSubjects(exam.mandatory_subjects, "mandatory");
+
+        const mSubsRaw = normalizeSubjects(
+          exam.mandatory_subjects,
+          "mandatory",
+        );
         const oSubsRaw = normalizeSubjects(exam.optional_subjects, "optional");
-        
-        mSubsRaw.forEach(s => s.question_ids?.forEach(id => allIds.add(id)));
-        oSubsRaw.forEach(s => s.question_ids?.forEach(id => allIds.add(id)));
-        
+
+        mSubsRaw.forEach((s) =>
+          s.question_ids?.forEach((id) => allIds.add(id)),
+        );
+        oSubsRaw.forEach((s) =>
+          s.question_ids?.forEach((id) => allIds.add(id)),
+        );
+
         if (currentQuestions.length === 0) {
           if (allIds.size > 0) {
-             const fetched = await fetchQuestions(
-                undefined, 
-                undefined, 
-                undefined, 
-                undefined, 
-                undefined, 
-                Array.from(allIds)
-             );
-             if (Array.isArray(fetched)) {
-                currentQuestions = fetched.map((q) => ({
-                  ...q,
-                  id: String(q.id),
-                  question: q.question || q.question_text || "",
-                  options: q.options || [],
-                  answer: q.answer || 0,
-                })) as Question[];
-             }
+            const fetched = await fetchQuestions(
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              undefined,
+              Array.from(allIds),
+            );
+            if (Array.isArray(fetched)) {
+              currentQuestions = fetched.map((q) => ({
+                ...q,
+                id: String(q.id),
+                question: q.question || q.question_text || "",
+                options: q.options || [],
+                answer: q.answer || 0,
+              })) as Question[];
+            }
           } else if (exam.file_id) {
             const fetched = await fetchQuestions(exam.file_id, exam.id);
             if (Array.isArray(fetched)) {
@@ -213,12 +220,10 @@ export function EditExamModal({
             // Try to find questions for this section
             // Prioritize explicit question_ids over subject field to maintain correct assignments
             // This prevents issues where questions might be reassigned due to subject field changes
-            const sectionQuestions = currentQuestions.filter(
-              (q) =>
-                (config.question_ids && config.question_ids.length > 0
-                  ? config.question_ids.includes(String(q.id))  // Use explicit IDs if available
-                  : (q.subject === config.id || q.subject === config.name)  // Fallback to subject matching
-                )
+            const sectionQuestions = currentQuestions.filter((q) =>
+              config.question_ids && config.question_ids.length > 0
+                ? config.question_ids.includes(String(q.id)) // Use explicit IDs if available
+                : q.subject === config.id || q.subject === config.name, // Fallback to subject matching
             );
 
             if (sectionQuestions.length > 0) {

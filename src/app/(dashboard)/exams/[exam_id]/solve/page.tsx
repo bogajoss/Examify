@@ -91,12 +91,8 @@ export default function SolvePage() {
         }
       });
 
-      const embeddedQuestions = (examData as Record<string, unknown>)
-        .questions;
-      if (
-        Array.isArray(embeddedQuestions) &&
-        embeddedQuestions.length > 0
-      ) {
+      const embeddedQuestions = (examData as Record<string, unknown>).questions;
+      if (Array.isArray(embeddedQuestions) && embeddedQuestions.length > 0) {
         finalQuestions = (embeddedQuestions as RawQuestion[]).map(
           (q: RawQuestion) => {
             const normalized = normalizeQuestion(q);

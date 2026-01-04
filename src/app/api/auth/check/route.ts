@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { validateApiToken } from '@/lib/supabase';
-import { corsHeaders, handleCors } from '../../middleware';
+import { NextRequest, NextResponse } from "next/server";
+import { validateApiToken } from "@/lib/supabase";
+import { corsHeaders, handleCors } from "../../middleware";
 
 export async function GET(req: NextRequest) {
   // Handle CORS
@@ -9,19 +9,19 @@ export async function GET(req: NextRequest) {
 
   try {
     const url = new URL(req.url);
-    let token = url.searchParams.get('token');
+    let token = url.searchParams.get("token");
 
     if (!token) {
-      const authHeader = req.headers.get('authorization');
-      if (authHeader?.startsWith('Bearer ')) {
+      const authHeader = req.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
         token = authHeader.substring(7);
       }
     }
 
     if (!token) {
       return NextResponse.json(
-        { success: false, error: 'Missing API Token' },
-        { status: 401, headers: corsHeaders() }
+        { success: false, error: "Missing API Token" },
+        { status: 401, headers: corsHeaders() },
       );
     }
 
@@ -32,20 +32,21 @@ export async function GET(req: NextRequest) {
         success: true,
         valid,
         isAdmin,
-        message: valid ? 'Token is valid' : 'Token is invalid',
+        message: valid ? "Token is valid" : "Token is invalid",
       },
-      { headers: corsHeaders() }
+      { headers: corsHeaders() },
     );
-  } catch (error: any) {
-    console.error('Error in GET /api/auth/check:', error);
+  } catch (error: unknown) {
+    console.error("Error in GET /api/auth/check:", error);
+    const errorMessage = error instanceof Error ? error.message : "Internal server error";
     return NextResponse.json(
-      { success: false, error: error.message || 'Internal server error' },
-      { status: 500, headers: corsHeaders() }
+      { success: false, error: errorMessage },
+      { status: 500, headers: corsHeaders() },
     );
   }
 }
 
-export async function OPTIONS(req: NextRequest) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: corsHeaders(),

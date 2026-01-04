@@ -35,27 +35,27 @@ export default function ExamQuestionsPage() {
 
       if (examData) {
         setExamName(examData.name || undefined);
-        
+
         // Collect all question IDs from all sources (top-level, mandatory, optional)
         const allIds = new Set<string>();
-        
+
         if (examData.question_ids && Array.isArray(examData.question_ids)) {
-            examData.question_ids.forEach((id: string) => allIds.add(id));
+          examData.question_ids.forEach((id: string) => allIds.add(id));
         }
 
         const mSubs = (examData.mandatory_subjects as SubjectConfig[]) || [];
         const oSubs = (examData.optional_subjects as SubjectConfig[]) || [];
 
         mSubs.forEach((sub) => {
-            if (sub?.question_ids && Array.isArray(sub.question_ids)) {
-                sub.question_ids.forEach((id: string) => allIds.add(id));
-            }
+          if (sub?.question_ids && Array.isArray(sub.question_ids)) {
+            sub.question_ids.forEach((id: string) => allIds.add(id));
+          }
         });
 
         oSubs.forEach((sub) => {
-            if (sub?.question_ids && Array.isArray(sub.question_ids)) {
-                sub.question_ids.forEach((id: string) => allIds.add(id));
-            }
+          if (sub?.question_ids && Array.isArray(sub.question_ids)) {
+            sub.question_ids.forEach((id: string) => allIds.add(id));
+          }
         });
 
         // Prioritize specific question IDs if they exist
@@ -72,9 +72,9 @@ export default function ExamQuestionsPage() {
           setQuestions(fetched || []);
           // Use the file_id from the first question if we need a default for editing, or the exam's file_id
           if (fetched && fetched.length > 0 && fetched[0].file_id) {
-             setFileId(String(fetched[0].file_id));
+            setFileId(String(fetched[0].file_id));
           } else if (examData.file_id) {
-             setFileId(examData.file_id);
+            setFileId(examData.file_id);
           }
         } else if (examData.file_id) {
           setFileId(examData.file_id);

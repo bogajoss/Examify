@@ -26,10 +26,10 @@ export function Pagination({
     if (!showNumbers) return null;
 
     const maxVisible = 5;
-    
+
     let start = Math.max(1, currentPage - 2);
     const end = Math.min(totalPages, start + maxVisible - 1);
-    
+
     if (end - start < maxVisible - 1) {
       start = Math.max(1, end - maxVisible + 1);
     }
@@ -49,7 +49,7 @@ export function Pagination({
             {start > 2 && <span className="px-1 self-end">...</span>}
           </>
         )}
-        
+
         {Array.from({ length: end - start + 1 }).map((_, i) => {
           const p = start + i;
           return (
@@ -96,7 +96,7 @@ export function Pagination({
         >
           <ChevronLeft className="h-4 w-4 mr-1" /> আগের
         </Button>
-        
+
         {renderPageNumbers()}
 
         <Button

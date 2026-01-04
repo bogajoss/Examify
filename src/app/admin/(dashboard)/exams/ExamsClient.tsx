@@ -129,7 +129,7 @@ export function ExamsClient({
     try {
       const formData = new FormData();
       formData.append("id", exam.id);
-      
+
       // Toggle logic: if live -> disable (0), else -> enable (1)
       formData.append("is_enabled", exam.status === "live" ? "0" : "1");
       if (exam.batch_id) formData.append("batch_id", exam.batch_id);
@@ -139,21 +139,40 @@ export function ExamsClient({
       formData.append("description", exam.description || "");
       formData.append("course_name", exam.course_name || "");
       formData.append("duration_minutes", String(exam.duration_minutes || ""));
-      formData.append("marks_per_question", String(exam.marks_per_question || ""));
-      formData.append("negative_marks_per_wrong", String(exam.negative_marks_per_wrong || ""));
+      formData.append(
+        "marks_per_question",
+        String(exam.marks_per_question || ""),
+      );
+      formData.append(
+        "negative_marks_per_wrong",
+        String(exam.negative_marks_per_wrong || ""),
+      );
       if (exam.file_id) formData.append("file_id", exam.file_id);
       formData.append("is_practice", exam.is_practice ? "true" : "false");
-      formData.append("shuffle_questions", exam.shuffle_questions ? "true" : "false");
-      formData.append("number_of_attempts", exam.number_of_attempts || "one_time");
+      formData.append(
+        "shuffle_questions",
+        exam.shuffle_questions ? "true" : "false",
+      );
+      formData.append(
+        "number_of_attempts",
+        exam.number_of_attempts || "one_time",
+      );
       if (exam.start_at) formData.append("start_at", exam.start_at);
       if (exam.end_at) formData.append("end_at", exam.end_at);
-      if (exam.total_subjects) formData.append("total_subjects", String(exam.total_subjects));
-      
+      if (exam.total_subjects)
+        formData.append("total_subjects", String(exam.total_subjects));
+
       if (exam.mandatory_subjects) {
-        formData.append("mandatory_subjects", JSON.stringify(exam.mandatory_subjects));
+        formData.append(
+          "mandatory_subjects",
+          JSON.stringify(exam.mandatory_subjects),
+        );
       }
       if (exam.optional_subjects) {
-        formData.append("optional_subjects", JSON.stringify(exam.optional_subjects));
+        formData.append(
+          "optional_subjects",
+          JSON.stringify(exam.optional_subjects),
+        );
       }
       if (exam.question_ids) {
         formData.append("question_ids", JSON.stringify(exam.question_ids));
@@ -174,7 +193,11 @@ export function ExamsClient({
           prev.map((e) => (e.id === updatedExam.id ? updatedExam : e)),
         );
       } else {
-        toast({ title: "স্টাটাস আপডেট ব্যর্থ", description: result.message, variant: "destructive" });
+        toast({
+          title: "স্টাটাস আপডেট ব্যর্থ",
+          description: result.message,
+          variant: "destructive",
+        });
       }
     } catch (err) {
       console.error(err);
