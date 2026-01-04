@@ -248,7 +248,7 @@ export function ExamsClient({
               },
               {
                 label: "Marks Per Question:",
-                value: exam.marks_per_question || 1,
+                value: exam.marks_per_question !== undefined ? exam.marks_per_question.toFixed(2) : "1.00",
               },
               {
                 label: "Negative Mark:",

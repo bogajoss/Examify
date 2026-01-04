@@ -276,7 +276,7 @@ export default function SolvePage() {
     questions.forEach((q) => {
       const qMarks = q.question_marks
         ? parseFloat(String(q.question_marks))
-        : parseFloat(String(exam?.marks_per_question || 1));
+        : parseFloat(String(exam?.marks_per_question || 1.00));
 
       const qNeg = parseFloat(String(exam?.negative_marks_per_wrong || 0));
 

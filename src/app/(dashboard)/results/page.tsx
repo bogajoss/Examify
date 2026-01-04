@@ -189,7 +189,7 @@ export default function ResultsPage() {
 
         negative_marks_per_wrong: negativeMarks,
 
-        marks_per_question: examDetails?.marks_per_question || 1,
+        marks_per_question: examDetails?.marks_per_question || 1.00,
 
         batch_id: examDetails?.batch_id || null,
       } as ExamResult;

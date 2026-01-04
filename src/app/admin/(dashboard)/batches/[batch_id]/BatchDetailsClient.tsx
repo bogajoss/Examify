@@ -521,7 +521,7 @@ export function BatchDetailsClient({
                         name="marks_per_question"
                         type="number"
                         step="0.01"
-                        defaultValue="1"
+                        defaultValue="1.00"
                         placeholder="প্রশ্ন প্রতি মার্ক"
                         onInput={handleNumberInput}
                       />

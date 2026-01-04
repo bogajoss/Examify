@@ -647,7 +647,7 @@ export default function TakeExamPage() {
       const qId = String(q.id);
       const selectedOptIndex = selectedAnswers[qId];
 
-      let qMarks = parseFloat(String(exam?.marks_per_question || 1));
+      let qMarks = parseFloat(String(exam?.marks_per_question || 1.00));
       if (
         q.question_marks !== null &&
         q.question_marks !== undefined &&

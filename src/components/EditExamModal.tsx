@@ -480,7 +480,7 @@ export function EditExamModal({
                     type="number"
                     step="0.01"
                     name="marks_per_question"
-                    defaultValue={String(exam?.marks_per_question || "1")}
+                    defaultValue={String(exam?.marks_per_question?.toFixed(2) || "1.00")}
                     placeholder="প্রশ্ন প্রতি মার্ক"
                     onInput={handleNumberInput}
                   />
