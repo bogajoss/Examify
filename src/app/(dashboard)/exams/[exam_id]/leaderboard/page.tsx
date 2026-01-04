@@ -109,8 +109,8 @@ export default function ExamLeaderboardPage() {
     .filter((result) => {
       if (!exam?.end_at) return true; // If no end time, show all
 
-      const submittedTime = dayjs(result.submitted_at);
-      const examEndTime = dayjs(exam.end_at);
+      const submittedTime = dayjs.utc(result.submitted_at).utcOffset(6 * 60);
+      const examEndTime = dayjs.utc(exam.end_at).utcOffset(6 * 60);
 
       // Only include submissions that were made before or at exam end time
       // (within the actual exam time window, not practice mode submissions)

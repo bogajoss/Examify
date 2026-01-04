@@ -186,8 +186,8 @@ function SubjectSelectionScreen({
   let isPractice = exam?.is_practice;
 
   // Auto-convert to practice mode if exam time has expired
-  const now = dayjs.utc();
-  const currentEndDate = exam?.end_at ? dayjs.utc(exam.end_at) : null;
+  const now = dayjs().utcOffset(6 * 60); // Bangladesh timezone
+  const currentEndDate = exam?.end_at ? dayjs.utc(exam.end_at).utcOffset(6 * 60) : null;
   if (!isPractice && currentEndDate && now.isAfter(currentEndDate)) {
     isPractice = true; // Auto-enable practice mode after exam ends
   }
@@ -196,9 +196,9 @@ function SubjectSelectionScreen({
   const getExamTimeStatus = () => {
     if (isPractice) return { isValid: true, message: "" };
 
-    const now = dayjs.utc();
-    const start = startDate ? dayjs.utc(startDate) : null;
-    const end = endDate ? dayjs.utc(endDate) : null;
+    const now = dayjs().utcOffset(6 * 60); // Bangladesh timezone
+    const start = startDate ? dayjs.utc(startDate).utcOffset(6 * 60) : null;
+    const end = endDate ? dayjs.utc(endDate).utcOffset(6 * 60) : null;
 
     if (!start && !end) return { isValid: true, message: "" };
 
@@ -251,13 +251,13 @@ function SubjectSelectionScreen({
                       {startDate && (
                         <div>
                           <strong>শুরুর সময়:</strong>{" "}
-                          {formatDate(startDate, "DD MMMM YYYY, hh:mm A")}
+                          {dayjs.utc(startDate).utcOffset(6 * 60).locale("bn-bd").format("DD MMMM YYYY, hh:mm A")}
                         </div>
                       )}
                       {endDate && (
                         <div>
                           <strong>সম্ভাব্য শেষ সময়:</strong>{" "}
-                          {formatDate(endDate, "DD MMMM YYYY, hh:mm A")}
+                          {dayjs.utc(endDate).utcOffset(6 * 60).locale("bn-bd").format("DD MMMM YYYY, hh:mm A")}
                         </div>
                       )}
                       {!startDate && !endDate && (

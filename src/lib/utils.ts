@@ -161,13 +161,15 @@ export const validateExamTime = (
 };
 
 /**
- * Get formatted time strings for display
- * @param date - Date to format
- * @returns Formatted date string
+ * Get formatted time strings for display (in Bangladesh timezone)
+ * @param date - Date to format (UTC from database)
+ * @returns Formatted date string in Bangladesh timezone
  */
 export const formatExamDateTime = (date: Date | string | null | undefined) => {
   if (!date) return null;
-  return formatDate(date, "DD MMMM YYYY, hh:mm:ss A");
+  // Convert UTC to Bangladesh timezone (UTC+6) before formatting
+  const bangladeshTime = dayjs.utc(date).utcOffset(6 * 60);
+  return bangladeshTime.locale("bn-bd").format("DD MMMM YYYY, hh:mm:ss A");
 };
 
 /**

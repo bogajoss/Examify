@@ -199,9 +199,9 @@ export default function StudentBatchExamsPage() {
   // Helper to render exam card
   const renderExamCard = (exam: Exam) => {
     const result = examResults[exam.id];
-    const now = dayjs.utc();
-    const startAt = exam.start_at ? dayjs.utc(exam.start_at) : null;
-    const endAt = exam.end_at ? dayjs.utc(exam.end_at) : null;
+    const now = dayjs().utcOffset(6 * 60); // Bangladesh timezone
+    const startAt = exam.start_at ? dayjs.utc(exam.start_at).utcOffset(6 * 60) : null;
+    const endAt = exam.end_at ? dayjs.utc(exam.end_at).utcOffset(6 * 60) : null;
 
     const timeExpired =
       !exam.is_practice && endAt !== null && now.isAfter(endAt);

@@ -364,8 +364,8 @@ export default function SolvePage() {
         {/* Warning if this is a practice mode submission after exam time expired */}
         {exam.end_at &&
           (() => {
-            const now = dayjs();
-            const endAt = dayjs(exam.end_at);
+            const now = dayjs().utcOffset(6 * 60); // Bangladesh timezone
+            const endAt = dayjs.utc(exam.end_at).utcOffset(6 * 60); // UTC from DB converted to Bangladesh
             const isPastExamTime = !exam.is_practice && now.isAfter(endAt);
             return isPastExamTime ? (
               <Card className="border-0 shadow-md bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500">
