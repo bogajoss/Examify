@@ -325,7 +325,7 @@ export function EditExamModal({
       setTimeout(() => {
         try {
           input.setSelectionRange(newStart, newEnd);
-        } catch (e) {
+        } catch (_e) {
           // If setting selection fails (e.g., input is not focused), ignore
         }
       }, 0);

@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import dayjs from "@/lib/date-utils";
 import { supabaseAdmin } from "./supabase";
 import { parseCSV } from "@/lib/csv-parser";
+import type { Exam, Question, SubjectConfig } from "./types";
 
 const randomUUID = () => globalThis.crypto.randomUUID();
 
@@ -748,7 +748,7 @@ export async function recalculateExamScores(formData: FormData) {
     // 2. Fetch All Questions for this Exam (linked via exam_questions or file_id logic)
     // We need the latest correct answer for each question.
     // Logic similar to fetchQuestions but server-side simplified.
-    let examQuestions: any[] = [];
+    let examQuestions: Question[] = [];
     
     // a. Questions from file
     if (exam.file_id) {
@@ -756,7 +756,7 @@ export async function recalculateExamScores(formData: FormData) {
         .from("questions")
         .select("*")
         .eq("file_id", exam.file_id);
-      if (fq) examQuestions = [...examQuestions, ...fq];
+      if (fq) examQuestions = [...examQuestions, ...(fq as Question[])];
     }
 
     // b. Questions from explicit links (custom exams)
@@ -766,7 +766,7 @@ export async function recalculateExamScores(formData: FormData) {
       .eq("exam_id", examId);
     
     if (linkedQ) {
-      linkedQ.forEach((lq: any) => {
+      (linkedQ as unknown as { questions: Question }[]).forEach((lq) => {
         if (lq.questions && !examQuestions.some(q => q.id === lq.questions.id)) {
           examQuestions.push(lq.questions);
         }
@@ -774,8 +774,10 @@ export async function recalculateExamScores(formData: FormData) {
     }
 
     // Map questions by ID for fast lookup
-    const questionMap = new Map<string, any>();
-    examQuestions.forEach(q => questionMap.set(q.id, q));
+    const questionMap = new Map<string, Question>();
+    examQuestions.forEach(q => {
+      if (q.id) questionMap.set(q.id, q);
+    });
 
     // 3. Fetch All Student Results for this Exam
     const { data: studentExams, error: seError } = await supabaseAdmin
@@ -797,9 +799,18 @@ export async function recalculateExamScores(formData: FormData) {
 
     if (respError) throw respError;
 
+    interface StudentResponse {
+      id: string;
+      student_exam_id: string;
+      question_id: string;
+      selected_option: string;
+      is_correct: boolean;
+      marks_obtained: number;
+    }
+
     // Group responses by student_exam_id
-    const responsesByExam = new Map<string, any[]>();
-    allResponses?.forEach(r => {
+    const responsesByExam = new Map<string, StudentResponse[]>();
+    (allResponses as unknown as StudentResponse[])?.forEach(r => {
       const list = responsesByExam.get(r.student_exam_id) || [];
       list.push(r);
       responsesByExam.set(r.student_exam_id, list);
@@ -822,7 +833,7 @@ export async function recalculateExamScores(formData: FormData) {
       // Filter Relevant Questions for this student
       const relevantQuestions = examQuestions.filter(q => {
         // 1. Mandatory Check
-        const isMandatory = (exam.mandatory_subjects as any[])?.some((s: any) => {
+        const isMandatory = (exam.mandatory_subjects as (string | SubjectConfig)[])?.some((s) => {
            const sId = typeof s === 'string' ? s : s.id;
            const sName = typeof s === 'object' ? s.name : undefined;
            return sId === q.subject || sName === q.subject;
@@ -830,7 +841,7 @@ export async function recalculateExamScores(formData: FormData) {
         if (isMandatory) return true;
 
         // 2. Optional Check (only if attempted)
-        const isOptional = (exam.optional_subjects as any[])?.some((s: any) => {
+        const isOptional = (exam.optional_subjects as (string | SubjectConfig)[])?.some((s) => {
            const sId = typeof s === 'string' ? s : s.id;
            const sName = typeof s === 'object' ? s.name : undefined;
            return sId === q.subject || sName === q.subject;
@@ -850,7 +861,7 @@ export async function recalculateExamScores(formData: FormData) {
       let wrong = 0;
       let score = 0;
       
-      const responseUpdates: any[] = [];
+      const responseUpdates: { id: string; is_correct: boolean; marks_obtained: number }[] = [];
 
       relevantQuestions.forEach(q => {
         const response = responses.find(r => r.question_id === q.id);
@@ -866,7 +877,7 @@ export async function recalculateExamScores(formData: FormData) {
            else if (ansStr.length === 1) correctIndex = ansStr.toUpperCase().charCodeAt(0) - 65;
         }
 
-        const qMarks = q.question_marks ? parseFloat(q.question_marks) : (exam.marks_per_question || 1);
+        const qMarks = q.question_marks ? parseFloat(String(q.question_marks)) : (exam.marks_per_question || 1);
         const qNeg = exam.negative_marks_per_wrong || 0;
 
         if (response) {
@@ -904,7 +915,7 @@ export async function recalculateExamScores(formData: FormData) {
       const { error: updateError } = await supabaseAdmin
         .from("student_exams")
         .update({
-          score: score,
+          score: Number(score.toFixed(2)),
           correct_answers: correct,
           wrong_answers: wrong,
           unattempted: unattempted
@@ -930,9 +941,10 @@ export async function recalculateExamScores(formData: FormData) {
       message: `Successfully recalculated scores for ${updatedCount} students.`,
     };
 
-  } catch (err: any) {
-    console.error("Recalculation error:", err);
-    return { success: false, message: "Recalculation failed: " + err.message };
+  } catch (err: unknown) {
+    const error = err as Error;
+    console.error("Recalculation error:", error);
+    return { success: false, message: "Recalculation failed: " + error.message };
   }
 }
 

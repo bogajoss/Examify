@@ -37,6 +37,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -107,7 +108,7 @@ function SubjectSelectionScreen({
   questionCount,
 }: {
   exam: Exam;
-  onStart: (selectedSubjects: string[]) => void;
+  onStart: (selectedSubjects: string[]) => Promise<void> | void;
   questionCount: number;
 }) {
   const mandatorySubjects = (exam.mandatory_subjects as SubjectConfig[]) || [];
@@ -396,6 +397,7 @@ export default function TakeExamPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
   const { user, loading: authContextLoading } = useAuth();
   const exam_id = params.exam_id as string;
   const { toast } = useToast();
@@ -481,8 +483,35 @@ export default function TakeExamPage() {
   const endIndex = startIndex + questionsPerPage;
   const currentPageQuestions = filteredQuestions.slice(startIndex, endIndex);
 
-  const handleStartCustomExam = (selectedSubjectIds: string[]) => {
+  const handleStartCustomExam = async (selectedSubjectIds: string[]) => {
     if (!exam) return;
+
+    // Check number_of_attempts setting
+    if (exam?.number_of_attempts === "one_time" && user?.uid) {
+      try {
+        // Check if user has already submitted this exam
+        const { data: existingResult } = await supabase
+          .from("student_exams")
+          .select("id, submitted_at")
+          .eq("exam_id", exam_id)
+          .eq("student_id", user.uid)
+          .maybeSingle();
+
+        if (existingResult && existingResult.submitted_at) {
+          // User has already submitted this exam
+          toast({
+            title: "একটি প্রচেষ্টা ইতিমধ্যে জমা হয়েছে",
+            description:
+              "আপনি ইতিমধ্যে এই পরীক্ষায় অংশগ্রহণ করেছেন এবং শুধুমাত্র একবার অংশগ্রহণের অনুমতি রয়েছে।",
+            variant: "destructive",
+          });
+          return;
+        }
+      } catch (err) {
+        console.error("Error checking previous attempts:", err);
+        // Continue anyway on error - don't block user
+      }
+    }
 
     // Helper to find config for a subject ID
     const findConfig = (id: string) => {
@@ -774,6 +803,15 @@ export default function TakeExamPage() {
       localStorage.setItem(storageKey, JSON.stringify(dataToStore));
     }
 
+    if (user?.uid && exam_id) {
+      await queryClient.invalidateQueries({
+        queryKey: ["exam-answers", exam_id, user.uid],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["exam-rank", exam_id, user.uid],
+      });
+    }
+
     setSubmitted(true);
     const solveUrl = `/exams/${exam_id}/solve?${searchParams.toString()}`;
     router.push(solveUrl);
@@ -787,6 +825,7 @@ export default function TakeExamPage() {
     router,
     searchParams,
     startedAt,
+    queryClient,
   ]);
 
   // Restore exam progress
@@ -1309,13 +1348,13 @@ export default function TakeExamPage() {
           // Check if user has already submitted this exam
           const { data: existingResult } = await supabase
             .from("student_exams")
-            .select("id")
+            .select("id, submitted_at")
             .eq("exam_id", exam_id)
             .eq("student_id", user.uid)
-            .single();
+            .maybeSingle();
 
-          if (existingResult) {
-            // User has already attempted this exam
+          if (existingResult && existingResult.submitted_at) {
+            // User has already submitted this exam
             toast({
               title: "একটি প্রচেষ্টা ইতিমধ্যে জমা হয়েছে",
               description:

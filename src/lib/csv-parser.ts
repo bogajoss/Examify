@@ -79,34 +79,30 @@ export function convertAnswersFromZeroToOne(questions: ParsedQuestion[]): void {
  * Parse CSV content and extract questions
  */
 export async function parseCSV(file: File): Promise<ParsedQuestion[]> {
-  try {
-    // For browser environments, use FileReader
-    if (typeof window !== "undefined" && window.FileReader) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
+  // For browser environments, use FileReader
+  if (typeof window !== "undefined" && window.FileReader) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
 
-        reader.onload = (event) => {
-          try {
-            const csv = event.target?.result as string;
-            parseCSVContent(csv).then(resolve).catch(reject);
-          } catch (error) {
-            reject(error);
-          }
-        };
+      reader.onload = (event) => {
+        try {
+          const csv = event.target?.result as string;
+          parseCSVContent(csv).then(resolve).catch(reject);
+        } catch (error) {
+          reject(error);
+        }
+      };
 
-        reader.onerror = () => {
-          reject(new Error("Failed to read file"));
-        };
+      reader.onerror = () => {
+        reject(new Error("Failed to read file"));
+      };
 
-        reader.readAsText(file);
-      });
-    } else {
-      // For Node.js environments, get text directly from file
-      const content = await file.text();
-      return parseCSVContent(content);
-    }
-  } catch (error) {
-    throw error;
+      reader.readAsText(file);
+    });
+  } else {
+    // For Node.js environments, get text directly from file
+    const content = await file.text();
+    return parseCSVContent(content);
   }
 }
 
@@ -147,7 +143,7 @@ export async function parseCSVContent(csv: string): Promise<ParsedQuestion[]> {
   }
 
   // Get the headers from the parsed data
-  const headers = Object.keys(results.data[0] as Record<string, any>).map((h) =>
+  const headers = Object.keys(results.data[0] as Record<string, unknown>).map((h) =>
     h.trim().toLowerCase(),
   );
 
@@ -202,7 +198,7 @@ export async function parseCSVContent(csv: string): Promise<ParsedQuestion[]> {
   for (const row of results.data) {
     if (!row) continue;
 
-    const rowValues = Object.values(row as Record<string, any>);
+    const rowValues = Object.values(row as Record<string, unknown>);
 
     const question_text = rowValues[questionCol]?.toString()?.trim() || "";
     if (!question_text) continue;

@@ -201,6 +201,8 @@ export default function SolvePage() {
       return { answers: {}, result: null };
     },
     enabled: !!exam_id,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   const loadedUserAnswers = userData?.answers || null;

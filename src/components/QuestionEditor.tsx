@@ -22,7 +22,7 @@ interface QuestionEditorProps {
 
 export default function QuestionEditor({
   file_id,
-  exam_id,
+  exam_id: _exam_id,
   initialQuestion,
   onSave,
   onCancel,
