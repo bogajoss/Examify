@@ -723,12 +723,217 @@ export async function bulkUpdateExamScores(_formData: FormData) {
   };
 }
 
-export async function recalculateExamScores(_formData: FormData) {
-  // Placeholder for recalculate
-  return {
-    success: false,
-    message: "Recalculate not yet implemented for Supabase",
-  };
+export async function recalculateExamScores(formData: FormData) {
+  if (!(await verifyPasswordInternal())) {
+    return { success: false, message: "Unauthorized" };
+  }
+
+  const examId = formData.get("exam_id") as string;
+  if (!examId) {
+    return { success: false, message: "Exam ID is required" };
+  }
+
+  try {
+    // 1. Fetch Exam Details
+    const { data: exam, error: examError } = await supabaseAdmin
+      .from("exams")
+      .select("*")
+      .eq("id", examId)
+      .single();
+
+    if (examError || !exam) {
+      throw new Error("Exam not found");
+    }
+
+    // 2. Fetch All Questions for this Exam (linked via exam_questions or file_id logic)
+    // We need the latest correct answer for each question.
+    // Logic similar to fetchQuestions but server-side simplified.
+    let examQuestions: any[] = [];
+    
+    // a. Questions from file
+    if (exam.file_id) {
+      const { data: fq } = await supabaseAdmin
+        .from("questions")
+        .select("*")
+        .eq("file_id", exam.file_id);
+      if (fq) examQuestions = [...examQuestions, ...fq];
+    }
+
+    // b. Questions from explicit links (custom exams)
+    const { data: linkedQ } = await supabaseAdmin
+      .from("exam_questions")
+      .select("question_id, questions(*)")
+      .eq("exam_id", examId);
+    
+    if (linkedQ) {
+      linkedQ.forEach((lq: any) => {
+        if (lq.questions && !examQuestions.some(q => q.id === lq.questions.id)) {
+          examQuestions.push(lq.questions);
+        }
+      });
+    }
+
+    // Map questions by ID for fast lookup
+    const questionMap = new Map<string, any>();
+    examQuestions.forEach(q => questionMap.set(q.id, q));
+
+    // 3. Fetch All Student Results for this Exam
+    const { data: studentExams, error: seError } = await supabaseAdmin
+      .from("student_exams")
+      .select("id, student_id")
+      .eq("exam_id", examId);
+
+    if (seError) throw seError;
+    if (!studentExams || studentExams.length === 0) {
+      return { success: true, message: "No student results to recalculate." };
+    }
+
+    // 4. Fetch All Responses for these exams
+    const studentExamIds = studentExams.map(se => se.id);
+    const { data: allResponses, error: respError } = await supabaseAdmin
+      .from("student_responses")
+      .select("*")
+      .in("student_exam_id", studentExamIds);
+
+    if (respError) throw respError;
+
+    // Group responses by student_exam_id
+    const responsesByExam = new Map<string, any[]>();
+    allResponses?.forEach(r => {
+      const list = responsesByExam.get(r.student_exam_id) || [];
+      list.push(r);
+      responsesByExam.set(r.student_exam_id, list);
+    });
+
+    let updatedCount = 0;
+
+    // 5. Iterate and Recalculate
+    for (const se of studentExams) {
+      const responses = responsesByExam.get(se.id) || [];
+      
+      // Determine Attempted Subjects to filter Valid Questions
+      // (Using the logic: Mandatory + Optional subjects that have at least 1 response)
+      const attemptedSubjects = new Set<string>();
+      responses.forEach(r => {
+        const q = questionMap.get(r.question_id);
+        if (q && q.subject) attemptedSubjects.add(q.subject);
+      });
+
+      // Filter Relevant Questions for this student
+      const relevantQuestions = examQuestions.filter(q => {
+        // 1. Mandatory Check
+        const isMandatory = (exam.mandatory_subjects as any[])?.some((s: any) => {
+           const sId = typeof s === 'string' ? s : s.id;
+           const sName = typeof s === 'object' ? s.name : undefined;
+           return sId === q.subject || sName === q.subject;
+        });
+        if (isMandatory) return true;
+
+        // 2. Optional Check (only if attempted)
+        const isOptional = (exam.optional_subjects as any[])?.some((s: any) => {
+           const sId = typeof s === 'string' ? s : s.id;
+           const sName = typeof s === 'object' ? s.name : undefined;
+           return sId === q.subject || sName === q.subject;
+        });
+        if (isOptional) {
+          return q.subject && attemptedSubjects.has(q.subject);
+        }
+
+        // 3. Fallback (if no strict subject config, include all)
+        if (!exam.mandatory_subjects && !exam.optional_subjects) return true;
+        
+        return false;
+      });
+
+      // Calculate Stats
+      let correct = 0;
+      let wrong = 0;
+      let score = 0;
+      
+      const responseUpdates: any[] = [];
+
+      relevantQuestions.forEach(q => {
+        const response = responses.find(r => r.question_id === q.id);
+        
+        // Normalize Correct Answer from Question Bank
+        let correctIndex = -1;
+        // Logic from normalizeQuestion (simplified for server)
+        if (typeof q.answer === 'number') {
+           correctIndex = q.answer;
+        } else {
+           const ansStr = String(q.answer || "").trim();
+           if (/^\d+$/.test(ansStr)) correctIndex = parseInt(ansStr) - 1;
+           else if (ansStr.length === 1) correctIndex = ansStr.toUpperCase().charCodeAt(0) - 65;
+        }
+
+        const qMarks = q.question_marks ? parseFloat(q.question_marks) : (exam.marks_per_question || 1);
+        const qNeg = exam.negative_marks_per_wrong || 0;
+
+        if (response) {
+          // Student attempted this question
+          const selectedIndex = parseInt(response.selected_option);
+          let isCorrect = false;
+          let marksObtained = 0;
+
+          if (!isNaN(selectedIndex) && selectedIndex === correctIndex) {
+            correct++;
+            score += qMarks;
+            marksObtained = qMarks;
+            isCorrect = true;
+          } else {
+            wrong++;
+            score -= qNeg;
+            marksObtained = -qNeg;
+            isCorrect = false;
+          }
+
+          // Queue update for response detail if it changed
+          if (response.is_correct !== isCorrect || response.marks_obtained !== marksObtained) {
+             responseUpdates.push({
+               id: response.id,
+               is_correct: isCorrect,
+               marks_obtained: marksObtained
+             });
+          }
+        }
+      });
+
+      const unattempted = relevantQuestions.length - (correct + wrong);
+
+      // Update Student Exam Record
+      const { error: updateError } = await supabaseAdmin
+        .from("student_exams")
+        .update({
+          score: score,
+          correct_answers: correct,
+          wrong_answers: wrong,
+          unattempted: unattempted
+        })
+        .eq("id", se.id);
+
+      if (!updateError) updatedCount++;
+
+      // Batch Update Response Details (Optional optimization: do in chunks if massive)
+      if (responseUpdates.length > 0) {
+        for (const update of responseUpdates) {
+           await supabaseAdmin.from("student_responses").update({
+             is_correct: update.is_correct,
+             marks_obtained: update.marks_obtained
+           }).eq("id", update.id);
+        }
+      }
+    }
+
+    revalidatePath(`/admin/exams/${examId}/results`);
+    return {
+      success: true,
+      message: `Successfully recalculated scores for ${updatedCount} students.`,
+    };
+
+  } catch (err: any) {
+    console.error("Recalculation error:", err);
+    return { success: false, message: "Recalculation failed: " + err.message };
+  }
 }
 
 export async function cleanupUnrolledStudents() {
