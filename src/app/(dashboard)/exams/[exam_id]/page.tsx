@@ -2,7 +2,11 @@
 
 import { useState, useEffect, useCallback, useMemo, Fragment } from "react";
 import { supabase } from "@/lib/supabase";
-import { fetchQuestions, type RawQuestion } from "@/lib/fetchQuestions";
+import {
+  fetchQuestions,
+  normalizeQuestion,
+  type RawQuestion,
+} from "@/lib/fetchQuestions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -1074,48 +1078,14 @@ export default function TakeExamPage() {
 
       const embeddedQuestions = (examData as Record<string, unknown>).questions;
       if (Array.isArray(embeddedQuestions) && embeddedQuestions.length > 0) {
-        finalQuestions = (embeddedQuestions as Question[]).map((q) => {
-          let answerIndex = -1;
-          if (typeof q.answer === "number") {
-            answerIndex = q.answer;
-          } else {
-            const answerString = (q.answer || q.correct || "")
-              .toString()
-              .trim();
-            if (/^\d+$/.test(answerString)) {
-              const num = parseInt(answerString, 10);
-              answerIndex = num - 1;
-            } else if (
-              answerString.length === 1 &&
-              /[a-zA-Z]/.test(answerString)
-            ) {
-              answerIndex = answerString.toUpperCase().charCodeAt(0) - 65;
-            }
-          }
-
-          const rawOptions =
-            q.options && Array.isArray(q.options) && q.options.length > 0
-              ? q.options
-              : [q.option1, q.option2, q.option3, q.option4, q.option5];
-
-          const options = rawOptions.filter(
-            (opt: unknown) =>
-              opt && typeof opt === "string" && opt.trim() !== "",
-          );
-
-          const originalSubject = q.subject || "";
-          const mappedSubject =
-            customMap[originalSubject] ||
-            subjectsMap[originalSubject] ||
-            originalSubject;
-
+        finalQuestions = (embeddedQuestions as RawQuestion[]).map((q) => {
+          const normalized = normalizeQuestion(q);
           return {
-            ...q,
-            id: String(q.id),
-            question: q.question || q.question_text || "",
-            answer: answerIndex,
-            options,
-            subject: mappedSubject,
+            ...normalized,
+            id: String(normalized.id),
+            question: normalized.question || normalized.question_text || "",
+            answer: Number(normalized.answer),
+            options: normalized.options || [],
           } as Question;
         });
       } else {
@@ -1129,53 +1099,10 @@ export default function TakeExamPage() {
         );
 
         if (Array.isArray(fetched) && fetched.length > 0) {
-          finalQuestions = fetched.map((q: RawQuestion) => {
-            let answerIndex = -1;
-            const answerString = (q.answer || q.correct || "A")
-              .toString()
-              .trim();
-
-            const answerNum = parseInt(answerString, 10);
-            if (!isNaN(answerNum)) {
-              answerIndex = answerNum - 1;
-            } else {
-              answerIndex = answerString.toUpperCase().charCodeAt(0) - 65;
-            }
-            const options =
-              q.options && Array.isArray(q.options) && q.options.length > 0
-                ? q.options
-                : [
-                    q.option1,
-                    q.option2,
-                    q.option3,
-                    q.option4,
-                    q.option5,
-                  ].filter((opt): opt is string => !!opt);
-
-            const originalSubject = q.subject || "";
-            const mappedSubject =
-              customMap[originalSubject] ||
-              subjectsMap[originalSubject] ||
-              originalSubject;
-
-            return {
-              id: String(q.id),
-              question: q.question || q.question_text || "",
-              options: options,
-              answer: answerIndex,
-              explanation: q.explanation || "",
-              type: q.type || null,
-              question_image_url: q.question_image_url as string | undefined,
-              explanation_image_url: q.explanation_image_url as
-                | string
-                | undefined,
-              question_marks: q.question_marks,
-              subject: mappedSubject,
-              paper: q.paper,
-              chapter: q.chapter,
-              highlight: q.highlight,
-            };
-          });
+          finalQuestions = fetched.map((q: RawQuestion) => ({
+            ...q,
+            answer: Number(q.answer),
+          })) as Question[];
         }
       }
 

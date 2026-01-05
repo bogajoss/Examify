@@ -99,11 +99,7 @@ export default function SolvePage() {
             const normalized = normalizeQuestion(q);
             return {
               ...normalized,
-              answer:
-                typeof normalized.answer === "number" ||
-                typeof normalized.answer === "string"
-                  ? normalized.answer
-                  : -1,
+              answer: Number(normalized.answer),
               options: normalized.options || [],
             } as Question;
           },
@@ -118,17 +114,11 @@ export default function SolvePage() {
           allSubjectQuestionIds.length > 0 ? allSubjectQuestionIds : undefined,
         );
         if (Array.isArray(fetched) && fetched.length > 0) {
-          finalQuestions = fetched.map((q: RawQuestion) => {
-            const normalized = normalizeQuestion(q);
-            return {
-              ...normalized,
-              answer:
-                typeof normalized.answer === "number"
-                  ? normalized.answer
-                  : -1,
-              options: normalized.options || [],
-            } as Question;
-          });
+          finalQuestions = fetched.map((q: RawQuestion) => ({
+            ...q,
+            answer: Number(q.answer),
+            options: q.options || [],
+          })) as Question[];
         }
       }
       return { exam: examData as Exam, questions: finalQuestions };
@@ -649,9 +639,10 @@ export default function SolvePage() {
                 ? loadedUserAnswers[qId]
                 : undefined;
 
-              const correctAnswer = question.answer;
+              // Derived from question.answer directly in the loop for consistency with QuestionSelector
+              // const correctAnswer = question.answer; 
 
-              const isCorrect = userAnswer === correctAnswer;
+              const isCorrect = userAnswer === Number(question.answer);
 
               const isSkipped = userAnswer === undefined;
 
@@ -771,7 +762,8 @@ export default function SolvePage() {
                       ).map((option, optIdx) => {
                         if (!option) return null;
                         const isSelected = userAnswer === optIdx;
-                        const isRightAnswer = correctAnswer === optIdx;
+                        // Use Number() to ensure strict comparison, matching QuestionSelector logic
+                        const isRightAnswer = Number(question.answer) === optIdx;
                         const bengaliLetters = [
                           "ক",
                           "খ",

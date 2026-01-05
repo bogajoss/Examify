@@ -98,19 +98,25 @@ export async function fetchQuestions(
 export function normalizeQuestion(q: RawQuestion): RawQuestion {
   // Normalize answer index to 0-based integer
   let answerIndex: number | string = -1;
-  const answerString = (q.answer || q.correct || "").toString().trim();
 
-  if (/^\d+$/.test(answerString)) {
-    const num = parseInt(answerString, 10);
-    // Standardizing: 1-based (1,2,3,4,5) to 0-based (0,1,2,3,4)
-    // We strictly follow 1-based indexing for numeric strings as per project convention.
-    answerIndex = num - 1;
-  } else if (answerString.length === 1 && /[a-zA-Z]/.test(answerString)) {
-    // A -> 0, B -> 1, etc.
-    answerIndex = answerString.toUpperCase().charCodeAt(0) - 65;
+  if (typeof q.answer === "number") {
+    // Already normalized or direct numeric index
+    answerIndex = q.answer;
   } else {
-    // Fallback to original if we can't parse it
-    answerIndex = q.answer || q.correct || "";
+    const answerString = (q.answer || q.correct || "").toString().trim();
+
+    if (/^\d+$/.test(answerString)) {
+      const num = parseInt(answerString, 10);
+      // Standardizing: 1-based (1,2,3,4,5) to 0-based (0,1,2,3,4)
+      // We strictly follow 1-based indexing for numeric strings as per project convention.
+      answerIndex = num - 1;
+    } else if (answerString.length === 1 && /[a-zA-Z]/.test(answerString)) {
+      // A -> 0, B -> 1, etc.
+      answerIndex = answerString.toUpperCase().charCodeAt(0) - 65;
+    } else {
+      // Fallback to original if we can't parse it
+      answerIndex = q.answer || q.correct || "";
+    }
   }
 
   // Normalize options - ensure we have an array
