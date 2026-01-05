@@ -1088,6 +1088,14 @@ export default function TakeExamPage() {
 
       setExam(examData as Exam);
 
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchExamQuestions = async (examData: Exam) => {
+    setLoading(true);
+    try {
       // Create a mapping for subject IDs to names from exam configuration
       const customMap: { [key: string]: string } = { ...subjectsMap };
       const mConfigs =
@@ -1188,6 +1196,12 @@ export default function TakeExamPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isAuthorized === true && exam && allQuestions.length === 0) {
+      fetchExamQuestions(exam);
+    }
+  }, [isAuthorized, exam]);
 
   const handleAnswerSelect = useCallback(
     (questionId: string, optionIndex: number) => {
