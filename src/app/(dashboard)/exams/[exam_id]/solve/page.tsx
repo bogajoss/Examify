@@ -33,6 +33,7 @@ import dayjs, { formatDuration } from "@/lib/date-utils";
 interface ResultInfo {
   started_at?: string;
   submitted_at?: string;
+  score?: number | null;
 }
 
 export default function SolvePage() {
@@ -117,17 +118,17 @@ export default function SolvePage() {
           allSubjectQuestionIds.length > 0 ? allSubjectQuestionIds : undefined,
         );
         if (Array.isArray(fetched) && fetched.length > 0) {
-          finalQuestions = fetched.map(
-            (q: RawQuestion) =>
-              ({
-                ...q,
-                answer:
-                  typeof q.answer === "number" || typeof q.answer === "string"
-                    ? q.answer
-                    : -1,
-                options: q.options || [],
-              }) as Question,
-          );
+          finalQuestions = fetched.map((q: RawQuestion) => {
+            const normalized = normalizeQuestion(q);
+            return {
+              ...normalized,
+              answer:
+                typeof normalized.answer === "number"
+                  ? normalized.answer
+                  : -1,
+              options: normalized.options || [],
+            } as Question;
+          });
         }
       }
       return { exam: examData as Exam, questions: finalQuestions };
@@ -177,12 +178,13 @@ export default function SolvePage() {
               });
             }
 
-            if (hasResponses) {
+            if (hasResponses || examData.score !== undefined) {
               return {
                 answers,
                 result: {
                   started_at: examData.started_at,
                   submitted_at: examData.submitted_at,
+                  score: examData.score,
                 },
               };
             }
@@ -274,11 +276,18 @@ export default function SolvePage() {
     const answeredIds = Object.keys(loadedUserAnswers);
 
     questions.forEach((q) => {
-      const qMarks = q.question_marks
-        ? parseFloat(String(q.question_marks))
-        : parseFloat(String(exam?.marks_per_question || 1.00));
+      let qMarks = parseFloat(String(exam?.marks_per_question || 1.00));
+      if (
+        q.question_marks !== null &&
+        q.question_marks !== undefined &&
+        q.question_marks !== ""
+      ) {
+        const parsed = parseFloat(String(q.question_marks));
+        if (!isNaN(parsed)) qMarks = parsed;
+      }
 
-      const qNeg = parseFloat(String(exam?.negative_marks_per_wrong || 0));
+      let qNeg = parseFloat(String(exam?.negative_marks_per_wrong || 0));
+      if (isNaN(qNeg)) qNeg = 0;
 
       const qId = String(q.id);
 
@@ -334,6 +343,11 @@ export default function SolvePage() {
 
   if (!exam || questions.length === 0)
     return <p className="p-8 text-center">কোনো সমাধান পাওয়া যায়নি।</p>;
+
+  const displayScore =
+    examResultData?.score !== undefined && examResultData?.score !== null
+      ? examResultData.score
+      : finalScore;
 
   const totalNegativeMarksFromWrong =
     wrongAnswers * parseFloat(String(exam?.negative_marks_per_wrong || 0));
@@ -393,7 +407,7 @@ export default function SolvePage() {
 
             <div className="space-y-2">
               <div className="text-4xl md:text-6xl font-black bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                {finalScore.toFixed(2)}
+                {displayScore.toFixed(2)}
               </div>
 
               {examResultData?.started_at && examResultData?.submitted_at && (
@@ -532,9 +546,9 @@ export default function SolvePage() {
 
         <Alert
           className={`mb-8 ${
-            finalScore >= questions.length * 0.75
+            displayScore >= questions.length * 0.75
               ? "bg-success/5"
-              : finalScore >= questions.length * 0.5
+              : displayScore >= questions.length * 0.5
                 ? "bg-warning/5"
                 : "bg-destructive/5"
           }`}
@@ -543,9 +557,9 @@ export default function SolvePage() {
 
           <AlertDescription className="text-sm">
             <strong>ফিডব্যাক:</strong>{" "}
-            {finalScore >= questions.length * 0.75
+            {displayScore >= questions.length * 0.75
               ? " চমৎকার! আপনি খুব ভালো করেছেন। এই মানের পরীক্ষা চালিয়ে যান।"
-              : finalScore >= questions.length * 0.5
+              : displayScore >= questions.length * 0.5
                 ? " ভালো! আরও বেশি অনুশীলন করুন এবং পরবর্তী পরীক্ষায় আরও ভালো করতে পারবেন।"
                 : " আরও বেশি মনোযোগ দিয়ে পড়ুন এবং পরবর্তী পরীক্ষায় আরও ভালো করুন।"}{" "}
             {rankData && rankData.rank !== null && (
