@@ -315,7 +315,8 @@ export default function SolvePage() {
       const qId = String(q.id);
 
       if (qId && answeredIds.includes(qId)) {
-        if (loadedUserAnswers[qId] === q.answer) {
+        // Use strict Number comparison for answer matching
+        if (loadedUserAnswers[qId] === Number(q.answer)) {
           correct++;
           totalMarksFromCorrect += qMarks;
         } else {

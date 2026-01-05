@@ -668,7 +668,8 @@ export default function TakeExamPage() {
       let isCorrect = false;
 
       if (selectedOptIndex !== undefined) {
-        if (selectedOptIndex === q.answer) {
+        // Use strict Number comparison for answer matching
+        if (selectedOptIndex === Number(q.answer)) {
           correctAnswers++;
           totalScore += qMarks;
           marksObtained = qMarks;
