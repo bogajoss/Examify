@@ -38,7 +38,12 @@ export default function QuestionEditor({
     option3: initialQuestion?.option3 || "",
     option4: initialQuestion?.option4 || "",
     option5: initialQuestion?.option5 || "",
-    answer: initialQuestion?.answer || "",
+    answer:
+      initialQuestion?.answer !== undefined && initialQuestion?.answer !== null
+        ? typeof initialQuestion.answer === "number"
+          ? String(initialQuestion.answer + 1)
+          : initialQuestion.answer
+        : "",
     explanation: initialQuestion?.explanation || "",
     subject: initialQuestion?.subject || "",
     paper: initialQuestion?.paper || "",

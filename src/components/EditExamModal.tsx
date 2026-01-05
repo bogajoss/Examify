@@ -1263,7 +1263,6 @@ export function EditExamModal({
       {/* Secondary Dialog for Subject Question Selection */}
       <Dialog
         open={!!activeSubjectSelection}
-        onOpenChange={(open) => !open && setActiveSubjectSelection(null)}
       >
         <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0">
           <DialogHeader className="p-4 border-b shrink-0">

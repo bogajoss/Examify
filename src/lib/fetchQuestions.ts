@@ -102,13 +102,9 @@ export function normalizeQuestion(q: RawQuestion): RawQuestion {
 
   if (/^\d+$/.test(answerString)) {
     const num = parseInt(answerString, 10);
-    // Standardizing: 1-based (1,2,3,4) to 0-based (0,1,2,3)
-    // If it's 0, we assume it's already 0-based A.
-    if (num > 0) {
-      answerIndex = num - 1;
-    } else {
-      answerIndex = 0; // "0" is A
-    }
+    // Standardizing: 1-based (1,2,3,4,5) to 0-based (0,1,2,3,4)
+    // We strictly follow 1-based indexing for numeric strings as per project convention.
+    answerIndex = num - 1;
   } else if (answerString.length === 1 && /[a-zA-Z]/.test(answerString)) {
     // A -> 0, B -> 1, etc.
     answerIndex = answerString.toUpperCase().charCodeAt(0) - 65;

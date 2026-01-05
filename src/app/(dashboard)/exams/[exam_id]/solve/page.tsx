@@ -242,20 +242,17 @@ export default function SolvePage() {
   });
 
   const {
+    relevantQuestions,
     correctAnswers,
-
     wrongAnswers,
-
     unattempted,
-
     finalScore,
-
     negativeMarks,
-
     marksFromCorrect,
   } = useMemo(() => {
-    if (!loadedUserAnswers || questions.length === 0) {
+    if (!loadedUserAnswers || questions.length === 0 || !exam) {
       return {
+        relevantQuestions: [],
         correctAnswers: 0,
         wrongAnswers: 0,
         unattempted: 0,
@@ -265,17 +262,53 @@ export default function SolvePage() {
       };
     }
 
+    const answeredIds = Object.keys(loadedUserAnswers);
+    const attemptedSubjects = new Set<string>();
+
+    // Identify subjects the user attempted
+    questions.forEach((q) => {
+      if (answeredIds.includes(String(q.id))) {
+        if (q.subject) attemptedSubjects.add(q.subject);
+      }
+    });
+
+    // Determine valid questions based on Mandatory + Selected Optional subjects
+    const validQuestions = questions.filter((q) => {
+      // 1. If it's a practice exam or simple exam (no subject structure), show all
+      if (!exam.mandatory_subjects && !exam.optional_subjects) return true;
+
+      // 2. Check if it belongs to a Mandatory subject
+      const isMandatory = (
+        exam.mandatory_subjects as unknown[]
+      )?.some((s) => {
+        if (typeof s === "string") return s === q.subject;
+        return (s as { id: string; name?: string }).id === q.subject || (s as { id: string; name?: string }).name === q.subject;
+      });
+      if (isMandatory) return true;
+
+      // 3. Check if it belongs to an Optional subject that was attempted
+      const isOptional = (
+        exam.optional_subjects as unknown[]
+      )?.some((s) => {
+        if (typeof s === "string") return s === q.subject;
+        return (s as { id: string; name?: string }).id === q.subject || (s as { id: string; name?: string }).name === q.subject;
+      });
+
+      if (isOptional) {
+        // Only include if user attempted this subject
+        return q.subject && attemptedSubjects.has(q.subject);
+      }
+
+      // 4. Fallback: If question has no subject or doesn't match config, keep it (legacy behavior)
+      return true;
+    });
+
     let correct = 0;
-
     let wrong = 0;
-
     let totalMarksFromCorrect = 0;
-
     let totalNegative = 0;
 
-    const answeredIds = Object.keys(loadedUserAnswers);
-
-    questions.forEach((q) => {
+    validQuestions.forEach((q) => {
       let qMarks = parseFloat(String(exam?.marks_per_question || 1.00));
       if (
         q.question_marks !== null &&
@@ -294,37 +327,30 @@ export default function SolvePage() {
       if (qId && answeredIds.includes(qId)) {
         if (loadedUserAnswers[qId] === q.answer) {
           correct++;
-
           totalMarksFromCorrect += qMarks;
         } else {
           wrong++;
-
           totalNegative += qNeg;
         }
       }
     });
 
     return {
+      relevantQuestions: validQuestions,
       correctAnswers: correct,
-
       wrongAnswers: wrong,
-
-      unattempted: questions.length - (correct + wrong),
-
+      unattempted: validQuestions.length - (correct + wrong),
       finalScore: totalMarksFromCorrect - totalNegative,
-
       negativeMarks: totalNegative,
-
       marksFromCorrect: totalMarksFromCorrect,
     };
   }, [loadedUserAnswers, questions, exam]);
 
   const filteredQuestions = useMemo(() => {
-    if (filter === "all" || !loadedUserAnswers) return questions;
+    if (filter === "all" || !loadedUserAnswers) return relevantQuestions;
 
-    return questions.filter((q) => {
+    return relevantQuestions.filter((q) => {
       const qId = String(q.id);
-
       const userAnswer = loadedUserAnswers[qId];
 
       if (filter === "correct")
@@ -337,7 +363,7 @@ export default function SolvePage() {
 
       return true;
     });
-  }, [filter, questions, loadedUserAnswers]);
+  }, [filter, relevantQuestions, loadedUserAnswers]);
 
   if (loadingExam) return <CustomLoader />;
 
@@ -546,9 +572,9 @@ export default function SolvePage() {
 
         <Alert
           className={`mb-8 ${
-            displayScore >= questions.length * 0.75
+            displayScore >= relevantQuestions.length * 0.75
               ? "bg-success/5"
-              : displayScore >= questions.length * 0.5
+              : displayScore >= relevantQuestions.length * 0.5
                 ? "bg-warning/5"
                 : "bg-destructive/5"
           }`}
@@ -557,9 +583,9 @@ export default function SolvePage() {
 
           <AlertDescription className="text-sm">
             <strong>ফিডব্যাক:</strong>{" "}
-            {displayScore >= questions.length * 0.75
+            {displayScore >= relevantQuestions.length * 0.75
               ? " চমৎকার! আপনি খুব ভালো করেছেন। এই মানের পরীক্ষা চালিয়ে যান।"
-              : displayScore >= questions.length * 0.5
+              : displayScore >= relevantQuestions.length * 0.5
                 ? " ভালো! আরও বেশি অনুশীলন করুন এবং পরবর্তী পরীক্ষায় আরও ভালো করতে পারবেন।"
                 : " আরও বেশি মনোযোগ দিয়ে পড়ুন এবং পরবর্তী পরীক্ষায় আরও ভালো করুন।"}{" "}
             {rankData && rankData.rank !== null && (

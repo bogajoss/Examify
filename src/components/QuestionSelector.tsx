@@ -68,6 +68,12 @@ export default function QuestionSelector({
   // Load selected questions details when in review mode
   useEffect(() => {
     async function loadCurrentQuestions() {
+      // Safety check: Don't auto-load massive lists to prevent URL length errors
+      if (selectedIds.length > 100 && viewMode === "review") {
+        console.warn("Skipping auto-fetch for large selection to prevent error");
+        return;
+      }
+
       if (viewMode !== "review" || selectedIds.length === 0) {
         if (viewMode === "review" && selectedIds.length === 0) {
           setViewMode("browse");

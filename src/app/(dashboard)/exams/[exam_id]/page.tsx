@@ -1084,11 +1084,7 @@ export default function TakeExamPage() {
               .trim();
             if (/^\d+$/.test(answerString)) {
               const num = parseInt(answerString, 10);
-              if (num > 0) {
-                answerIndex = num - 1;
-              } else {
-                answerIndex = num;
-              }
+              answerIndex = num - 1;
             } else if (
               answerString.length === 1 &&
               /[a-zA-Z]/.test(answerString)
