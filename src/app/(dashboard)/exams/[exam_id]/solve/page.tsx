@@ -36,6 +36,19 @@ interface ResultInfo {
   score?: number | null;
 }
 
+const subjectsMap: { [key: string]: string } = {
+  p: "পদার্থবিজ্ঞান",
+  c: "রসায়ন",
+  m: "উচ্চতর গণিত",
+  b: "জীববিজ্ঞান",
+  bm: "জীববিজ্ঞান + উচ্চতর গণিত",
+  bn: "বাংলা",
+  e: "ইংরেজী",
+  i: "আইসিটি",
+  gk: "জিকে",
+  iq: "আইকিউ",
+};
+
 export default function SolvePage() {
   const params = useParams();
   const router = useRouter();
@@ -264,43 +277,78 @@ export default function SolvePage() {
       }
     });
 
-    // Determine valid questions based on Mandatory + Selected Optional subjects
-    const validQuestions = questions.filter((q) => {
-      // 1. If it's a practice exam or simple exam (no subject structure), show all
-      if (!exam.mandatory_subjects && !exam.optional_subjects) return true;
+    const mand = (exam.mandatory_subjects as any[]) || [];
+    const opt = (exam.optional_subjects as any[]) || [];
+    const hasStructure = mand.length > 0 || opt.length > 0;
 
-      // 2. Check if it belongs to a Mandatory subject
-      const isMandatory = (
-        exam.mandatory_subjects as unknown[]
-      )?.some((s) => {
-        if (typeof s === "string") return s === q.subject;
-        return (s as { id: string; name?: string }).id === q.subject || (s as { id: string; name?: string }).name === q.subject;
-      });
-      if (isMandatory) return true;
+    let finalValidQuestions: Question[] = [];
 
-      // 3. Check if it belongs to an Optional subject that was attempted
-      const isOptional = (
-        exam.optional_subjects as unknown[]
-      )?.some((s) => {
-        if (typeof s === "string") return s === q.subject;
-        return (s as { id: string; name?: string }).id === q.subject || (s as { id: string; name?: string }).name === q.subject;
+    if (!hasStructure) {
+      // Standard exam logic: Group by subject
+      const groups: Record<string, Question[]> = {};
+      const subjectOrder: string[] = [];
+
+      questions.forEach((q) => {
+        const s = q.subject || "General";
+        if (!groups[s]) {
+          groups[s] = [];
+          subjectOrder.push(s);
+        }
+        groups[s].push(q);
       });
 
-      if (isOptional) {
-        // Only include if user attempted this subject
-        return q.subject && attemptedSubjects.has(q.subject);
-      }
+      subjectOrder.forEach((s) => {
+        finalValidQuestions.push(...groups[s]);
+      });
+    } else {
+      // Custom exam logic: Group and filter by Mandatory + Attempted Optional
+      const handleSection = (s: any, isOptional: boolean) => {
+        const id = typeof s === "string" ? s : s.id;
+        const config = typeof s === "object" ? s : null;
+        const displayName = config?.name || subjectsMap[id] || id;
 
-      // 4. Fallback: If question has no subject or doesn't match config, keep it (legacy behavior)
-      return true;
-    });
+        // For optional subjects, only show if the user attempted it
+        if (
+          isOptional &&
+          !attemptedSubjects.has(id) &&
+          !attemptedSubjects.has(displayName)
+        ) {
+          return;
+        }
+
+        let sectionQuestions: Question[] = [];
+        if (config?.question_ids && config.question_ids.length > 0) {
+          const ids = config.question_ids;
+          sectionQuestions = questions.filter(
+            (q) => q.id && ids.includes(String(q.id)),
+          );
+        } else {
+          const subjectName = subjectsMap[id] || id;
+          sectionQuestions = questions.filter(
+            (q) => q.subject === id || q.subject === subjectName,
+          );
+          if (config?.count) {
+            sectionQuestions = sectionQuestions.slice(0, config.count);
+          }
+        }
+
+        if (sectionQuestions.length > 0) {
+          finalValidQuestions.push(
+            ...sectionQuestions.map((q) => ({ ...q, subject: displayName })),
+          );
+        }
+      };
+
+      mand.forEach((s) => handleSection(s, false));
+      opt.forEach((s) => handleSection(s, true));
+    }
 
     let correct = 0;
     let wrong = 0;
     let totalMarksFromCorrect = 0;
     let totalNegative = 0;
 
-    validQuestions.forEach((q) => {
+    finalValidQuestions.forEach((q) => {
       let qMarks = parseFloat(String(exam?.marks_per_question || 1.00));
       if (
         q.question_marks !== null &&
@@ -329,10 +377,10 @@ export default function SolvePage() {
     });
 
     return {
-      relevantQuestions: validQuestions,
+      relevantQuestions: finalValidQuestions,
       correctAnswers: correct,
       wrongAnswers: wrong,
-      unattempted: validQuestions.length - (correct + wrong),
+      unattempted: finalValidQuestions.length - (correct + wrong),
       finalScore: totalMarksFromCorrect - totalNegative,
       negativeMarks: totalNegative,
       marksFromCorrect: totalMarksFromCorrect,
