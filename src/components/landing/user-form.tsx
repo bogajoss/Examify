@@ -66,12 +66,26 @@ export function UserForm({
   const form = useForm<UserFormValues>({
     resolver: zodResolver(
       isCreateMode
-        ? formSchema.pick({
-            name: true,
-            roll: true,
-            enrolled_batches: true,
-            passwordMode: true,
-          })
+        ? formSchema
+            .pick({
+              name: true,
+              roll: true,
+              enrolled_batches: true,
+              passwordMode: true,
+              pass: true,
+            })
+            .refine(
+              (data) => {
+                if (data.passwordMode === "manual") {
+                  return !!data.pass && data.pass.length >= 4;
+                }
+                return true;
+              },
+              {
+                message: "পাসওয়ার্ড কমপক্ষে ৪টি অক্ষরের হতে হবে।",
+                path: ["pass"],
+              },
+            )
         : formSchema.extend({
             pass: z
               .string()
