@@ -16,9 +16,26 @@ async function verifyPasswordInternal() {
 export async function createUser(formData: FormData) {
   const name = formData.get("name") as string;
   const roll = formData.get("roll") as string;
-  const batch_id = formData.get("batch_id") as string | null;
   const passwordMode = formData.get("passwordMode") as "auto" | "manual";
   const manualPassword = formData.get("pass") as string;
+
+  // Handle enrolled_batches
+  let enrolled_batches: string[] = [];
+  try {
+    const batchesRaw = formData.get("enrolled_batches") as string;
+    if (batchesRaw) {
+      enrolled_batches = JSON.parse(batchesRaw);
+    }
+  } catch (e) {
+    console.error("Failed to parse enrolled_batches", e);
+    // Fallback or ignore
+  }
+
+  // Legacy single batch fallback (if needed, but form sends array now)
+  const batch_id = formData.get("batch_id") as string | null;
+  if (batch_id && enrolled_batches.length === 0) {
+    enrolled_batches = [batch_id];
+  }
 
   // 1. Generate password based on mode
   let newPassword = manualPassword;
@@ -27,7 +44,7 @@ export async function createUser(formData: FormData) {
   }
 
   // 2. Insert the new user into Supabase
-  const enrolled_batches = batch_id ? [batch_id] : [];
+  // const enrolled_batches = batch_id ? [batch_id] : []; // REMOVED
 
   const { data, error } = await supabaseAdmin
     .from("users")
@@ -516,6 +533,78 @@ export async function enrollStudent(formData: FormData) {
 
   return {
     success: true,
+  };
+}
+
+export async function bulkEnrollStudents(formData: FormData) {
+  const user_ids_json = formData.get("user_ids") as string;
+  const batch_id = formData.get("batch_id") as string;
+
+  if (!user_ids_json || !batch_id) {
+    return { success: false, message: "Missing users or batch" };
+  }
+
+  const user_ids: string[] = JSON.parse(user_ids_json);
+
+  if (user_ids.length === 0) {
+    return { success: true, message: "No users selected" };
+  }
+
+  // Fetch current enrolled batches for these users
+  const { data: users, error: fetchError } = await supabaseAdmin
+    .from("users")
+    .select("uid, enrolled_batches")
+    .in("uid", user_ids);
+
+  if (fetchError) {
+    return { success: false, message: "Failed to fetch users: " + fetchError.message };
+  }
+
+  // Prepare updates
+  const updates = users.map((user) => {
+    const currentBatches = user.enrolled_batches || [];
+    if (!currentBatches.includes(batch_id)) {
+      return {
+        uid: user.uid,
+        enrolled_batches: [...currentBatches, batch_id],
+      };
+    }
+    return null;
+  }).filter(Boolean); // Only update users who are not already enrolled
+
+  if (updates.length === 0) {
+    return { success: true, message: "All selected users are already enrolled in this batch" };
+  }
+
+  // Perform updates (Supabase doesn't support bulk update with different values easily in one query without RPC or complex logic,
+  // but here we can loop or use upsert if we had all fields. Since we only update enrolled_batches, looping is safest/easiest for now given low concurrency requirement)
+  // Actually, upsert works if we provide all required fields or if it's partial update.
+  // Supabase 'upsert' works on primary key. We need to be careful not to overwrite other fields if we don't fetch them.
+  // Ideally, we should loop updates or use a Promise.all.
+
+  const updatePromises = updates.map((update) =>
+    supabaseAdmin
+      .from("users")
+      .update({ enrolled_batches: update?.enrolled_batches })
+      .eq("uid", update?.uid)
+  );
+
+  const results = await Promise.all(updatePromises);
+  const errors = results.filter((r) => r.error);
+
+  if (errors.length > 0) {
+    return {
+      success: false,
+      message: `Failed to enroll some users. ${errors.length} errors. First error: ${errors[0].error?.message}`,
+    };
+  }
+
+  revalidatePath(`/admin/batches/${batch_id}`);
+  revalidatePath("/admin/users");
+
+  return {
+    success: true,
+    message: `Successfully enrolled ${updates.length} users`,
   };
 }
 

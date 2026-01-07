@@ -86,6 +86,8 @@ import { formatDate } from "@/lib/date-utils";
 import { Switch } from "@/components/ui/switch";
 import { useCopyLink } from "@/hooks/use-copy-link";
 import { maskRollNumber } from "@/lib/utils";
+import { Checkbox } from "@/components/ui/checkbox";
+import { bulkEnrollStudents } from "@/lib/actions";
 
 interface UsersClientProps {
   initialUsers: User[];
@@ -211,6 +213,8 @@ export function UsersClient({
   const [searchTerm, setSearchTerm] = useState(
     searchParams.get("search") || "",
   );
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [isBulkEnrollDialogOpen, setIsBulkEnrollDialogOpen] = useState(false);
 
   // Queries
   const { data: users = initialUsers, isLoading: loadingUsers } = useQuery({
@@ -233,6 +237,36 @@ export function UsersClient({
   });
 
   // Mutations
+  const bulkEnrollMutation = useMutation({
+    mutationFn: async ({
+      userIds,
+      batchId,
+    }: {
+      userIds: string[];
+      batchId: string;
+    }) => {
+      const formData = new FormData();
+      formData.append("user_ids", JSON.stringify(userIds));
+      formData.append("batch_id", batchId);
+      const result = await bulkEnrollStudents(formData);
+      if (!result.success) throw new Error(result.message);
+      return result;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      toast({ title: data.message || "সফলভাবে ভর্তি করা হয়েছে" });
+      setIsBulkEnrollDialogOpen(false);
+      setSelectedUserIds([]);
+    },
+    onError: (err: Error) => {
+      toast({
+        title: "বাল্ক ভর্তি ব্যর্থ",
+        description: err.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const deleteUserMutation = useMutation({
     mutationFn: (uid: string) => {
       const formData = new FormData();
@@ -328,6 +362,22 @@ export function UsersClient({
     else params.delete("search");
     params.set("page", "1");
     router.push(`/admin/users?${params.toString()}`);
+  };
+
+  const handleToggleUser = (userId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedUserIds((prev) => [...prev, userId]);
+    } else {
+      setSelectedUserIds((prev) => prev.filter((id) => id !== userId));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked && Array.isArray(users)) {
+      setSelectedUserIds(users.map((u) => u.uid));
+    } else {
+      setSelectedUserIds([]);
+    }
   };
 
   const handleImportUsers = async (file: File) => {
@@ -510,11 +560,68 @@ export function UsersClient({
           </div>
         </CardHeader>
         <CardContent>
+          {selectedUserIds.length > 0 && (
+            <div className="mb-4 p-2 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+              <span className="text-sm font-medium px-2">
+                {selectedUserIds.length} জন নির্বাচিত
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={() => setIsBulkEnrollDialogOpen(true)}
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  ব্যাচে ভর্তি করুন
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setSelectedUserIds([])}
+                >
+                  বাতিল
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center space-x-2 mb-4 px-1">
+            <Checkbox
+              checked={
+                Array.isArray(users) &&
+                users.length > 0 &&
+                selectedUserIds.length === users.length
+              }
+              onCheckedChange={(checked) => handleSelectAll(!!checked)}
+              id="select-all-users"
+            />
+            <label
+              htmlFor="select-all-users"
+              className="text-sm font-medium cursor-pointer select-none"
+            >
+              সব নির্বাচন করুন ({Array.isArray(users) ? users.length : 0})
+            </label>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
             {Array.isArray(users) && users.length > 0 ? (
               users.map((user) => (
-                <Card key={user.uid} className="flex flex-col">
+                <Card
+                  key={user.uid}
+                  className={`flex flex-col transition-colors ${
+                    selectedUserIds.includes(user.uid)
+                      ? "border-primary bg-primary/5"
+                      : ""
+                  }`}
+                >
                   <CardHeader className="flex flex-row items-center gap-2 md:gap-4">
+                    <Checkbox
+                      checked={selectedUserIds.includes(user.uid)}
+                      onCheckedChange={(checked) =>
+                        handleToggleUser(user.uid, !!checked)
+                      }
+                      className="mr-1"
+                    />
                     <Avatar>
                       <AvatarFallback>
                         <UserIcon className="h-5 w-5" />
@@ -684,6 +791,60 @@ export function UsersClient({
               </>
             ) : (
               "ভর্তি করুন"
+            )}
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isBulkEnrollDialogOpen}
+        onOpenChange={(open) => {
+          setIsBulkEnrollDialogOpen(open);
+          if (!open) setSelectedBatch(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>বাল্ক ভর্তি</DialogTitle>
+            <DialogDescription>
+              নির্বাচিত {selectedUserIds.length} জন ব্যবহারকারীকে একটি ব্যাচে
+              ভর্তি করুন।
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Select
+              onValueChange={setSelectedBatch}
+              disabled={bulkEnrollMutation.isPending}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="একটি ব্যাচ নির্বাচন করুন" />
+              </SelectTrigger>
+              <SelectContent>
+                {batches.map((batch) => (
+                  <SelectItem key={batch.id} value={batch.id}>
+                    {batch.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            onClick={() =>
+              selectedBatch &&
+              bulkEnrollMutation.mutate({
+                userIds: selectedUserIds,
+                batchId: selectedBatch,
+              })
+            }
+            disabled={bulkEnrollMutation.isPending || !selectedBatch}
+          >
+            {bulkEnrollMutation.isPending ? (
+              <>
+                <CustomLoader minimal />
+                ভর্তি হচ্ছে...
+              </>
+            ) : (
+              "নিশ্চিত করুন"
             )}
           </Button>
         </DialogContent>
