@@ -544,7 +544,7 @@ export function UsersClient({
                     </DialogDescription>
                   </DialogHeader>
                   <ScrollArea className="flex-1 -mr-2 pr-2">
-                    <div className="pt-2 pb-1">
+                    <div className="pt-2 pb-10">
                       <UserForm
                         isCreateMode={!selectedUser}
                         defaultValues={selectedUser}

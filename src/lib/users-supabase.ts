@@ -24,7 +24,8 @@ export async function getUsersWithParams(
   }
 
   if (enrolledOnly === "1") {
-    query = query.not("enrolled_batches", "is", null);
+    // Filter out null or empty array
+    query = query.not("enrolled_batches", "is", null).neq("enrolled_batches", "{}");
   }
 
   const from = (page - 1) * limit;

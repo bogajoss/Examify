@@ -336,7 +336,11 @@ export function UserForm({
             />
           </>
         )}
-        <Button type="submit" disabled={formState.isSubmitting}>
+        <Button
+          type="submit"
+          disabled={formState.isSubmitting}
+          className="w-full mt-6 mb-8"
+        >
           {formState.isSubmitting ? "সংরক্ষণ করা হচ্ছে..." : "সংরক্ষণ করুন"}
         </Button>
       </form>

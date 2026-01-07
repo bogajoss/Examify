@@ -452,21 +452,27 @@ export default function SolvePage() {
 
         {/* Warning if this is a practice mode submission after exam time expired */}
         {exam.end_at &&
+          !exam.is_practice &&
           (() => {
-            const now = dayjs().utcOffset(6 * 60); // Bangladesh timezone
             const endAt = dayjs.utc(exam.end_at).utcOffset(6 * 60); // UTC from DB converted to Bangladesh
-            const isPastExamTime = !exam.is_practice && now.isAfter(endAt);
-            return isPastExamTime ? (
+            
+            let isLateSubmission = false;
+            if (examResultData?.submitted_at) {
+                const subAt = dayjs.utc(examResultData.submitted_at).utcOffset(6 * 60);
+                isLateSubmission = subAt.isAfter(endAt);
+            }
+            
+            return isLateSubmission ? (
               <Card className="border-0 shadow-md bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-500">
                 <CardContent className="p-6 flex items-start gap-3">
                   <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-1 flex-shrink-0" />
                   <div>
                     <h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-1">
-                      অনুশীলনী মোডে চলছে
+                      অনুশীলনী মোডে জমা দেওয়া হয়েছে
                     </h3>
                     <p className="text-sm text-amber-800 dark:text-amber-200">
-                      পরীক্ষার সময় শেষ হওয়ার পর এই সমাধান দেখুন। এই ফলাফল
-                      leaderboard এ অন্তর্ভুক্ত হবে না।
+                      পরীক্ষার নির্ধারিত সময়ের পর এই উত্তরপত্র জমা দেওয়া হয়েছে। এই ফলাফল
+                      leaderboard এর অফিসিয়াল তালিকায় অন্তর্ভুক্ত হবে না।
                     </p>
                   </div>
                 </CardContent>
