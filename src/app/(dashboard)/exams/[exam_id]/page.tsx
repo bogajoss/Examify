@@ -192,7 +192,9 @@ function SubjectSelectionScreen({
 
   // Auto-convert to practice mode if exam time has expired
   const now = dayjs().utcOffset(6 * 60); // Bangladesh timezone
-  const currentEndDate = exam?.end_at ? dayjs.utc(exam.end_at).utcOffset(6 * 60) : null;
+  const currentEndDate = exam?.end_at
+    ? dayjs.utc(exam.end_at).utcOffset(6 * 60)
+    : null;
   if (!isPractice && currentEndDate && now.isAfter(currentEndDate)) {
     isPractice = true; // Auto-enable practice mode after exam ends
   }
@@ -256,13 +258,21 @@ function SubjectSelectionScreen({
                       {startDate && (
                         <div>
                           <strong>শুরুর সময়:</strong>{" "}
-                          {dayjs.utc(startDate).utcOffset(6 * 60).locale("bn-bd").format("DD MMMM YYYY, hh:mm A")}
+                          {dayjs
+                            .utc(startDate)
+                            .utcOffset(6 * 60)
+                            .locale("bn-bd")
+                            .format("DD MMMM YYYY, hh:mm A")}
                         </div>
                       )}
                       {endDate && (
                         <div>
                           <strong>সম্ভাব্য শেষ সময়:</strong>{" "}
-                          {dayjs.utc(endDate).utcOffset(6 * 60).locale("bn-bd").format("DD MMMM YYYY, hh:mm A")}
+                          {dayjs
+                            .utc(endDate)
+                            .utcOffset(6 * 60)
+                            .locale("bn-bd")
+                            .format("DD MMMM YYYY, hh:mm A")}
                         </div>
                       )}
                       {!startDate && !endDate && (
@@ -680,7 +690,7 @@ export default function TakeExamPage() {
       const qId = String(q.id);
       const selectedOptIndex = selectedAnswers[qId];
 
-      let qMarks = parseFloat(String(exam?.marks_per_question || 1.00));
+      let qMarks = parseFloat(String(exam?.marks_per_question || 1.0));
       if (
         q.question_marks !== null &&
         q.question_marks !== undefined &&
@@ -743,22 +753,8 @@ export default function TakeExamPage() {
 
         if (seError) throw seError;
 
-        if (responses.length > 0 && seData) {
-          const { error: resError } = await supabase
-            .from("student_responses")
-            .upsert(
-              responses.map((r) => ({
-                student_exam_id: seData.id,
-                question_id: r.question_id,
-                selected_option: r.selected_option,
-                is_correct: r.is_correct === 1,
-                marks_obtained: r.marks_obtained,
-              })),
-              { onConflict: "student_exam_id,question_id" },
-            );
-
-          if (resError) console.error("Error saving responses:", resError);
-        }
+        // Note: We do not store detailed student responses in the database anymore per privacy requirements.
+        // The detailed answers are only saved in localStorage for immediate review.
 
         toast({ title: "পরীক্ষা জমা হয়েছে!" });
       } catch (err) {
@@ -1087,7 +1083,6 @@ export default function TakeExamPage() {
       }
 
       setExam(examData as Exam);
-
     } finally {
       setLoading(false);
     }

@@ -124,8 +124,12 @@ export default function StudentBatchExamsPage() {
       if (exam.is_practice) {
         practice.push(exam);
       } else {
-        const startTime = exam.start_at ? dayjs.utc(exam.start_at).utcOffset(6 * 60) : null;
-        const endTime = exam.end_at ? dayjs.utc(exam.end_at).utcOffset(6 * 60) : null;
+        const startTime = exam.start_at
+          ? dayjs.utc(exam.start_at).utcOffset(6 * 60)
+          : null;
+        const endTime = exam.end_at
+          ? dayjs.utc(exam.end_at).utcOffset(6 * 60)
+          : null;
 
         if (startTime && now.isBefore(startTime)) {
           upcoming.push(exam);
@@ -200,7 +204,9 @@ export default function StudentBatchExamsPage() {
   const renderExamCard = (exam: Exam) => {
     const result = examResults[exam.id];
     const now = dayjs().utcOffset(6 * 60); // Bangladesh timezone
-    const startAt = exam.start_at ? dayjs.utc(exam.start_at).utcOffset(6 * 60) : null;
+    const startAt = exam.start_at
+      ? dayjs.utc(exam.start_at).utcOffset(6 * 60)
+      : null;
     const endAt = exam.end_at ? dayjs.utc(exam.end_at).utcOffset(6 * 60) : null;
 
     const timeExpired =

@@ -18,7 +18,9 @@ export const safeParseDate = (
 // Helper to get current local time in Bangladesh timezone (UTC+6)
 export function getCurrentLocalTime() {
   // Use Bangladesh timezone (UTC+6) instead of UTC
-  return dayjs().utcOffset(6 * 60).toDate();
+  return dayjs()
+    .utcOffset(6 * 60)
+    .toDate();
 }
 
 // Helper to combine date and time components into UTC ISO string
@@ -42,15 +44,20 @@ export const combineLocalDateTime = (
     dateStr = dateInput;
   } else {
     // If it's a Date object, extract date in Bangladesh timezone
-    dateStr = dayjs(dateInput).utcOffset(6 * 60).format("YYYY-MM-DD");
+    dateStr = dayjs(dateInput)
+      .utcOffset(6 * 60)
+      .format("YYYY-MM-DD");
   }
 
   const timeStr = `${String(h24).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00`;
 
   // Parse as Bangladesh local time, then convert to UTC for storage
   // So 4:00 PM Bangladesh (UTC+6) becomes 10:00 AM UTC
-  const bangladeshTime = dayjs(`${dateStr} ${timeStr}`, "YYYY-MM-DD HH:mm:ss").utcOffset(6 * 60);
-  
+  const bangladeshTime = dayjs(
+    `${dateStr} ${timeStr}`,
+    "YYYY-MM-DD HH:mm:ss",
+  ).utcOffset(6 * 60);
+
   // Return as UTC ISO string for storage
   return bangladeshTime.utc().format();
 };
@@ -72,7 +79,7 @@ export const parseLocalDateTime = (datetimeString: string) => {
 
   // Convert to Bangladesh timezone for display
   const bangladeshTime = utcTime.utcOffset(6 * 60);
-  
+
   const hour = bangladeshTime.hour();
   const period = hour >= 12 ? "PM" : "AM";
   const hour12 = hour % 12 || 12;

@@ -41,7 +41,6 @@ import {
   deleteStudentExamResult,
   updateStudentResultScore,
   bulkUpdateExamScores,
-  recalculateExamScores,
 } from "@/lib/actions";
 import {
   Dialog,
@@ -111,10 +110,6 @@ export default function AdminExamResultsPage() {
   const [isBulkUpdateOpen, setIsBulkUpdateOpen] = useState(false);
   const [bulkScoreChange, setBulkScoreChange] = useState("");
 
-  // Recalculate State
-  const [isRecalculateOpen, setIsRecalculateOpen] = useState(false);
-  const [recalculating, setRecalculating] = useState(false);
-
   useEffect(() => {
     if (!admin) return;
     const loadData = async () => {
@@ -179,32 +174,6 @@ export default function AdminExamResultsPage() {
 
     loadData();
   }, [admin, exam_id, router, toast]);
-
-  const handleRecalculateConfirmed = async (password: string) => {
-    if (!admin) return;
-
-    setRecalculating(true);
-    const formData = new FormData();
-    formData.append("exam_id", exam_id);
-    formData.append("admin_uid", admin.uid);
-    formData.append("password", password);
-
-    const result = await recalculateExamScores(formData);
-
-    if (result.success) {
-      toast({ title: "স্কোর পুনরায় গণনা করা হয়েছে" });
-      // Reload page to reflect changes
-      window.location.reload();
-    } else {
-      toast({
-        title: "ব্যর্থ হয়েছে",
-        description: result.message,
-        variant: "destructive",
-      });
-    }
-    setRecalculating(false);
-    setIsRecalculateOpen(false);
-  };
 
   const handleDownloadPDF = async () => {
     setGeneratingPDF(true);
@@ -547,17 +516,6 @@ export default function AdminExamResultsPage() {
           </div>
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button
-              onClick={() => setIsRecalculateOpen(true)}
-              variant="outline"
-              className="w-full sm:w-auto"
-              title="প্রশ্ন পরিবর্তনের পর স্কোর আপডেট করুন"
-            >
-              <RefreshCw
-                className={`w-4 h-4 mr-2 ${recalculating ? "animate-spin" : ""}`}
-              />
-              রিক্যালকুলেট
-            </Button>
-            <Button
               onClick={handleDownloadPDF}
               disabled={generatingPDF}
               variant="outline"
@@ -855,35 +813,6 @@ export default function AdminExamResultsPage() {
               }}
             >
               আপডেট করুন
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Recalculate Dialog */}
-      <Dialog open={isRecalculateOpen} onOpenChange={setIsRecalculateOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>স্কোর রিক্যলকুলেশন</DialogTitle>
-            <DialogDescription>
-              আপনি কি সব শিক্ষার্থীর স্কোর বর্তমান সঠিক উত্তরের ভিত্তিতে পুনরায়
-              গণনা করতে চান? এটি করতে কিছু সময় লাগতে পারে।
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsRecalculateOpen(false)}
-            >
-              বাতিল
-            </Button>
-            <Button
-              disabled={recalculating}
-              onClick={() => {
-                handleRecalculateConfirmed("");
-              }}
-            >
-              {recalculating ? "গণনা করা হচ্ছে..." : "শুরু করুন"}
             </Button>
           </DialogFooter>
         </DialogContent>

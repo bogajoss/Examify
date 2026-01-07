@@ -67,11 +67,11 @@ export async function getDailyTasks(
   date: string,
 ) {
   const { data, error } = await supabase
-    .from("student_tasks")
+    .from("student_attendance")
     .select("*")
     .eq("student_id", userId)
     .eq("batch_id", batchId)
-    .eq("task_date", date)
+    .eq("attendance_date", date)
     .maybeSingle();
 
   if (error) throw error;
@@ -89,7 +89,7 @@ export async function submitTask(
   const updateData: Record<string, string | boolean | null> = {
     student_id: userId,
     batch_id: batchId,
-    task_date: date,
+    attendance_date: date,
   };
 
   if (type === "mandatory") {
@@ -105,8 +105,8 @@ export async function submitTask(
 
   // We use upsert to create or update
   const { error } = await supabase
-    .from("student_tasks")
-    .upsert(updateData, { onConflict: "student_id,batch_id,task_date" });
+    .from("student_attendance")
+    .upsert(updateData, { onConflict: "student_id,batch_id,attendance_date" });
 
   if (error) throw error;
 }

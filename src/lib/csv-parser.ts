@@ -143,8 +143,8 @@ export async function parseCSVContent(csv: string): Promise<ParsedQuestion[]> {
   }
 
   // Get the headers from the parsed data
-  const headers = Object.keys(results.data[0] as Record<string, unknown>).map((h) =>
-    h.trim().toLowerCase(),
+  const headers = Object.keys(results.data[0] as Record<string, unknown>).map(
+    (h) => h.trim().toLowerCase(),
   );
 
   // Find column indices

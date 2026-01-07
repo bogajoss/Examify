@@ -12,39 +12,12 @@ BEGIN
 END$$;
 
 -- ============================================================
--- API TOKENS TABLE (For backend authentication)
--- ============================================================
-create table if not exists api_tokens (
-  id uuid default uuid_generate_v4() not null primary key,
-  user_id uuid not null,
-  token varchar(255) not null unique,
-  name varchar(255),
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  is_active boolean default true,
-  is_admin boolean default false
-);
-
-create index if not exists idx_api_tokens_token on api_tokens(token);
-create index if not exists idx_api_tokens_active on api_tokens(is_active);
-
--- ============================================================
--- CATEGORIES TABLE (For organizing question files)
--- ============================================================
-create table if not exists categories (
-  id uuid default uuid_generate_v4() not null primary key,
-  name varchar(255) not null unique,
-  description text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- ============================================================
 -- FILES TABLE (Question banks/files)
 -- ============================================================
 create table if not exists files (
   id uuid default uuid_generate_v4() not null primary key,
   original_filename varchar(255) not null,
   display_name varchar(255),
-  category_id uuid references categories(id) on delete set null,
   uploaded_at timestamp with time zone default timezone('utc'::text, now()) not null,
   total_questions integer default 0,
   external_id varchar(50),
@@ -57,7 +30,6 @@ create table if not exists files (
 create index if not exists idx_files_bank on files(is_bank);
 create index if not exists idx_files_uploaded on files(uploaded_at);
 create index if not exists idx_files_batch on files(batch_id);
-create index if not exists idx_files_category on files(category_id);
 
 -- ============================================================
 -- QUESTIONS TABLE (Individual questions)
@@ -211,24 +183,6 @@ create table if not exists student_exams (
 create index if not exists idx_student_exams_student_id on student_exams(student_id);
 create index if not exists idx_student_exams_exam_id on student_exams(exam_id);
 create index if not exists idx_student_exams_submitted on student_exams(submitted_at);
-
--- ============================================================
--- STUDENT RESPONSES (Detailed Answers)
--- ============================================================
-create table if not exists student_responses (
-  id uuid default uuid_generate_v4() not null primary key,
-  student_exam_id uuid not null references student_exams(id) on delete cascade,
-  question_id uuid not null references questions(id) on delete cascade,
-  selected_option text,
-  is_correct boolean default false,
-  marks_obtained numeric(5,2) default 0,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  unique(student_exam_id, question_id)
-);
-
-create index if not exists idx_student_responses_exam on student_responses(student_exam_id);
-create index if not exists idx_student_responses_question on student_responses(question_id);
-create index if not exists idx_student_responses_correct on student_responses(is_correct);
 
 -- ============================================================
 -- DAILY RECORDS (Stats)

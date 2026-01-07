@@ -67,33 +67,6 @@ export interface ExamQuestion {
   order_index: number;
 }
 
-// Helper function to validate API token
-export async function validateApiToken(
-  token: string,
-): Promise<{ valid: boolean; isAdmin: boolean; userId?: string }> {
-  try {
-    const { data, error } = await supabaseAdmin
-      .from("api_tokens")
-      .select("*")
-      .eq("token", token)
-      .eq("is_active", true)
-      .single();
-
-    if (error || !data) {
-      return { valid: false, isAdmin: false };
-    }
-
-    return {
-      valid: true,
-      isAdmin: data.is_admin,
-      userId: data.user_id,
-    };
-  } catch (error) {
-    console.error("Token validation error:", error);
-    return { valid: false, isAdmin: false };
-  }
-}
-
 // UUID generation is handled by PostgreSQL uuid-ossp extension (uuid_generate_v4())
 // Application no longer generates UUIDs - database handles it via DEFAULT values
 // This keeps UUID generation centralized and more secure

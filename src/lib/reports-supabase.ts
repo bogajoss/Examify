@@ -29,12 +29,12 @@ export async function getReports(batchId: string, date: string) {
 
   if (attendanceError) throw attendanceError;
 
-  // 3. Get tasks for the date
+  // 3. Get tasks for the date (now part of student_attendance)
   const { data: tasks, error: tasksError } = await supabase
-    .from("student_tasks")
+    .from("student_attendance")
     .select("*")
     .eq("batch_id", batchId)
-    .eq("task_date", date);
+    .eq("attendance_date", date);
 
   if (tasksError) throw tasksError;
 

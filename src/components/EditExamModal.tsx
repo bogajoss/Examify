@@ -308,8 +308,8 @@ export function EditExamModal({
     let newValue = bengaliToEnglishNumber(input.value);
 
     // If the old value ended with a dot and the new value doesn't, preserve the dot
-    if (oldValue.endsWith('.') && !newValue.endsWith('.')) {
-      newValue += '.';
+    if (oldValue.endsWith(".") && !newValue.endsWith(".")) {
+      newValue += ".";
     }
 
     input.value = newValue;
@@ -480,7 +480,9 @@ export function EditExamModal({
                     type="number"
                     step="0.01"
                     name="marks_per_question"
-                    defaultValue={String(exam?.marks_per_question?.toFixed(2) || "1.00")}
+                    defaultValue={String(
+                      exam?.marks_per_question?.toFixed(2) || "1.00",
+                    )}
                     placeholder="প্রশ্ন প্রতি মার্ক"
                     onInput={handleNumberInput}
                   />
@@ -1261,9 +1263,7 @@ export function EditExamModal({
       </Dialog>
 
       {/* Secondary Dialog for Subject Question Selection */}
-      <Dialog
-        open={!!activeSubjectSelection}
-      >
+      <Dialog open={!!activeSubjectSelection}>
         <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0">
           <DialogHeader className="p-4 border-b shrink-0">
             <DialogTitle>

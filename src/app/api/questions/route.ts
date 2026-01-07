@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin, validateApiToken } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
 import { corsHeaders, handleCors } from "../middleware";
 
 export async function GET(req: NextRequest) {
@@ -9,7 +9,6 @@ export async function GET(req: NextRequest) {
 
   try {
     const url = new URL(req.url);
-    let token = url.searchParams.get("token");
     const fileId = url.searchParams.get("file_id");
     const examId = url.searchParams.get("exam_id");
     const ids = url.searchParams.get("ids");
@@ -20,28 +19,6 @@ export async function GET(req: NextRequest) {
     const offset = url.searchParams.get("offset")
       ? parseInt(url.searchParams.get("offset")!)
       : 0;
-
-    if (!token) {
-      const authHeader = req.headers.get("authorization");
-      if (authHeader?.startsWith("Bearer ")) {
-        token = authHeader.substring(7);
-      }
-    }
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Missing API Token" },
-        { status: 401, headers: corsHeaders() },
-      );
-    }
-
-    const { valid } = await validateApiToken(token);
-    if (!valid) {
-      return NextResponse.json(
-        { success: false, error: "Invalid API Token" },
-        { status: 403, headers: corsHeaders() },
-      );
-    }
 
     let query = supabaseAdmin.from("questions").select("*");
 
@@ -128,30 +105,6 @@ export async function POST(req: NextRequest) {
   if (corsResponse) return corsResponse;
 
   try {
-    const url = new URL(req.url);
-    let token = url.searchParams.get("token");
-
-    if (!token) {
-      const authHeader = req.headers.get("authorization");
-      if (authHeader?.startsWith("Bearer ")) {
-        token = authHeader.substring(7);
-      }
-    }
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Missing API Token" },
-        { status: 401, headers: corsHeaders() },
-      );
-    }
-
-    const { valid } = await validateApiToken(token);
-    if (!valid) {
-      return NextResponse.json(
-        { success: false, error: "Invalid API Token" },
-        { status: 403, headers: corsHeaders() },
-      );
-    }
 
     const body = await req.json();
     const {
@@ -297,30 +250,6 @@ export async function PUT(req: NextRequest) {
   if (corsResponse) return corsResponse;
 
   try {
-    const url = new URL(req.url);
-    let token = url.searchParams.get("token");
-
-    if (!token) {
-      const authHeader = req.headers.get("authorization");
-      if (authHeader?.startsWith("Bearer ")) {
-        token = authHeader.substring(7);
-      }
-    }
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Missing API Token" },
-        { status: 401, headers: corsHeaders() },
-      );
-    }
-
-    const { valid } = await validateApiToken(token);
-    if (!valid) {
-      return NextResponse.json(
-        { success: false, error: "Invalid API Token" },
-        { status: 403, headers: corsHeaders() },
-      );
-    }
 
     const body = await req.json();
     const { id } = body;
@@ -404,30 +333,6 @@ export async function DELETE(req: NextRequest) {
   if (corsResponse) return corsResponse;
 
   try {
-    const url = new URL(req.url);
-    let token = url.searchParams.get("token");
-
-    if (!token) {
-      const authHeader = req.headers.get("authorization");
-      if (authHeader?.startsWith("Bearer ")) {
-        token = authHeader.substring(7);
-      }
-    }
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Missing API Token" },
-        { status: 401, headers: corsHeaders() },
-      );
-    }
-
-    const { valid } = await validateApiToken(token);
-    if (!valid) {
-      return NextResponse.json(
-        { success: false, error: "Invalid API Token" },
-        { status: 403, headers: corsHeaders() },
-      );
-    }
 
     const body = await req.json();
     const { id } = body;

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin, validateApiToken } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
 import { parseCSV } from "@/lib/csv-parser";
 import { corsHeaders, handleCors } from "../middleware";
 
@@ -11,31 +11,6 @@ export async function POST(request: NextRequest) {
   if (corsResponse) return corsResponse;
 
   try {
-    const url = new URL(request.url);
-    let token = url.searchParams.get("token");
-
-    if (!token) {
-      const authHeader = request.headers.get("authorization");
-      if (authHeader?.startsWith("Bearer ")) {
-        token = authHeader.substring(7);
-      }
-    }
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Missing API Token" },
-        { status: 401, headers: corsHeaders() },
-      );
-    }
-
-    const { valid } = await validateApiToken(token);
-    if (!valid) {
-      return NextResponse.json(
-        { success: false, error: "Invalid API Token" },
-        { status: 403, headers: corsHeaders() },
-      );
-    }
-
     const formData = await request.formData();
     const csvFile = formData.get("csv_file") as File | null;
 

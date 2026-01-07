@@ -34,6 +34,9 @@ interface ResultInfo {
   started_at?: string;
   submitted_at?: string;
   score?: number | null;
+  correct_answers?: number;
+  wrong_answers?: number;
+  unattempted?: number;
 }
 
 const subjectsMap: { [key: string]: string } = {
@@ -149,48 +152,47 @@ export default function SolvePage() {
   }>({
     queryKey: ["exam-answers", exam_id, user?.uid],
     queryFn: async () => {
-      // 1. Try fetching from Supabase first
+      // 1. Try fetching score from Supabase
       if (user?.uid && exam_id) {
         try {
           const { data: examData, error: examError } = await supabase
             .from("student_exams")
-            .select("*, student_responses(*)")
+            .select("score, started_at, submitted_at, correct_answers, wrong_answers, unattempted")
             .eq("exam_id", exam_id)
             .eq("student_id", user.uid)
             .single();
 
-          if (!examError && examData) {
-            const answers: Record<string, number> = {};
-            let hasResponses = false;
+          if (!examError && examData && examData.score !== undefined) {
+            // We have a score - try to load answers from localStorage for review
+            const storageKey = user?.uid
+              ? `exam_answers_${user.uid}_${exam_id}`
+              : null;
+            let localAnswers: Record<string, number> = {};
 
-            const responses = examData.student_responses;
-            if (responses && Array.isArray(responses) && responses.length > 0) {
-              (
-                responses as {
-                  selected_option: string | null;
-                  question_id: string;
-                }[]
-              ).forEach((resp) => {
-                if (resp.selected_option !== null) {
-                  answers[resp.question_id] = parseInt(
-                    resp.selected_option,
-                    10,
-                  );
-                  hasResponses = true;
+            if (storageKey) {
+              try {
+                const savedData = localStorage.getItem(storageKey);
+                if (savedData) {
+                  const parsed = JSON.parse(savedData);
+                  localAnswers =
+                    (parsed.answers || parsed) as Record<string, number>;
                 }
-              });
+              } catch (err) {
+                console.error("Error reading local answers:", err);
+              }
             }
 
-            if (hasResponses || examData.score !== undefined) {
-              return {
-                answers,
-                result: {
-                  started_at: examData.started_at,
-                  submitted_at: examData.submitted_at,
-                  score: examData.score,
-                },
-              };
-            }
+            return {
+              answers: localAnswers,
+              result: {
+                started_at: examData.started_at,
+                submitted_at: examData.submitted_at,
+                score: examData.score,
+                correct_answers: examData.correct_answers,
+                wrong_answers: examData.wrong_answers,
+                unattempted: examData.unattempted,
+              },
+            };
           }
         } catch (e) {
           console.error("Failed to fetch result from Supabase:", e);
@@ -308,12 +310,18 @@ export default function SolvePage() {
         const displayName = config?.name || subjectsMap[id] || id;
 
         // For optional subjects, only show if the user attempted it
-        if (
-          isOptional &&
-          !attemptedSubjects.has(id) &&
-          !attemptedSubjects.has(displayName)
-        ) {
-          return;
+        if (isOptional) {
+          const hasAttempted =
+            attemptedSubjects.has(id) ||
+            attemptedSubjects.has(displayName) ||
+            (config?.question_ids &&
+              config.question_ids.some((qId: string) =>
+                answeredIds.includes(String(qId)),
+              ));
+
+          if (!hasAttempted) {
+            return;
+          }
         }
 
         let sectionQuestions: Question[] = [];
@@ -349,7 +357,7 @@ export default function SolvePage() {
     let totalNegative = 0;
 
     finalValidQuestions.forEach((q) => {
-      let qMarks = parseFloat(String(exam?.marks_per_question || 1.00));
+      let qMarks = parseFloat(String(exam?.marks_per_question || 1.0));
       if (
         q.question_marks !== null &&
         q.question_marks !== undefined &&
@@ -491,6 +499,37 @@ export default function SolvePage() {
                   </span>
                 </div>
               )}
+
+              {(examResultData?.correct_answers !== undefined ||
+                examResultData?.wrong_answers !== undefined ||
+                examResultData?.unattempted !== undefined) && (
+                <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-1">
+                      সঠিক
+                    </p>
+                    <p className="text-2xl font-bold text-success">
+                      {examResultData.correct_answers ?? 0}
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-1">
+                      ভুল
+                    </p>
+                    <p className="text-2xl font-bold text-destructive">
+                      {examResultData.wrong_answers ?? 0}
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-1">
+                      স্কিপ
+                    </p>
+                    <p className="text-2xl font-bold text-warning">
+                      {examResultData.unattempted ?? 0}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -609,7 +648,7 @@ export default function SolvePage() {
                 : undefined;
 
               // Derived from question.answer directly in the loop for consistency with QuestionSelector
-              // const correctAnswer = question.answer; 
+              // const correctAnswer = question.answer;
 
               const isCorrect = userAnswer === Number(question.answer);
 
@@ -732,7 +771,8 @@ export default function SolvePage() {
                         if (!option) return null;
                         const isSelected = userAnswer === optIdx;
                         // Use Number() to ensure strict comparison, matching QuestionSelector logic
-                        const isRightAnswer = Number(question.answer) === optIdx;
+                        const isRightAnswer =
+                          Number(question.answer) === optIdx;
                         const bengaliLetters = [
                           "ক",
                           "খ",

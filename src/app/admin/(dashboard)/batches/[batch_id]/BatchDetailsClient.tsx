@@ -319,8 +319,8 @@ export function BatchDetailsClient({
     let newValue = bengaliToEnglishNumber(input.value);
 
     // If the old value ended with a dot and the new value doesn't, preserve the dot
-    if (oldValue.endsWith('.') && !newValue.endsWith('.')) {
-      newValue += '.';
+    if (oldValue.endsWith(".") && !newValue.endsWith(".")) {
+      newValue += ".";
     }
 
     input.value = newValue;
