@@ -52,7 +52,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RefreshCw } from "lucide-react";
 import { formatDuration } from "@/lib/date-utils";
 
 interface StudentResult {

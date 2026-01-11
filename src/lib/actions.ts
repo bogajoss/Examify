@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "./supabase";
 import { parseCSV } from "@/lib/csv-parser";
-import type { Exam, Question, SubjectConfig } from "./types";
 
 const randomUUID = () => globalThis.crypto.randomUUID();
 

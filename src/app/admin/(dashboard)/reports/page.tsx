@@ -295,10 +295,10 @@ export default function ReportsPage() {
                 <TableRow>
                   <TableHead>নাম ও রোল</TableHead>
                   <TableHead className="text-center">উপস্থিতি</TableHead>
-                  <TableHead className="text-center">পরীক্ষা</TableHead>
+                  <TableHead className="text-center">টুডু লিস্ট</TableHead>
                   <TableHead className="text-center">টাস্ক ১</TableHead>
                   <TableHead className="text-center">টাস্ক ২</TableHead>
-                  <TableHead className="text-center">টুডু লিস্ট</TableHead>
+                  <TableHead className="text-center">পরীক্ষা</TableHead>
                   <TableHead className="text-center">দৈনিক অগ্রগতি</TableHead>
                 </TableRow>
               </TableHeader>
@@ -326,23 +326,33 @@ export default function ReportsPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="flex flex-col gap-1 items-center">
-                        {report.exams && report.exams.length > 0 ? (
-                          report.exams.map((ex, i) => (
-                            <Badge
-                              key={i}
-                              variant="secondary"
-                              className="whitespace-nowrap bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-                            >
-                              {ex.name}: {ex.score.toFixed(2)}
-                            </Badge>
-                          ))
-                        ) : (
-                          <Badge variant="outline" className="text-gray-400">
-                            অংশ নেয়নি
+                      {report.todo_done ? (
+                        <div className="flex flex-col items-center gap-1">
+                          <Badge
+                            variant="outline"
+                            className="text-green-600 border-green-600"
+                          >
+                            সম্পন্ন
                           </Badge>
-                        )}
-                      </div>
+                          {report.todo_url && (
+                            <a
+                              href={report.todo_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-500 hover:underline flex items-center"
+                            >
+                              লিঙ্ক <ExternalLink className="h-3 w-3 ml-1" />
+                            </a>
+                          )}
+                        </div>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="text-gray-400 border-gray-400"
+                        >
+                          নেই
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-center">
                       {report.mandatory_done ? (
@@ -378,7 +388,7 @@ export default function ReportsPage() {
                         <div className="flex flex-col items-center gap-1">
                           <Badge
                             variant="outline"
-                            className="text-blue-600 border-blue-600"
+                            className="text-green-600 border-green-600"
                           >
                             সম্পন্ন
                           </Badge>
@@ -403,33 +413,23 @@ export default function ReportsPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-center">
-                      {report.todo_done ? (
-                        <div className="flex flex-col items-center gap-1">
-                          <Badge
-                            variant="outline"
-                            className="text-green-600 border-green-600"
-                          >
-                            সম্পন্ন
-                          </Badge>
-                          {report.todo_url && (
-                            <a
-                              href={report.todo_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-500 hover:underline flex items-center"
+                      <div className="flex flex-col gap-1 items-center">
+                        {report.exams && report.exams.length > 0 ? (
+                          report.exams.map((ex, i) => (
+                            <Badge
+                              key={i}
+                              variant="secondary"
+                              className="whitespace-nowrap bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
                             >
-                              লিঙ্ক <ExternalLink className="h-3 w-3 ml-1" />
-                            </a>
-                          )}
-                        </div>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          className="text-gray-400 border-gray-400"
-                        >
-                          নেই
-                        </Badge>
-                      )}
+                              {ex.name}: {ex.score.toFixed(2)}
+                            </Badge>
+                          ))
+                        ) : (
+                          <Badge variant="outline" className="text-gray-400">
+                            অংশ নেয়নি
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
                       <ProgressBar progress={calculateProgress(report)} />

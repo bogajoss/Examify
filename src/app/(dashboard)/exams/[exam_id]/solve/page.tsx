@@ -21,7 +21,6 @@ import {
   ArrowLeft,
   CheckCircle2,
   AlertCircle,
-  HelpCircle,
   BookOpen,
   Zap,
   Clock,
@@ -250,12 +249,7 @@ export default function SolvePage() {
 
   const {
     relevantQuestions,
-    correctAnswers,
-    wrongAnswers,
-    unattempted,
     finalScore,
-    negativeMarks,
-    marksFromCorrect,
   } = useMemo(() => {
     if (!loadedUserAnswers || questions.length === 0 || !exam) {
       return {
@@ -264,8 +258,6 @@ export default function SolvePage() {
         wrongAnswers: 0,
         unattempted: 0,
         finalScore: 0,
-        negativeMarks: 0,
-        marksFromCorrect: 0,
       };
     }
 
@@ -279,11 +271,18 @@ export default function SolvePage() {
       }
     });
 
-    const mand = (exam.mandatory_subjects as any[]) || [];
-    const opt = (exam.optional_subjects as any[]) || [];
+    interface SubjectConfig {
+      id: string;
+      name?: string;
+      count?: number;
+      question_ids?: string[];
+    }
+
+    const mand = (exam.mandatory_subjects as unknown as SubjectConfig[]) || [];
+    const opt = (exam.optional_subjects as unknown as SubjectConfig[]) || [];
     const hasStructure = mand.length > 0 || opt.length > 0;
 
-    let finalValidQuestions: Question[] = [];
+    const finalValidQuestions: Question[] = [];
 
     if (!hasStructure) {
       // Standard exam logic: Group by subject
@@ -304,7 +303,7 @@ export default function SolvePage() {
       });
     } else {
       // Custom exam logic: Group and filter by Mandatory + Attempted Optional
-      const handleSection = (s: any, isOptional: boolean) => {
+      const handleSection = (s: SubjectConfig | string, isOptional: boolean) => {
         const id = typeof s === "string" ? s : s.id;
         const config = typeof s === "object" ? s : null;
         const displayName = config?.name || subjectsMap[id] || id;
@@ -390,8 +389,6 @@ export default function SolvePage() {
       wrongAnswers: wrong,
       unattempted: finalValidQuestions.length - (correct + wrong),
       finalScore: totalMarksFromCorrect - totalNegative,
-      negativeMarks: totalNegative,
-      marksFromCorrect: totalMarksFromCorrect,
     };
   }, [loadedUserAnswers, questions, exam]);
 
@@ -423,9 +420,6 @@ export default function SolvePage() {
     examResultData?.score !== undefined && examResultData?.score !== null
       ? examResultData.score
       : finalScore;
-
-  const totalNegativeMarksFromWrong =
-    wrongAnswers * parseFloat(String(exam?.negative_marks_per_wrong || 0));
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/50 flex flex-col items-center justify-start p-1 sm:p-4 md:p-6">

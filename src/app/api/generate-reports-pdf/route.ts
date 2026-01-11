@@ -92,10 +92,10 @@ export async function POST(req: NextRequest) {
               <th>নাম</th>
               <th>রোল</th>
               <th>উপস্থিতি</th>
-              <th>পরীক্ষা</th>
+              <th>টুডু লিস্ট</th>
               <th>টাস্ক ১</th>
               <th>টাস্ক ২</th>
-              <th>টুডু লিস্ট</th>
+              <th>পরীক্ষা</th>
             </tr>
           </thead>
           <tbody>
@@ -106,6 +106,9 @@ export async function POST(req: NextRequest) {
                 <td>${r.name}</td>
                 <td>${maskRollNumber(r.roll)}</td>
                 <td class="${r.present ? "present" : "absent"}">${r.present ? "উপস্থিত" : "অনুপস্থিত"}</td>
+                <td class="${r.todo_done ? "done" : "pending"}">${r.todo_done ? "সম্পন্ন" : "নেই"}</td>
+                <td class="${r.mandatory_done ? "done" : "pending"}">${r.mandatory_done ? "সম্পন্ন" : "বাকি"}</td>
+                <td class="${r.optional_done ? "done" : "pending"}">${r.optional_done ? "সম্পন্ন" : "নেই"}</td>
                 <td>
                   ${
                     r.exams && r.exams.length > 0
@@ -118,9 +121,6 @@ export async function POST(req: NextRequest) {
                       : "অংশ নেয়নি"
                   }
                 </td>
-                <td class="${r.mandatory_done ? "done" : "pending"}">${r.mandatory_done ? "সম্পন্ন" : "বাকি"}</td>
-                <td class="${r.optional_done ? "done" : "pending"}">${r.optional_done ? "সম্পন্ন" : "নেই"}</td>
-                <td class="${r.todo_done ? "done" : "pending"}">${r.todo_done ? "সম্পন্ন" : "নেই"}</td>
               </tr>
             `,
               )

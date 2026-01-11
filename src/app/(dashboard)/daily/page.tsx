@@ -336,8 +336,78 @@ export default function DailyTasksPage() {
                     <CardTitle className="text-lg">{batch.name}</CardTitle>
                   </CardHeader>
                   <CardContent className="pt-6 space-y-6">
-                    {/* Mandatory Task */}
+                    {/* To Do Task */}
                     <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-semibold flex items-center gap-2">
+                          {status?.todo_done ? (
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Circle className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          আপনার টুডু লিস্ট
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] text-green-500 border-green-200"
+                          >
+                            To Do
+                          </Badge>
+                        </label>
+                        {status?.todo_done && (
+                          <span className="text-xs text-green-600 font-medium">
+                            সম্পন্ন
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="করণীয় কাজের লিঙ্ক দিন"
+                            className="pl-9"
+                            value={
+                              status?.todo_done
+                                ? status.todo_url
+                                : urls[batch.id]?.todo || ""
+                            }
+                            onChange={(e) =>
+                              setUrls((prev) => ({
+                                ...prev,
+                                [batch.id]: {
+                                  ...(prev[batch.id] || {
+                                    mandatory: "",
+                                    optional: "",
+                                    todo: "",
+                                  }),
+                                  todo: e.target.value,
+                                },
+                              }))
+                            }
+                            disabled={status?.todo_done}
+                          />
+                        </div>
+                        {!status?.todo_done && (
+                          <Button
+                            variant="outline"
+                            onClick={() => handleTaskSubmit(batch.id, "todo")}
+                            disabled={
+                              taskMutation.isPending &&
+                              taskMutation.variables?.batchId === batch.id &&
+                              taskMutation.variables?.type === "todo"
+                            }
+                          >
+                            {taskMutation.isPending &&
+                            taskMutation.variables?.batchId === batch.id &&
+                            taskMutation.variables?.type === "todo"
+                              ? "..."
+                              : "জমা দিন"}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Mandatory Task */}
+                    <div className="space-y-3 pt-2 border-t border-dashed">
                       <div className="flex items-center justify-between">
                         <label className="text-sm font-semibold flex items-center gap-2">
                           {status?.mandatory_done ? (
@@ -412,16 +482,16 @@ export default function DailyTasksPage() {
                       <div className="flex items-center justify-between">
                         <label className="text-sm font-semibold flex items-center gap-2">
                           {status?.optional_done ? (
-                            <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                            <CheckCircle2 className="h-4 w-4 text-green-500" />
                           ) : (
                             <Circle className="h-4 w-4 text-muted-foreground" />
                           )}
                           টাস্ক ২
                           <Badge
                             variant="outline"
-                            className="text-[10px] text-blue-500 border-blue-200"
+                            className="text-[10px] text-red-500 border-red-200"
                           >
-                            Optional
+                            Mandatory
                           </Badge>
                         </label>
                         {status?.optional_done && (
@@ -434,7 +504,7 @@ export default function DailyTasksPage() {
                         <div className="relative flex-1">
                           <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
-                            placeholder="টাস্কের লিঙ্ক দিন (ঐচ্ছিক)"
+                            placeholder="টাস্কের লিঙ্ক দিন"
                             className="pl-9"
                             value={
                               status?.optional_done
@@ -459,7 +529,6 @@ export default function DailyTasksPage() {
                         </div>
                         {!status?.optional_done && (
                           <Button
-                            variant="secondary"
                             onClick={() =>
                               handleTaskSubmit(batch.id, "optional")
                             }
@@ -472,76 +541,6 @@ export default function DailyTasksPage() {
                             {taskMutation.isPending &&
                             taskMutation.variables?.batchId === batch.id &&
                             taskMutation.variables?.type === "optional"
-                              ? "..."
-                              : "জমা দিন"}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* To Do Task */}
-                    <div className="space-y-3 pt-2 border-t border-dashed">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-semibold flex items-center gap-2">
-                          {status?.todo_done ? (
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <Circle className="h-4 w-4 text-muted-foreground" />
-                          )}
-                          আপনার টুডু লিস্ট
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] text-green-500 border-green-200"
-                          >
-                            To Do
-                          </Badge>
-                        </label>
-                        {status?.todo_done && (
-                          <span className="text-xs text-green-600 font-medium">
-                            সম্পন্ন
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            placeholder="করণীয় কাজের লিঙ্ক দিন"
-                            className="pl-9"
-                            value={
-                              status?.todo_done
-                                ? status.todo_url
-                                : urls[batch.id]?.todo || ""
-                            }
-                            onChange={(e) =>
-                              setUrls((prev) => ({
-                                ...prev,
-                                [batch.id]: {
-                                  ...(prev[batch.id] || {
-                                    mandatory: "",
-                                    optional: "",
-                                    todo: "",
-                                  }),
-                                  todo: e.target.value,
-                                },
-                              }))
-                            }
-                            disabled={status?.todo_done}
-                          />
-                        </div>
-                        {!status?.todo_done && (
-                          <Button
-                            variant="outline"
-                            onClick={() => handleTaskSubmit(batch.id, "todo")}
-                            disabled={
-                              taskMutation.isPending &&
-                              taskMutation.variables?.batchId === batch.id &&
-                              taskMutation.variables?.type === "todo"
-                            }
-                          >
-                            {taskMutation.isPending &&
-                            taskMutation.variables?.batchId === batch.id &&
-                            taskMutation.variables?.type === "todo"
                               ? "..."
                               : "জমা দিন"}
                           </Button>

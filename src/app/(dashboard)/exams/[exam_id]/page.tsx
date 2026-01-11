@@ -732,7 +732,7 @@ export default function TakeExamPage() {
 
     if (user?.uid && exam_id) {
       try {
-        const { data: seData, error: seError } = await supabase
+        const { error: seError } = await supabase
           .from("student_exams")
           .upsert(
             {
