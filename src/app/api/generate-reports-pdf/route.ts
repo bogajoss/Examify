@@ -14,6 +14,7 @@ interface ReportData {
   exams: ExamResult[];
   mandatory_done: boolean;
   optional_done: boolean;
+  todo_done: boolean;
 }
 
 export async function POST(req: NextRequest) {
@@ -92,8 +93,9 @@ export async function POST(req: NextRequest) {
               <th>রোল</th>
               <th>উপস্থিতি</th>
               <th>পরীক্ষা</th>
-              <th>বাধ্যতামূলক টাস্ক</th>
-              <th>ঐচ্ছিক টাস্ক</th>
+              <th>বাধ্যতামূলক</th>
+              <th>ঐচ্ছিক</th>
+              <th>করণীয়</th>
             </tr>
           </thead>
           <tbody>
@@ -118,6 +120,7 @@ export async function POST(req: NextRequest) {
                 </td>
                 <td class="${r.mandatory_done ? "done" : "pending"}">${r.mandatory_done ? "সম্পন্ন" : "বাকি"}</td>
                 <td class="${r.optional_done ? "done" : "pending"}">${r.optional_done ? "সম্পন্ন" : "নেই"}</td>
+                <td class="${r.todo_done ? "done" : "pending"}">${r.todo_done ? "সম্পন্ন" : "নেই"}</td>
               </tr>
             `,
               )
