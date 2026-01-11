@@ -207,13 +207,13 @@ export default function DailyTasksPage() {
         },
       );
       const typeLabels = {
-        mandatory: "বাধ্যতামূলক",
-        optional: "ঐচ্ছিক",
-        todo: "করণীয় কাজ",
+        mandatory: "টাস্ক ১",
+        optional: "টাস্ক ২",
+        todo: "আপনার টুডু লিস্ট",
       };
       toast({
         title: "টাস্ক জমা হয়েছে",
-        description: `${typeLabels[data.type]} টাস্ক সফলভাবে জমা দেওয়া হয়েছে।`,
+        description: `${typeLabels[data.type]} সফলভাবে জমা দেওয়া হয়েছে।`,
       });
     },
     onError: () => {
@@ -345,7 +345,7 @@ export default function DailyTasksPage() {
                           ) : (
                             <Circle className="h-4 w-4 text-muted-foreground" />
                           )}
-                          বাধ্যতামূলক টাস্ক
+                          টাস্ক ১
                           <Badge
                             variant="outline"
                             className="text-[10px] text-red-500 border-red-200"
@@ -416,7 +416,7 @@ export default function DailyTasksPage() {
                           ) : (
                             <Circle className="h-4 w-4 text-muted-foreground" />
                           )}
-                          ঐচ্ছিক টাস্ক
+                          টাস্ক ২
                           <Badge
                             variant="outline"
                             className="text-[10px] text-blue-500 border-blue-200"
@@ -488,7 +488,7 @@ export default function DailyTasksPage() {
                           ) : (
                             <Circle className="h-4 w-4 text-muted-foreground" />
                           )}
-                          করণীয় কাজ
+                          আপনার টুডু লিস্ট
                           <Badge
                             variant="outline"
                             className="text-[10px] text-green-500 border-green-200"

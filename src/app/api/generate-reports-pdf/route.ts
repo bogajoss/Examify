@@ -93,9 +93,9 @@ export async function POST(req: NextRequest) {
               <th>রোল</th>
               <th>উপস্থিতি</th>
               <th>পরীক্ষা</th>
-              <th>বাধ্যতামূলক</th>
-              <th>ঐচ্ছিক</th>
-              <th>করণীয়</th>
+              <th>টাস্ক ১</th>
+              <th>টাস্ক ২</th>
+              <th>টুডু লিস্ট</th>
             </tr>
           </thead>
           <tbody>

@@ -296,11 +296,9 @@ export default function ReportsPage() {
                   <TableHead>নাম ও রোল</TableHead>
                   <TableHead className="text-center">উপস্থিতি</TableHead>
                   <TableHead className="text-center">পরীক্ষা</TableHead>
-                  <TableHead className="text-center">
-                    বাধ্যতামূলক টাস্ক
-                  </TableHead>
-                  <TableHead className="text-center">ঐচ্ছিক টাস্ক</TableHead>
-                  <TableHead className="text-center">করণীয় টাস্ক</TableHead>
+                  <TableHead className="text-center">টাস্ক ১</TableHead>
+                  <TableHead className="text-center">টাস্ক ২</TableHead>
+                  <TableHead className="text-center">টুডু লিস্ট</TableHead>
                   <TableHead className="text-center">দৈনিক অগ্রগতি</TableHead>
                 </TableRow>
               </TableHeader>
